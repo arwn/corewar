@@ -1,0 +1,19 @@
+ASM:
+  Hardcode test everything
+
+COREWAR:
+  Test
+  Fix fork/lfork -- process calling fork and sometimes adjacent processes
+                    incorrectly set instruction_time after forking
+  helltrain1 -- issues related to fork on cycle 2745
+  Fix live -- CYCLE_TO_DIE (tentatively fixed, need to verify more)
+
+DONE:
+  ASM:
+    Fix names
+  COREWAR:
+    Fix zjmp -- negative offset
+    Check invalid header
+    Load champions eqidistant from each other
+      WONTFIX:
+      Error check too small champ

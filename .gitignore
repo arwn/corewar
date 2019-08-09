@@ -1,0 +1,16 @@
+asm
+corewar
+lib/glew-2.1.0/bin/
+lib/glew-2.1.0/glew.pc
+lib/glew-2.1.0/lib/
+lib/glew-2.1.0/tmp
+lib/glfw-3.3/build/
+lib/glfw-3.3/build/Makefile
+lib/libft/.obj/
+lib/libft/libft.a
+*.o
+*.in
+/*.s
+*.cor
+.vscode
+TAGS
