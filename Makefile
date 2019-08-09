@@ -27,6 +27,11 @@ VM_CFILES = corewar.c cpu.c instructions.c
 VM_SRCS = $(addprefix $(VM_SRCDIR), $(VM_CFILES))
 VM_OBJS = $(VM_SRCS:.c=.o)
 
+CHAMP_SRCDIR = cmd/champ/
+CHAMP_NAME = champ.cor
+CHAMP_CFILES = champ.s
+CHAMP_SRCS = $(addprefix $(CHAMP_SRCDIR), $(CHAMP_CFILES))
+
 GUI_LDFLAGS = $(LIBGLEW) -L $(dir $(LIBGLFW)) -lglfw3
 GUI_FRAMEWORKS = -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
 GUI_INCLUDE = -I lib/glfw-3.3/build/include -I lib/glew-2.1.0/include
@@ -38,7 +43,7 @@ INTERNAL_OBJS = $(INTERNAL_SRCS:.c=.o)
 
 CFLAGS = $(CCFLAGS) $(INCLUDES)
 
-all: $(LFT) $(ASM_NAME) $(VM_NAME)
+all: $(ASM_NAME) $(VM_NAME) $(CHAMP_NAME)
 
 $(ASM_NAME): $(LFT) $(ASM_OBJS) $(INTERNAL_OBJS)
 	$(CC) $(CFLAGS) $(LINKERS) $(INCLUDES) $(INTERNAL_OBJS) $(ASM_OBJS) -o $(ASM_NAME)
@@ -46,6 +51,12 @@ $(ASM_NAME): $(LFT) $(ASM_OBJS) $(INTERNAL_OBJS)
 $(VM_NAME): $(VM_OBJS) $(ASM_OBJS) $(INTERNAL_OBJS)
 	make deps
 	$(CC) $(CFLAGS) $(LINKERS) $(INCLUDES) $(GUI_INCLUDE) $(GUI_LDFLAGS) $(GUI_FRAMEWORKS) $(INTERNAL_OBJS) $(VM_OBJS) -o $(VM_NAME)
+
+$(CHAMP_NAME): $(ASM) $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME))
+	mv $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME)) ./
+
+$(addprefix $(CHAMP_SRCDIR), %.cor): $(addprefix $(CHAMP_SRCDIR), %.s)
+	./$(ASM_NAME) $<
 
 deps: $(LFT) $(LIBGLEW) $(LIBGLFW)
 
@@ -65,6 +76,7 @@ clean:
 fclean: clean
 	-$(RM) $(ASM_NAME) $(VM_NAME)
 	-$(RM) -r $(ASM_NAME).dSYM $(VM_NAME).dSYM
+	-$(RM) $(CHAMP_NAME)
 
 depclean:
 	make -C $(LIBDIR)glew-2.1.0 clean
