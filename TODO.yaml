@@ -3,6 +3,12 @@ ASM:
 
 COREWAR:
   Test
+  Seg fault with 4 players in GUI
+    - `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
+    breaks around cycle 1500
+  No winner output with disabled gui
+    - `./corewar -r Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
+    has no output after introducing players
   Fix fork/lfork -- process calling fork and sometimes adjacent processes
                     incorrectly set instruction_time after forking
   helltrain1 -- issues related to fork on cycle 2745
