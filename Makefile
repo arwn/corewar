@@ -53,7 +53,7 @@ $(VM_NAME): $(VM_OBJS) $(ASM_OBJS) $(INTERNAL_OBJS)
 	$(CC) $(CFLAGS) $(LINKERS) $(INCLUDES) $(GUI_INCLUDE) $(GUI_LDFLAGS) $(GUI_FRAMEWORKS) $(INTERNAL_OBJS) $(VM_OBJS) -o $(VM_NAME)
 
 $(CHAMP_NAME): $(ASM) $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME))
-	mv $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME)) ./
+	cp $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME)) ./
 
 $(addprefix $(CHAMP_SRCDIR), %.cor): $(addprefix $(CHAMP_SRCDIR), %.s)
 	./$(ASM_NAME) $<
