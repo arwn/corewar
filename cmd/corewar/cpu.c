@@ -95,7 +95,6 @@ bool valid_header_p(header_t $header) {
 
 // Check for living processes
 static void check_alive(struct s_cpu *cpu) {
-  // struct s_process *proc;
   do {
     if (cpu->processes == NULL)
       break;
@@ -120,7 +119,6 @@ static void check_alive(struct s_cpu *cpu) {
 }
 
 static int step(struct s_cpu *cpu) {
-  // struct s_process *proc = cpu->processes;
   int ii;
   int done = 0;
 
@@ -136,9 +134,6 @@ static int step(struct s_cpu *cpu) {
              cpu->processes->instruction_time, cpu->processes->prev_time);
     if (cpu->processes->pid > ii) {
       printf("DBG: pid(%d) != ii(%d) CPU_STEP loop\n", cpu->processes->pid, ii);
-      // if (cpu->processes->pid == ii + 1 && cpu->processes->prev_time == 0 &&
-      // cpu->processes->next)
-      //   cpu->processes = cpu->processes->next;
     }
     --ii;
     cpu->processes = cpu->processes->next;
@@ -207,8 +202,6 @@ static void delete_process(struct s_cpu *cpu) {
       fprintf(stderr, "ERROR: cpu or cpu->processes NULL in delete_process\n");
     return;
   }
-  // struct s_process *nxt = cpu->processes->next;
-  // struct s_process *prv = cpu->processes->prev;
   struct s_process *tmp = cpu->processes;
   cpu->processes = cpu->processes->next;
   if (tmp->next != NULL)
@@ -216,17 +209,7 @@ static void delete_process(struct s_cpu *cpu) {
   if (tmp->prev != NULL)
     tmp->prev->next = tmp->next;
   free(tmp);
-  // if (cpu->processes == cpu->processes->next) {
-  //   ; // Last one standing should probably win except when they don't.
-  // } else {
-  //   struct s_process *proc = cpu->processes->prev;
-  //   if (cpu->processes == cpu->first)
-  //     cpu->first = cpu->processes->next;
-  //   cpu->processes->prev->next = cpu->processes->next;
-  //   cpu->processes->next->prev = cpu->processes->prev;
-  //   free(cpu->processes);
-  //   cpu->processes = proc;
-  // }
+  cpu->first = cpu->processes;
   cpu->active -= 1;
 }
 

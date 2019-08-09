@@ -170,7 +170,8 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
 
     // top buttons
     nk_layout_row_static(ctx, 30, 80, 5);
-    if (cpu != 0 && cpu->processes == 0 && cpu->winner != 0 && (cpu->num_checks != 0 || cpu->nbr_lives != 0)) {
+    if (cpu != 0 && cpu->processes == 0 && cpu->winner != 0 &&
+        (cpu->num_checks != 0 || cpu->nbr_lives != 0)) {
       printf("winner is %d\n", cpu->winner);
     }
     if (nk_button_label(ctx, "step")) {
@@ -767,17 +768,18 @@ int main(int argc, char *argv[]) {
     nk_glfw3_shutdown();
     glfwTerminate();
   } else {
-    if (f_dump) {
-      while (cpu.clock != dump_cycles && cpu.active && cpu.processes) {
-        if (f_verbose) {
-          printf("It is now cycle %zu\n", cpu.clock + 1);
-        }
-        cpu.step(&cpu);
+    while (cpu.active && cpu.processes) {
+      if (f_verbose) {
+        printf("It is now cycle %zu\n", cpu.clock + 1);
       }
-      vm_dump_state(&cpu);
-      while (cpu.active != 0 && cpu.processes != NULL) {
-        cpu.kill_process(&cpu);
+      if (f_dump && cpu.clock == dump_cycles) {
+        vm_dump_state(&cpu);
+        break;
       }
+      cpu.step(&cpu);
+    }
+    while (cpu.active != 0 && cpu.processes != NULL) {
+      cpu.kill_process(&cpu);
     }
   }
   if (f_leaks)
