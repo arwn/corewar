@@ -633,10 +633,10 @@ int main(int argc, char *argv[]) {
     off1 = OFFSET_3P_P1;
     off2 = OFFSET_3P_P2;
     off3 = OFFSET_3P_P3;
-  } else if (f4) {
+  } else if (f2) {
     off1 = OFFSET_2P_P1;
     off2 = OFFSET_2P_P2;
-  } else if (f4) {
+  } else if (f1) {
     off1 = OFFSET_1P_P1;
   }
   FILE *f;
