@@ -170,7 +170,7 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
 
     // top buttons
     nk_layout_row_static(ctx, 30, 80, 5);
-    if (cpu != 0 && cpu->processes == 0 && cpu->winner != 0) {
+    if (cpu != 0 && cpu->processes == 0 && cpu->winner != 0 && (cpu->num_checks != 0 || cpu->nbr_lives != 0)) {
       printf("winner is %d\n", cpu->winner);
     }
     if (nk_button_label(ctx, "step")) {
@@ -605,16 +605,26 @@ int main(int argc, char *argv[]) {
   argv += optind;
   switch (argc - f_file) {
   case 4:
-    f4 = *argv++;
-  case 3:
-    f3 = *argv++;
-  case 2:
+    f1 = *argv++;
     f2 = *argv++;
+    f3 = *argv++;
+    f4 = *argv++;
+    break;
+  case 3:
+    f1 = *argv++;
+    f2 = *argv++;
+    f3 = *argv++;
+    break;
+  case 2:
+    f1 = *argv++;
+    f2 = *argv++;
+    break;
   case 1:
     f1 = *argv++;
-    f_file = 0;
-    free(filename);
+    break;
   }
+  free(filename);
+  f_file = 0;
 
   // make our cpu and program
   static struct s_cpu cpu;

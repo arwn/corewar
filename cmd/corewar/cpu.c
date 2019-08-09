@@ -75,7 +75,7 @@ static int execute_instruction(struct s_cpu *cpu) {
       break;
     }
   }
-  if (f_verbose >= 3)
+  if (f_verbose >= 6)
     printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
            "pc(%4d) ins_time(%4d) EXEC_INS end --\n",
            cpu->clock, cpu->processes->pid, cpu->processes->carry,
@@ -121,17 +121,27 @@ static void check_alive(struct s_cpu *cpu) {
 
 static int step(struct s_cpu *cpu) {
   // struct s_process *proc = cpu->processes;
+  int ii;
   int done = 0;
 
+  cpu->processes = cpu->first;
+  ii = cpu->first->pid;
   while (cpu->processes != 0) {
     done = execute_instruction(cpu);
+    if (f_verbose >= 3)
+      printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
+             "pc(%4d) ins_time(%4d) prev_time(%4d) CPU_STEP loop\n",
+             cpu->clock, cpu->processes->pid, cpu->processes->carry,
+             cpu->processes->last_live, cpu->processes->pc,
+             cpu->processes->instruction_time, cpu->processes->prev_time);
+    if (cpu->processes->pid > ii) {
+      printf("DBG: pid(%d) != ii(%d) CPU_STEP loop\n", cpu->processes->pid, ii);
+      // if (cpu->processes->pid == ii + 1 && cpu->processes->prev_time == 0 &&
+      // cpu->processes->next)
+      //   cpu->processes = cpu->processes->next;
+    }
+    --ii;
     cpu->processes = cpu->processes->next;
-    // if (f_verbose >= 3)
-    //   printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
-    //          "pc(%4d) ins_time(%4d) CPU_STEP loop\n",
-    //          cpu->clock, cpu->processes->pid, cpu->processes->carry,
-    //          cpu->processes->last_live, cpu->processes->pc,
-    //          cpu->processes->instruction_time);
   }
   cpu->processes = cpu->first;
   if ((unsigned)cpu->cycle_to_die <= cpu->clock - cpu->prev_check)
@@ -151,20 +161,20 @@ static void spawn_process(struct s_cpu *cpu, int pc, int r1) {
   done->carry = 0;
   done->pc = pc;
   done->pid = cpu->active + 1;
-  done->prev_time = 0;
+  done->prev_time = -1;
   if (f_verbose >= 3)
     printf("DBG: pc(%4d) op(%02x) SPAWN_PROC\n", pc,
            cpu->program[pc % MEM_SIZE]);
-  uint8_t op = cpu->program[pc % MEM_SIZE];
-  if (op >= 1 && op <= 16)
-    done->instruction_time = g_op_tab[op - 1].cycles_to_exec;
+  done->opcode = cpu->program[pc % MEM_SIZE];
+  if (done->opcode >= 1 && done->opcode <= 16)
+    done->instruction_time = g_op_tab[done->opcode - 1].cycles_to_exec;
   else
     done->instruction_time = 1;
   done->last_live = 0;
   if (f_verbose >= 3)
     fprintf(stderr,
             "DBG: clock(%5zu) pid(%d) ins_time(%4d) op(0x%02x) SPAWN_PROC\n",
-            cpu->clock, done->pid, done->instruction_time, op);
+            cpu->clock, done->pid, done->instruction_time, done->opcode);
   done->registers[0] = r1;
   for (int i = 1; i < REG_NUMBER; i++) {
     done->registers[i] = cpu->processes ? cpu->processes->registers[i] : 0;
@@ -193,7 +203,7 @@ static void delete_process(struct s_cpu *cpu) {
            cpu->processes ? cpu->processes->pid : -1, cpu->num_checks,
            cpu->nbr_lives, cpu->prev_check);
   if (!cpu || !cpu->processes) {
-    if (f_verbose >=2)
+    if (f_verbose >= 2)
       fprintf(stderr, "ERROR: cpu or cpu->processes NULL in delete_process\n");
     return;
   }
