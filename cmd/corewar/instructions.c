@@ -293,9 +293,10 @@ int instruction_live(struct s_cpu *cpu) {
   name = read_mem_long(cpu->program, cpu->processes->pc);
   cpu->processes->pc += 4;
   int player = abs(name) - 1;
-  if (name >= -4 && name <= -1 && player >= 0 && player <= 3) {
+  if (player >= 0 && player <= 3) {
     cpu->lastlive[player] = cpu->clock;
     cpu->processes->last_live = cpu->clock;
+    cpu->winner = name;
   }
   if (f_verbose >= 3)
     printf("DBG: pc(%d) name(%08x) pid(%d) last_live(%d) nbr_lives(%d) "
@@ -352,25 +353,13 @@ int instruction_ld(struct s_cpu *cpu) {
   return 1;
 }
 
-// monstrosity for preserving the signedness of values read from core memory
-union fungus {
-  uint64_t u64;
-  int64_t i64;
-  uint32_t u32;
-  int32_t i32;
-  uint16_t u16;
-  int16_t i16;
-  uint8_t u8;
-  int8_t i8;
-};
-
 // st takes 2 parameters, storing (REG_SIZE bytes) of the value of
 // the first argument (always a register) in the second. 'st r4,34' stores the
 // value of 'r4' at the address (PC + (34 % IDX_MOD)) 'st r3,r8' copies the
 // contents of 'r3' to 'r8'
 int instruction_st(struct s_cpu *cpu) {
-  int v1, v2, r1;
-  union fungus amongus;
+  int v1, r1;
+  short v2;
   int pc = cpu->processes->pc;
 
   if (f_verbose >= 3)
@@ -382,7 +371,6 @@ int instruction_st(struct s_cpu *cpu) {
   if (check_param(par, cpu->program[pc] - 1)) {
     cpu->processes->pc += 3;
     return 1;
-    ;
   }
   cpu->processes->pc += 1;
   r1 = read_val(cpu, get_param(par, 1));
@@ -399,11 +387,10 @@ int instruction_st(struct s_cpu *cpu) {
   } else {
     if (f_verbose >= 3)
       dump_nbytes(cpu, 5, pc, 1);
-    amongus.i16 = v2 = (int16_t)read_mem_word(cpu->program, cpu->processes->pc);
+    v2 = read_mem_word(cpu->program, cpu->processes->pc);
     if (f_verbose >= 3)
-      printf("DBG: ind(%04hx) idx(%hd) amongus(%hd) INS_ST\n", (int16_t)v2,
-             (short)(pc + ((v2) % IDX_MOD)), amongus.i16);
-    write_mem_ins(cpu->program, pc + ((amongus.i16) % IDX_MOD), v1);
+      printf("DBG: ind(%04hx) idx(%d) INS_ST\n", v2, (pc + ((v2) % IDX_MOD)));
+    write_mem_ins(cpu->program, pc + ((v2) % IDX_MOD), v1);
     cpu->processes->pc += 2;
   }
   if (f_verbose == 1) {
@@ -796,34 +783,30 @@ int instruction_sti(struct s_cpu *cpu) {
 
 // fork always takes an index and creates a new program which is
 // executed from address (PC + ('idx' % IDX_MOD)). 'fork %34' spawns a new
-// process at (PC + (34 % IDX_MOD)). helltrain cycles (1105,1935,2745,3555)
+// process at (PC + (34 % IDX_MOD)). helltrain cycles (1105,1935,2745,3555,4365)
 // TOOD: handle process calling fork correctly: cycle 2745,
 //       pid(3).instruction_time is decremented twice
 int instruction_fork(struct s_cpu *cpu) {
   struct s_process *prev_head = cpu->processes;
   int pc = cpu->processes->pc;
   dump_nbytes(cpu, 6, pc, cpu->program[pc]);
-  union fungus amongus;
   short new;
 
   if (f_verbose >= 3)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_FORK start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
-  amongus.i16 = new =
-      read_mem_word(cpu->program, cpu->processes->pc + 1); // % IDX_MOD;
+  new = read_mem_word(cpu->program, cpu->processes->pc + 1); // % IDX_MOD;
   if (f_verbose >= 3)
-    printf("DBG: new(0x%02hx) amongus(%hd) pc(%d) INS_FORK read\n", new,
-           amongus.i16, pc + new);
+    printf("DBG: new(0x%02hx) pc(%d) INS_FORK read\n", new, pc + new);
   new %= IDX_MOD;
   if (f_verbose >= 3)
-    printf("DBG: new(0x%02hx) amongus(%hd) pc(%d) INS_FORK mod\n", new,
-           amongus.i16, pc + new);
+    printf("DBG: new(0x%02hx) pc(%d) INS_FORK mod\n", new,
+           pc + new);
   if (new < 0)
     new += MEM_SIZE;
   if (f_verbose >= 3)
-    printf("DBG: new(0x%02hx) amongus(%hd) pc(%d) INS_FORK plusmem\n", new,
-           amongus.i16, pc + new);
+    printf("DBG: new(0x%02hx) pc(%d) INS_FORK plusmem\n", new, pc + new);
   cpu->processes->pc += 3;
   cpu->spawn_process(cpu, new + cpu->processes->pc - 3,
                      cpu->processes->registers[0]);

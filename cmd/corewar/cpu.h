@@ -31,6 +31,7 @@ struct s_process {
   int instruction_time;
   int prev_time;
   int last_live;
+  int opcode;
   int pid;
   int registers[REG_NUMBER];
   int pc;

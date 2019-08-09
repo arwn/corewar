@@ -1,5 +1,5 @@
 RM = rm -f
-CCFLAGS = -Wall -Wextra -g # -fsanitize=address # -Werror -g -O2 -fsanitize=address -fno-omit-frame-pointer # TODO: remove
+CCFLAGS = -Wall -Wextra -Werror -g
 
 LIBDIR = lib/
 
@@ -12,8 +12,8 @@ LIBGLFW = $(GLFWBUILDDIR)src/libglfw3.a
 
 LFTDIR = $(LIBDIR)libft/
 LFT = $(LFTDIR)libft.a
-LINKERS = -L $(LIBDIR)libft/ -lft
-INCLUDES = -I $(LIBDIR)libft/includes/ -I inc/
+LINKERS = -L $(LFTDIR) -lft
+INCLUDES = -I $(LFTDIR)includes/ -I inc/
 
 ASM_SRCDIR = cmd/asm/
 ASM_NAME = asm
@@ -50,7 +50,7 @@ $(VM_NAME): $(VM_OBJS) $(ASM_OBJS) $(INTERNAL_OBJS)
 deps: $(LFT) $(LIBGLEW) $(LIBGLFW)
 
 $(LIBGLFW):
-	mkdir -p $(GLFWBUILDDIR) && cd $(GLFWBUILDDIR) && cmake ..
+	mkdir -p $(GLFWBUILDDIR) && cd $(GLFWBUILDDIR) && cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_EXECUTABLE_FORMAT=MACHO -DGLFW_BUILD_DOCS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_INSTALL=OFF -DGLFW_USE_OSMESA=OFF -DGLFW_VULKAN_STATIC=OFF
 	make -C $(GLFWBUILDDIR)
 
 $(LIBGLEW):
