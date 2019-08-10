@@ -758,6 +758,7 @@ int main(int argc, char *argv[]) {
     while (cpu.active != 0 && cpu.processes != NULL) {
       cpu.kill_process(&cpu);
     }
+    printf("Winner is player %d\n", abs(cpu.winner));
   }
   if (f_leaks)
     pause();
