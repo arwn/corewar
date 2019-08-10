@@ -6,67 +6,74 @@ start:
 	live %0
 	fork %:b
 
-a:							# a - payload = 122
+a:							# a - payload = 138
 	fork %:ab
 
-aa:						# aa - ab = 29
+aa:						# aa - ab = 33
 	fork %:aab				# 3
 
-aaa:						# aaa - aab = 13
-							# aaa - payload = 116
-	ld 116, r5				# 5
-	and r2, r2, r2			# 5
+aaa:						# aaa - aab = 15
+	ld 132, r5				# 5
+	# and r2, r2, r2		# 5
+	or 44, 0, r4			# 7
 	zjmp %:payload			# 3
 
 aab:
-	ld 103, r5
-	and r2, r2, r2
+	ld 136, r5
+	# and r2, r2, r2
+	or 48, 0, r4
 	zjmp %:payload
 
 ab:
-	fork %:aad
+	fork %:abb
 
-aac:
-	ld 87, r5
-	and r2, r2, r2
+aba:
+	ld 140, r5
+	# and r2, r2, r2
+	or 52, 0, r4
 	zjmp %:payload
 
-aad:
-	ld 74, r5
-	and r2, r2, r2
+abb:
+	ld 144, r5
+	# and r2, r2, r2
+	or 56, 0, r4
 	zjmp %:payload
 
-b:							# b - payload = 61
+b:							# b - payload = 69
 	fork %:bb
 
 ba:
 	fork %:bab
 
 baa:
-	ld 55, r5
-	and r2, r2, r2
+	ld 148, r5
+	# and r2, r2, r2
+	or 60, 0, r4
 	zjmp %:payload
 
 bab:
-	ld 42, r5
-	and r2, r2, r2
+	ld 152, r5
+	# and r2, r2, r2
+	or 64, 0, r4
 	zjmp %:payload
 
 bb:
-	fork %:bad
+	fork %:bbb
 
-bac:
-	ld 26, r5
-	and r2, r2, r2
+bba:
+	ld 156, r5
+	# and r2, r2, r2
+	or 68, 0, r4
 	zjmp %:payload
 
-bad:
-	ld 13, r5
-	and r2, r2, r2
+bbb:
+	ld 160, r5
+	# and r2, r2, r2
+	or 72, 0, r4
 	zjmp %:payload
 
 payload:
 	st r1, 6
-	live %0
-	st r5, 40
+	live %69
+	st r5, r6
 	fork %-20
