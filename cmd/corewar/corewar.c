@@ -743,7 +743,11 @@ int main(int argc, char *argv[]) {
     }
     if (ii == 0)
       printf("Introducing contestants...\n");
-    load_file(&cpu, f, offsets[argc - 1][ii], ii + 1);
+    int len = load_file(&cpu, f, offsets[argc - 1][ii], ii + 1);
+    if (len < 1 || len >= CHAMP_MAX_SIZE) {
+      fprintf(stderr, "Fatal error: invalid champion file: %s\n", *argv);
+      return 1;
+    }
     if (fclose(f) != 0)
       return 1;
     ++ii;
