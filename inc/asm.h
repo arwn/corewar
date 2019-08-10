@@ -6,7 +6,7 @@
 /*   By: acarlson <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/11 14:08:29 by acarlson          #+#    #+#             */
-/*   Updated: 2019/08/09 10:09:37 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/10 11:09:38 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,9 +120,11 @@ struct	s_arg {
 # define WARNING_PROG_TOO_BIG_DISASM WARNING_MOD"WARNING"NC" Binary too large.  Truncating"
 # define WARNING_FILE_TRUNC WARNING_MOD"WARNING"NC" File appears to be truncated"
 # define ERR_BAD_HEADER ERR_MOD"ERROR"NC" File has invalid header"
-# define ERR_UNKNOWN_TYPE ERR_MOD"ERROR"NC" Unknown argument type %#llx"
+# define ERR_UNKNOWN_TYPE ERR_MOD"ERROR"NC" Unknown argument type %#04llx"
 # define ERR_FILE_TOO_BIG ERR_MOD"ERROR"NC" File too large"
-# define ERR_UNKNOWN_OPCODE ERR_MOD"ERROR"NC" Unknown opcode %#hhx"
+# define ERR_UNKNOWN_OPCODE ERR_MOD"ERROR"NC" Unknown opcode %#04hhx"
+
+# define ERR_MALLOC_FAIL ERR_MOD"ERROR"NC" Malloc failure FILE %s LINE %d"
 
 typedef struct s_tok	t_tok;
 typedef struct s_cmd	t_cmd;

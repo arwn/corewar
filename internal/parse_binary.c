@@ -6,15 +6,24 @@ int larger_than_bufsize(int *err, unsigned ii) {
 	return (ii);
 }
 
-void find_arg_types(char *argtypes, unsigned char enc) {
+/*
+** Convert encoding byte to array of types (T_INT, T_DIR, T_REG)
+*/
+
+void find_arg_types(unsigned char *argtypes, unsigned char enc) {
 	for (unsigned ii = 0; ii < 4; ++ii) {
-		unsigned char nn = enc >> ((6 - (ii * 2))) & 0b11;
+		unsigned char nn = (enc >> ((6 - (ii * 2)))) & 0b11;
 		argtypes[ii] = g_encoding_cmd[nn];
 	}
 }
 
+/*
+** Print next full instruction in progbuf to linebuf
+** Sets *err if there is an error
+*/
+
 unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx, uint8_t *progbuf, size_t progbuf_size, int *err) {
-	char	argtypes[MAX_ARGS_NUMBER] = {0};
+	unsigned char	argtypes[MAX_ARGS_NUMBER] = {0};
 	unsigned ii = 0;
 	unsigned char	opcode = progbuf[ii++];
 
@@ -46,8 +55,9 @@ unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx, uint8_t
 
 		int num_bytes = CMD_NUM_BYTES(argtypes[jj], opcode);
 
-		uint64_t nn = argtypes[jj];
-		if (!nn || nn > 3) {
+		printf("%zu\n", *bufidx);
+		uint64_t nn = argtypes[jj];	// T_INT || T_DIR || T_REG
+		if (!nn || nn > T_IND || !g_cmd_encoding[nn]) {
 			*err = 1;
 			asprintf(&g_errstr, ERR_UNKNOWN_TYPE, nn);
 			return (ii);
@@ -85,6 +95,10 @@ unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx, uint8_t
 	return (ii);
 }
 
+/*
+** Reads from fd, prints asm representation to buf not exceeding bufsize
+*/
+
 int	parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
 	header_t	header;
 
@@ -104,10 +118,6 @@ int	parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
 		asprintf(&g_errstr, ERR_BAD_HEADER);
 		return (1);
 	}
-	/* else if (header.prog_size > CHAMP_MAX_SIZE * 2) { */
-	/* 	asprintf(&g_errstr, ERR_FILE_TOO_BIG); */
-	/* 	return (1); */
-	/* } */
 
 	ft_strcat(buf, NAME_CMD_STRING" \"");
 	ft_strcat(buf, header.prog_name);
@@ -115,8 +125,12 @@ int	parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
 	ft_strcat(buf, header.comment);
 	ft_strcat(buf, "\"\n");
 
-	// uint8_t	progbuf[header.prog_size];
 	uint8_t *progbuf = malloc(header.prog_size + 1);
+	if (!progbuf) {
+		asprintf(&g_errstr, ERR_MALLOC_FAIL, __FILE__, __LINE__);
+		*size = 0;
+		return (1);
+	}
 	size_t progbuf_size = read(fd, progbuf, header.prog_size);
 
 	size_t bufidx = ft_strlen(buf);
@@ -127,10 +141,11 @@ int	parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
 		if (err) {
 			free(progbuf);
 			progbuf = NULL;
+			*size = 0;
 			return (1);
 		}
 	}
-	*size = ft_strlen(buf);
+	*size = bufidx;
 	if (ii < header.prog_size)
 		ft_dprintf(STDERR_FILENO, WARNING_FILE_TRUNC"\n");
 	free(progbuf);
