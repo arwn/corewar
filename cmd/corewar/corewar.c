@@ -23,18 +23,17 @@
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
-#define NK_ZERO_COMMAND_MEMORY
 #define NK_IMPLEMENTATION
 #define NK_GLFW_GL3_IMPLEMENTATION
 #define NK_KEYSTATE_BASED_INPUT
 #include "nuklear.h"
 #include "nuklear_glfw_gl3.h"
 
-#define WINDOW_WIDTH 1200
-#define WINDOW_HEIGHT 800
+#define WINDOW_WIDTH 1200  // 1200
+#define WINDOW_HEIGHT 1350 // 800
 
-#define MAX_VERTEX_BUFFER 512 * 1024
-#define MAX_ELEMENT_BUFFER 128 * 1024
+#define MAX_VERTEX_BUFFER 512 * 1536  // 512 * 1024 increase to fix buggy ui
+#define MAX_ELEMENT_BUFFER 128 * 1536 // 128 * 1024
 
 // open_buf is the buffer for the pathname inside the open window.
 char open_buf[PATH_MAX] = {"./tests/aff1.s"};
@@ -52,7 +51,7 @@ int instruction_calls[18] = {0};
 // automatically.
 bool running = 0;
 
-char winbuf[] = "none";
+char winbuf[64] = "none";
 
 // set_color sets the colorscheme. it should only be called once.
 static void set_color(struct nk_context *ctx) {
@@ -110,6 +109,7 @@ static void win_graph(struct nk_context *ctx, struct s_cpu *cpu) {
   }
   nk_end(ctx);
 }
+
 static const char *g_bytes_upper[256] = {
     "00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0A", "0B",
     "0C", "0D", "0E", "0F", "10", "11", "12", "13", "14", "15", "16", "17",
@@ -159,32 +159,38 @@ char *g_bytes_lower[256] = {
     "fc", "fd", "fe", "ff",
 };
 
+extern char g_mem_tab[4096];
 // win_debug displays the program and buttons to step through.
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
   if (nk_begin(ctx, "debug", nk_rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_TITLE)) {
     char buf[44];
-    struct nk_color color; // red color for current instruction
-    color.r = 255, color.g = 100, color.b = 100, color.a = 255;
+    struct nk_color p1c; // red color for current player 1 instruction
+    struct nk_color p2c; // green color for current player 2 instruction
+    struct nk_color p3c; // blue color for current player 3 instruction
+    struct nk_color p4c; // magenta color for current player 4 instruction
+    p1c.r = 255, p1c.g = 100, p1c.b = 100, p1c.a = 255;
+    p2c.r = 100, p2c.g = 255, p2c.b = 100, p2c.a = 255;
+    p3c.r = 100, p3c.g = 100, p3c.b = 255, p3c.a = 255;
+    p4c.r = 255, p4c.g = 100, p4c.b = 255, p4c.a = 255;
 
     // top buttons
-    nk_layout_row_static(ctx, 30, 80, 5);
-    if (cpu != 0 && cpu->processes == 0 && cpu->winner != 0 &&
+    nk_layout_row_static(ctx, 30, 80, 10);
+    if (cpu->processes == 0 && cpu->winner != 0 && cpu->clock == 0 &&
         (cpu->num_checks != 0 || cpu->nbr_lives != 0)) {
       printf("winner is %d\n", cpu->winner);
     }
     if (nk_button_label(ctx, "step")) {
-      cpu->step(cpu);
+      if (cpu->processes != 0)
+        cpu->step(cpu);
     }
     if (nk_button_label(ctx, "walk")) {
-      int cont = 0;
-      while (cont == 0) {
-        // if (cpu->processes->instruction_time == 0) {
-        //   cpu->step(cpu);
-        //   break;
-        // }
-        cont = cpu->step(cpu);
+      if (cpu->processes != 0) {
+        int cont = 0;
+        while (cont == 0) {
+          cont = cpu->step(cpu);
+        }
       }
     }
     // run button
@@ -203,36 +209,33 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     double trash;
     double time = modf(glfwGetTime(), &trash);
     time *= 100;
-    if (running && (int)time % (10 - slider) == 0) {
+    if (cpu->processes != 0 && running && (int)time % (10 - slider) == 0) {
       cpu->step(cpu);
     }
-
-    sprintf(winbuf, "%d", cpu->winner);
+    snprintf(winbuf, sizeof(winbuf), "Winner: %d", cpu->winner);
 
     // top stats
-    nk_layout_row_static(ctx, 20, 120, 2);
-    nk_label(ctx, "Winner:", NK_TEXT_LEFT);
-    nk_label(ctx, winbuf, NK_TEXT_LEFT);
-    nk_layout_row_static(ctx, 20, 120, 2);
-    sprintf(buf, "%d", cpu->active);
-    nk_label(ctx, "Processes:", NK_TEXT_LEFT);
-    nk_label(ctx, buf, NK_TEXT_LEFT);
-    if (cpu->processes != NULL)
-      sprintf(buf, "%d", cpu->processes->pc);
-    else
-      sprintf(buf, "%d", 0);
-    nk_label(ctx, "program counter:", NK_TEXT_LEFT);
-    nk_label(ctx, buf, NK_TEXT_LEFT);
-    sprintf(buf, "%zu", cpu->clock);
-    nk_label(ctx, "cpu cycles:", NK_TEXT_LEFT);
-    nk_label(ctx, buf, NK_TEXT_LEFT);
+    // nk_layout_row_static(ctx, 20, 120, 2);
+    // nk_label(ctx, "Winner:", NK_TEXT_LEFT);
+    nk_label(ctx, winbuf, NK_TEXT_CENTERED);
+    // nk_layout_row_static(ctx, 20, 120, 2);
+    snprintf(buf, sizeof(buf), "Active: %d", cpu->active);
+    // nk_label(ctx, "Processes:", NK_TEXT_LEFT);
+    nk_label(ctx, buf, NK_TEXT_CENTERED);
+    snprintf(buf, sizeof(buf), "CTD: %d", cpu->cycle_to_die);
+    // nk_label(ctx, "Cycle to die:", NK_TEXT_LEFT);
+    nk_label(ctx, buf, NK_TEXT_CENTERED);
+    snprintf(buf, sizeof(buf), "Cycle: %zu", cpu->clock);
+    // nk_label(ctx, "cpu cycles:", NK_TEXT_LEFT);
+    nk_label(ctx, buf, NK_TEXT_CENTERED);
 
-    // print the registers
+    // print the registers IDEA: make separate windows for stats for each player
     if (cpu->processes != NULL) {
       for (int i = 0; i < REG_NUMBER; i++) {
         if (i % 16 == 0)
-          nk_layout_row_dynamic(ctx, 30, 8);
-        sprintf(buf, "r%02d[%08x]", i + 1, cpu->processes->registers[i]);
+          nk_layout_row_dynamic(ctx, 15, 8);
+        snprintf(buf, sizeof(buf), "r%02d[%08x]", i + 1,
+                 cpu->processes->registers[i]);
         nk_label(ctx, buf, NK_TEXT_LEFT);
       }
     }
@@ -241,26 +244,26 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     for (register int i = 0; i < MEM_SIZE; i++) {
       if (i % 64 == 0)
         nk_layout_row_dynamic(ctx, 15, 64);
+      // nk_layout_row_static(ctx, 15, 16, 64);
 
       buf[0] = g_bytes_upper[cpu->program[i]][0];
       buf[1] = g_bytes_upper[cpu->program[i]][1];
       buf[2] = 0;
-      // sprintf(buf, "%02hhX", cpu->program[i]);
-      /* for (struct s_process *cur = cpu->processes, *end = 0; cur != end; cur
-      = cur->next) { if (end == 0) end = cpu->processes->prev; if (cur->pc == i)
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, color);
-        else
-          nk_label(ctx, buf, NK_TEXT_LEFT);
-      } */
       struct s_process *hd = cpu->first;
       while (hd != NULL) {
         if (hd->pc == i)
           break;
         hd = hd->next;
       }
-      if (hd != NULL && hd->pc == i)
-        nk_label_colored(ctx, buf, NK_TEXT_LEFT, color);
-      else
+      if (hd != NULL && hd->pc == i) {
+        switch (*hd->registers) {
+          case -1:nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);break;
+          case -2:nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);break;
+          case -3:nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);break;
+          case -4:nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);break;
+          default:nk_label(ctx, buf, NK_TEXT_LEFT);break;
+        }
+      } else
         nk_label(ctx, buf, NK_TEXT_LEFT);
     }
   }
@@ -290,11 +293,14 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
       cpu->spawn_process(cpu, location, -player); // player id reg must be < 0
       printf("* Player %d, weighing %d bytes, \"%s\" (\"%s\") !\n", player,
              h.prog_size, h.prog_name, h.comment);
+      for (int jj = location, ll = (len - sizeof(header_t)); jj < ll + location;
+           ++jj) {
+        g_mem_tab[jj] = player;
+      }
     } else {
       rewind(f);
       bzero(edit_buf, sizeof(edit_buf));
       fread(edit_buf, 1, sizeof(edit_buf), f);
-      // strncpy(edit_buf, readbuf, sizeof(edit_buf));
       for (size_t i = 0; i < sizeof(edit_buf); i++) {
         if (edit_buf[i] == '\t') {
           edit_buf[i] = ' ';
@@ -441,39 +447,55 @@ static void dump_process(struct s_process *proc, int num) {
   }
 }
 
+char g_mem_tab[4096] = {0};
 static void vm_dump_byte(struct s_cpu *cpu, int idx, int space) {
-  struct s_process *cur = cpu->first;
   char buf[3];
 
   buf[0] = g_bytes_lower[cpu->program[idx]][0];
   buf[1] = g_bytes_lower[cpu->program[idx]][1];
   buf[2] = 0;
+  if (space)
+    printf(" ");
   if (f_color) {
-    do {
+    struct s_process *cur = cpu->first;
+    while (cur != 0) {
       if (idx == cur->pc) {
         switch (cur->registers[0]) {
         case -1:
-          printf("\e[31m");
+          printf("\e[30;41m");
           break;
         case -2:
-          printf("\e[32m");
+          printf("\e[30;42m");
           break;
         case -3:
-          printf("\e[34m");
+          printf("\e[30;44m");
           break;
         case -4:
-          printf("\e[35m");
+          printf("\e[30;45m");
           break;
         }
         break;
       }
       cur = cur->next;
-    } while (cur != cpu->first);
+    }
+    if (g_mem_tab[idx] && cur == 0) {
+        switch (g_mem_tab[idx]) {
+        case 1:
+          printf("\e[31m");
+          break;
+        case 2:
+          printf("\e[32m");
+          break;
+        case 3:
+          printf("\e[34m");
+          break;
+        case 4:
+          printf("\e[35m");
+          break;
+        }
+      }
   }
-  if (space == 0)
-    printf("%s", buf);
-  else
-    printf(" %s", buf);
+  printf("%s", buf);
   if (f_color)
     printf("\e[0m");
 }
@@ -482,7 +504,7 @@ static void vm_dump_core(struct s_cpu *cpu) {
   register int ii, jj, kk;
   int max = MEM_SIZE >> 6;
 
-  if (f_verbose >= 3) {
+  if (f_verbose >= 3 && f_verbose != 42) {
     printf("-- [ CORE DUMP START ] --\n");
     printf("cpu->active(%d)\n", cpu->active);
     printf("cpu->clock(%zu)\n", cpu->clock);
@@ -500,7 +522,7 @@ static void vm_dump_core(struct s_cpu *cpu) {
       printf("\n");
     }
   }
-  if (f_verbose >= 3)
+  if (f_verbose >= 3 && f_verbose != 42)
     printf("-- [ CORE DUMP END ] --\n");
 }
 
@@ -536,7 +558,6 @@ static void usage_help(void) {
   fprintf(stderr, "Options:\n");
   fprintf(stderr, "  -c\t\tenable color in core dump\n");
   fprintf(stderr, "  -d\t\tdump core memory after NUM cycles\n");
-  fprintf(stderr, "  -f\t\tinput file\n");
   fprintf(stderr, "  -h\t\tdisplay this help output\n");
   fprintf(stderr, "  -l\t\tcall 'pause()' at the end of main\n");
   fprintf(stderr, "  -p\t\tdump processes when dumping core\n");
@@ -551,29 +572,102 @@ static void usage_help(void) {
 
 #define USAGE_ERR(X)                                                           \
   do {                                                                         \
-    fprintf(stderr, "call to usage() at %s:%d\n", __FILE__, __LINE__);         \
+    fprintf(stderr, "USAGE: call to usage() at %s:%d\n", __FILE__, __LINE__);  \
     usage();                                                                   \
   } while (0)
 
+static void corewar_gui(struct s_cpu *cpu) {
+  // Platform
+  static GLFWwindow *win;
+  int width = 0, height = 0;
+  struct nk_context *ctx;
+  struct nk_colorf bg;
+
+  // GLFW
+  glfwSetErrorCallback(error_callback);
+  if (!glfwInit()) {
+    fprintf(stdout, "[GFLW] failed to init!\n");
+    exit(1);
+  }
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+  win = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "corewar", NULL, NULL);
+  glfwMakeContextCurrent(win);
+  glfwGetWindowSize(win, &width, &height);
+
+  // OpenGL
+  glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+  glewExperimental = 1;
+  if (glewInit() != GLEW_OK) {
+    fprintf(stderr, "Failed to setup GLEW\n");
+    exit(1);
+  }
+
+  ctx = nk_glfw3_init(win, NK_GLFW3_INSTALL_CALLBACKS);
+  // Load Fonts: if none of these are loaded a default font will be used
+  // Load Cursor: if you uncomment cursor loading please hide the cursor
+  {
+    struct nk_font_atlas *atlas;
+    nk_glfw3_font_stash_begin(&atlas);
+    nk_glfw3_font_stash_end();
+  }
+
+  bg.r = 0.55f, bg.g = 0.55f, bg.b = 0.55f, bg.a = 1.0f;
+
+  set_color(ctx);
+  // mainloop
+  while (!glfwWindowShouldClose(win)) {
+    // Input
+    glfwPollEvents();
+    nk_glfw3_new_frame();
+
+    // check if each window should be shown and do that.
+
+    win_open(ctx, cpu);
+    win_edit(ctx, cpu);
+    win_graph(ctx, cpu);
+    win_debug(ctx, cpu);
+
+    // Draw
+    glfwGetWindowSize(win, &width, &height);
+    glViewport(0, 0, width, height);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(bg.r, bg.g, bg.b, bg.a);
+    // IMPORTANT: `nk_glfw_render` modifies some global OpenGL state
+    // with blending, scissor, face culling, depth test and viewport and
+    // defaults everything back into a default state.
+    // Make sure to either a.) save and restore or b.) reset your own state
+    // after rendering the UI.
+    nk_glfw3_render(NK_ANTI_ALIASING_OFF, MAX_VERTEX_BUFFER,
+                    MAX_ELEMENT_BUFFER);
+    glfwSwapBuffers(win);
+  }
+  nk_glfw3_shutdown();
+  glfwTerminate();
+}
+
 int main(int argc, char *argv[]) {
-  bin = *argv;
   int ch = 0;
+  int ii = 0;
   size_t dump_cycles = 0;
-  char *filename = 0;
-  f_color = f_dump = f_file = f_leaks = f_dump_processes = f_verbose = 0;
+  FILE *f;
+  static struct s_cpu cpu;
+
+  f_color = f_dump = f_leaks = f_dump_processes = f_verbose = 0;
   f_gui = 1;
-  while ((ch = getopt(argc, argv, "cd:f:hlprv:")) != -1) {
+  bin = *argv;
+  while ((ch = getopt(argc, argv, "cd:hlprv:")) != -1) {
     switch (ch) {
     case 'c':
       f_color = 1;
       break;
     case 'd':
       f_dump = 1;
-      sscanf(optarg, "%zu", &dump_cycles);
-      break;
-    case 'f':
-      f_file = 1;
-      filename = strdup(optarg);
+      dump_cycles = atoi(optarg);
       break;
     case 'h':
       usage_help();
@@ -601,175 +695,47 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
-  char *f1 = 0, *f2 = 0, *f3 = 0, *f4 = 0;
   argc -= optind;
   argv += optind;
-  switch (argc - f_file) {
-  case 4:
-    f1 = *argv++;
-    f2 = *argv++;
-    f3 = *argv++;
-    f4 = *argv++;
-    break;
-  case 3:
-    f1 = *argv++;
-    f2 = *argv++;
-    f3 = *argv++;
-    break;
-  case 2:
-    f1 = *argv++;
-    f2 = *argv++;
-    break;
-  case 1:
-    f1 = *argv++;
-    break;
-  }
-  free(filename);
-  f_file = 0;
 
   // make our cpu and program
-  static struct s_cpu cpu;
   cpu = new_cpu();
 
-  printf("Introducing contestants...\n");
+  // table for determining the offset based on number of players
+  int binkus[4][4] = {
+      {OFFSET_1P_P1, 0, 0, 0},
+      {OFFSET_2P_P1, OFFSET_2P_P2, 0, 0},
+      {OFFSET_3P_P1, OFFSET_3P_P2, OFFSET_3P_P3, 0},
+      {OFFSET_4P_P1, OFFSET_4P_P2, OFFSET_4P_P3, OFFSET_4P_P4},
+  };
+  if (argc > 4 || argc < 0)
+    return 56;
 
-  // determine the offset based on number of players
-  static int off1, off2, off3, off4;
-  if (f4) {
-    off1 = OFFSET_4P_P1;
-    off2 = OFFSET_4P_P2;
-    off3 = OFFSET_4P_P3;
-    off4 = OFFSET_4P_P4;
-  } else if (f3) {
-    off1 = OFFSET_3P_P1;
-    off2 = OFFSET_3P_P2;
-    off3 = OFFSET_3P_P3;
-  } else if (f2) {
-    off1 = OFFSET_2P_P1;
-    off2 = OFFSET_2P_P2;
-  } else if (f1) {
-    off1 = OFFSET_1P_P1;
+  // load in .cor files
+  printf("Introducing contestants...\n");
+  while (ii < argc) {
+    f = fopen(*argv, "r");
+    if (f == NULL) {
+      perror("Fatal error");
+      return 1;
+    }
+    load_file(&cpu, f, binkus[argc - 1][ii], ii + 1);
+    if (fclose(f) != 0)
+      return 1;
+    ++ii;
+    ++argv;
   }
-  FILE *f;
-  if (f1) {
-    f = fopen(f1, "r");
-    if (f == 0)
-      USAGE_ERR(0);
-    load_file(&cpu, f, off1, 1);
-    fclose(f);
-  }
-  if (f2) {
-    f = fopen(f2, "r");
-    if (f == 0)
-      USAGE_ERR(0);
-    load_file(&cpu, f, off2, 2);
-    fclose(f);
-  }
-  if (f3) {
-    f = fopen(f3, "r");
-    if (f == 0)
-      USAGE_ERR(0);
-    load_file(&cpu, f, off3, 3);
-    fclose(f);
-  }
-  if (f4) {
-    f = fopen(f4, "r");
-    if (f == 0)
-      USAGE_ERR(0);
-    load_file(&cpu, f, off4, 4);
-    fclose(f);
-  }
-  if (f_file) {
-    f = fopen(filename, "r");
-    if (f == 0)
-      USAGE_ERR(0);
-    load_file(&cpu, f, 0, 1);
-    fclose(f);
-  }
+
   if (cpu.processes == 0 && f_gui == false) {
     USAGE_ERR(0);
   }
 
-  // cpu.spawn_process(&cpu, 0, -1);
-  // cpu.spawn_process(&cpu, 0);
-
   // GUI stuff
   if (f_gui) {
-    // Platform
-    static GLFWwindow *win;
-    int width = 0, height = 0;
-    struct nk_context *ctx;
-    struct nk_colorf bg;
-
-    // GLFW
-    glfwSetErrorCallback(error_callback);
-    if (!glfwInit()) {
-      fprintf(stdout, "[GFLW] failed to init!\n");
-      exit(1);
-    }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-    win = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "corewar", NULL, NULL);
-    glfwMakeContextCurrent(win);
-    glfwGetWindowSize(win, &width, &height);
-
-    // OpenGL
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glewExperimental = 1;
-    if (glewInit() != GLEW_OK) {
-      fprintf(stderr, "Failed to setup GLEW\n");
-      exit(1);
-    }
-
-    ctx = nk_glfw3_init(win, NK_GLFW3_INSTALL_CALLBACKS);
-    // Load Fonts: if none of these are loaded a default font will be used
-    // Load Cursor: if you uncomment cursor loading please hide the cursor
-    {
-      struct nk_font_atlas *atlas;
-      nk_glfw3_font_stash_begin(&atlas);
-      nk_glfw3_font_stash_end();
-    }
-
-    bg.r = 0.55f, bg.g = 0.55f, bg.b = 0.55f, bg.a = 1.0f;
-
-    set_color(ctx);
-    // mainloop
-    while (!glfwWindowShouldClose(win)) {
-      // Input
-      glfwPollEvents();
-      nk_glfw3_new_frame();
-
-      // check if each window should be shown and do that.
-
-      win_open(ctx, &cpu);
-      win_edit(ctx, &cpu);
-      win_graph(ctx, &cpu);
-      if (cpu.processes != NULL)
-        win_debug(ctx, &cpu);
-
-      // Draw
-      glfwGetWindowSize(win, &width, &height);
-      glViewport(0, 0, width, height);
-      glClear(GL_COLOR_BUFFER_BIT);
-      glClearColor(bg.r, bg.g, bg.b, bg.a);
-      // IMPORTANT: `nk_glfw_render` modifies some global OpenGL state
-      // with blending, scissor, face culling, depth test and viewport and
-      // defaults everything back into a default state.
-      // Make sure to either a.) save and restore or b.) reset your own state
-      // after rendering the UI.
-      nk_glfw3_render(NK_ANTI_ALIASING_OFF, MAX_VERTEX_BUFFER,
-                      MAX_ELEMENT_BUFFER);
-      glfwSwapBuffers(win);
-    }
-    nk_glfw3_shutdown();
-    glfwTerminate();
+    corewar_gui(&cpu);
   } else {
     while (cpu.active && cpu.processes) {
-      if (f_verbose) {
+      if (f_verbose == 42) {
         printf("It is now cycle %zu\n", cpu.clock + 1);
       }
       if (f_dump && cpu.clock == dump_cycles) {
@@ -784,8 +750,5 @@ int main(int argc, char *argv[]) {
   }
   if (f_leaks)
     pause();
-  if (f_file)
-    free(filename);
-  // dump_state(&cpu);
   return 0;
 }

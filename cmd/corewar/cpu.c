@@ -64,7 +64,7 @@ static int execute_instruction(struct s_cpu *cpu) {
       CASE_INSTRUCTION(lfork);
       CASE_INSTRUCTION(aff);
     default:
-      if (f_verbose >= 9)
+      if (f_verbose >= 9 && f_verbose != 42)
         puts("NOP: instruction not implemented yet");
       if (cpu->processes->pc >= cpu->program_length)
         cpu->processes->pc = 0;
@@ -75,7 +75,7 @@ static int execute_instruction(struct s_cpu *cpu) {
       break;
     }
   }
-  if (f_verbose >= 6)
+  if (f_verbose >= 6 && f_verbose != 42)
     printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
            "pc(%4d) ins_time(%4d) EXEC_INS end --\n",
            cpu->clock, cpu->processes->pid, cpu->processes->carry,
@@ -95,19 +95,22 @@ bool valid_header_p(header_t $header) {
 
 // Check for living processes
 static void check_alive(struct s_cpu *cpu) {
-  do {
-    if (cpu->processes == NULL)
-      break;
+  struct s_process *proc;
+
+  proc = cpu->processes;
+  while (cpu->processes != NULL) {
+    // if (cpu->processes == NULL)
+    //   break;
     if (cpu->clock - cpu->processes->last_live < (unsigned)cpu->cycle_to_die) {
       cpu->processes = cpu->processes->next;
     } else {
-      if (cpu->processes->next == NULL)
+      if (cpu->active == 1)
         cpu->winner = -(*cpu->processes->registers);
+      // tmp = cpu->processes->next;
       cpu->kill_process(cpu);
-      if (cpu->processes)
-        cpu->processes = cpu->processes->next;
+      // cpu->processes = tmp;
     }
-  } while (cpu->processes != cpu->first);
+  }
   cpu->prev_check = cpu->clock;
   cpu->num_checks++;
   if (NBR_LIVE < cpu->nbr_lives || cpu->num_checks == MAX_CHECKS) {
@@ -126,14 +129,15 @@ static int step(struct s_cpu *cpu) {
   ii = cpu->first->pid;
   while (cpu->processes != 0) {
     done = execute_instruction(cpu);
-    if (f_verbose >= 3)
+    if (f_verbose >= 4 && f_verbose != 42)
       printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
              "pc(%4d) ins_time(%4d) prev_time(%4d) CPU_STEP loop\n",
              cpu->clock, cpu->processes->pid, cpu->processes->carry,
              cpu->processes->last_live, cpu->processes->pc,
              cpu->processes->instruction_time, cpu->processes->prev_time);
     if (cpu->processes->pid > ii) {
-      printf("DBG: pid(%d) != ii(%d) CPU_STEP loop\n", cpu->processes->pid, ii);
+      if (f_verbose >= 5 && f_verbose != 42)
+        printf("DBG: pid(%d) != ii(%d) CPU_STEP loop\n", cpu->processes->pid, ii);
     }
     --ii;
     cpu->processes = cpu->processes->next;
@@ -142,8 +146,6 @@ static int step(struct s_cpu *cpu) {
   if ((unsigned)cpu->cycle_to_die <= cpu->clock - cpu->prev_check)
     check_alive(cpu);
   cpu->clock += 1;
-  if (f_verbose >= 3)
-    printf("-------------------------------------------------------------\n");
   return done;
 }
 
@@ -151,13 +153,13 @@ static int step(struct s_cpu *cpu) {
 // space for a few new processes.
 static void spawn_process(struct s_cpu *cpu, int pc, int r1) {
   struct s_process *done = malloc(sizeof(*done));
-  if (f_verbose >= 3)
+  if (f_verbose >= 3 && f_verbose != 42)
     printf("DBG: start SPAWN_PROC\n");
   done->carry = 0;
   done->pc = pc;
   done->pid = cpu->active + 1;
   done->prev_time = -1;
-  if (f_verbose >= 3)
+  if (f_verbose >= 3 && f_verbose != 42)
     printf("DBG: pc(%4d) op(%02x) SPAWN_PROC\n", pc,
            cpu->program[pc % MEM_SIZE]);
   done->opcode = cpu->program[pc % MEM_SIZE];
@@ -165,8 +167,8 @@ static void spawn_process(struct s_cpu *cpu, int pc, int r1) {
     done->instruction_time = g_op_tab[done->opcode - 1].cycles_to_exec;
   else
     done->instruction_time = 1;
-  done->last_live = 0;
-  if (f_verbose >= 3)
+  done->last_live = cpu->processes ? cpu->processes->last_live : 0;
+  if (f_verbose >= 3 && f_verbose != 42)
     fprintf(stderr,
             "DBG: clock(%5zu) pid(%d) ins_time(%4d) op(0x%02x) SPAWN_PROC\n",
             cpu->clock, done->pid, done->instruction_time, done->opcode);
@@ -180,7 +182,7 @@ static void spawn_process(struct s_cpu *cpu, int pc, int r1) {
     prepend_process(done, cpu);
   }
   cpu->active += 1;
-  if (f_verbose >= 3)
+  if (f_verbose >= 3 && f_verbose != 42)
     printf("DBG: clock(%5zu) pid(%5d) carry(%d) last_live(%5d) pc(%4d) "
            "ins_time(%4d) prv_time(%4d) SPAWN_PROC end\n",
            cpu->clock, cpu->processes->pid, cpu->processes->carry,
@@ -192,13 +194,13 @@ static void spawn_process(struct s_cpu *cpu, int pc, int r1) {
 // delete_process deletes the current process and sets the current process to
 // the previous process.
 static void delete_process(struct s_cpu *cpu) {
-  if (f_verbose >= 2)
+  if (f_verbose >= 2 && f_verbose != 42)
     printf("DBG: pid(%d) num_checks(%d) num_lives(%d) prev_check(%d) "
            "DELET_PROC start\n",
            cpu->processes ? cpu->processes->pid : -1, cpu->num_checks,
            cpu->nbr_lives, cpu->prev_check);
   if (!cpu || !cpu->processes) {
-    if (f_verbose >= 2)
+    if (f_verbose >= 2 && f_verbose != 42)
       fprintf(stderr, "ERROR: cpu or cpu->processes NULL in delete_process\n");
     return;
   }
@@ -216,7 +218,7 @@ static void delete_process(struct s_cpu *cpu) {
 // load loads a PROGRAM of length LENGTH into memory address ADDRESS.
 static void load(struct s_cpu *cpu, char *program, uint32_t length,
                  uint32_t address) {
-  if (f_verbose >= 2)
+  if (f_verbose >= 2 && f_verbose != 42)
     printf("DBG: length(%d) address(%d) LOAD start\n", length, address);
   for (uint32_t i = 0; i < length; i++) {
     cpu->program[i + address] = (uint8_t)program[i];

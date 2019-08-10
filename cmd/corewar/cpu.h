@@ -64,7 +64,6 @@ struct s_cpu {
 /* VM Command Line Flags */
 int f_color;          /* enable color in core dump */
 int f_dump;           /* dump core memory after ARG cycles */
-int f_file;           /* input file */
 int f_leaks;          /* call 'pause()' at the end of main */
 int f_dump_processes; /* dump processes */
 int f_gui;            /* graphical visualizer of vm */
