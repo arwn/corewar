@@ -176,7 +176,7 @@ extern char g_mem_tab[4096];
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
   if (nk_begin(ctx, "debug", nk_rect(40, 400, 1150, 800),
                NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
-                    NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
+                   NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
     char buf[44];
     struct nk_color p1c; // red color for current player 1 instruction
     struct nk_color p2c; // green color for current player 2 instruction
@@ -463,7 +463,7 @@ static void dump_process(struct s_process *proc, int num) {
   printf("-- [ PROCESS   %02d ] --\n", num);
   printf("proc(%d)->pc(%d)\n", proc->pid, proc->pc);
   printf("proc(%d)->last_live(%d)\n", proc->pid, proc->last_live);
-  printf("proc(%d)->carry(%d)\n",proc->pid, proc->carry);
+  printf("proc(%d)->carry(%d)\n", proc->pid, proc->carry);
   for (int i = 0; i < 16; i++) {
     printf("proc(%d)->r%02d(%08x)\n", proc->pid, i, proc->registers[i]);
   }
@@ -526,9 +526,10 @@ static void vm_dump_core(struct s_cpu *cpu) {
   register int ii, jj, kk;
   int max = MEM_SIZE >> 6;
 
-  printf("-= [ CORE DUMP ] =-\n");
-  printf("cpu->active(%d)\n", cpu->active);
-  printf("cpu->clock(%zu)\n", cpu->clock);
+  printf("-= [ CORE DUMP ] =-\n"
+         "cpu->active(%d)\n"
+         "cpu->clock(%zu)\n",
+         cpu->active, cpu->clock);
   for (ii = 0; ii < max; ii++) {
     for (kk = 0; kk < 64; ++kk) {
       if (cpu->program[(ii << 6) + kk] != 0x00)
@@ -569,23 +570,23 @@ static void usage(const char *msg, const char *ext) {
     fprintf(stderr, "%s%s\n", msg, ext);
   else if (msg)
     fprintf(stderr, "%s\n", msg);
-  fprintf(stderr, "Usage: corewar [OPTION]... FILE...\n");
-  fprintf(stderr, "Try 'corewar -h' for more information.\n");
+  fprintf(stderr, "Usage: corewar [OPTION]... FILE...\n"
+                  "Try 'corewar -h' for more information.\n");
   exit(1);
 }
 
 static void usage_help(void) {
-  fprintf(stderr, "Usage: corewar [OPTION]... FILE...\n");
-  fprintf(stderr, "Run each file in the Corewar virtual machine\n");
-  fprintf(stderr, "Example: corewar -v 0 champ.cor zork.cor\n\n");
-  fprintf(stderr, "Options:\n");
-  fprintf(stderr, "  -c\t\tenable color in core dump\n");
-  fprintf(stderr, "  -d\t\tdump core memory after NUM cycles\n");
-  fprintf(stderr, "  -h\t\tdisplay this help output\n");
-  fprintf(stderr, "  -l\t\tcall 'pause()' at the end of main\n");
-  fprintf(stderr, "  -p\t\tdump processes when dumping core\n");
-  fprintf(stderr, "  -r\t\tdisable graphical visualizer of vm\n");
-  fprintf(stderr, "  -v\t\tverbosity level\n"
+  fprintf(stderr, "Usage: corewar [OPTION]... FILE...\n"
+                  "Run each file in the Corewar virtual machine\n"
+                  "Example: corewar -v 0 champ.cor zork.cor\n\n"
+                  "Options:\n"
+                  "  -c\t\tenable color in core dump\n"
+                  "  -d\t\tdump core memory after NUM cycles\n"
+                  "  -h\t\tdisplay this help output\n"
+                  "  -l\t\tcall 'pause()' at the end of main\n"
+                  "  -p\t\tdump processes when dumping core\n"
+                  "  -r\t\tdisable graphical visualizer of vm\n"
+                  "  -v\t\tverbosity level\n"
                   "\t\t\t 0 - minimal output\n"
                   "\t\t\t 1 - live calls\n"
                   "\t\t\t 2 - current cycle\n"
@@ -688,7 +689,10 @@ int main(int argc, char *argv[]) {
       break;
     case 'd':
       f_dump = 1;
-      dump_cycles = atoi(optarg);
+      if (optarg && ISDIGIT(*optarg))
+        dump_cycles = atoi(optarg);
+      else
+        usage("corewar: invalid \'-d\' argument: ", optarg);
       break;
     case 'h':
       usage_help();
@@ -703,14 +707,14 @@ int main(int argc, char *argv[]) {
       f_gui = 0;
       break;
     case 'v':
-      f_verbose = atoi(optarg);
-      break;
-    case ':':
-      usage("./corewar: requires argument -- ", optarg);
+      if (optarg && ISDIGIT(*optarg))
+        f_verbose = atoi(optarg);
+      else
+        usage("corewar: invalid \'-v\' argument: ", optarg);
       break;
     case '?':
     default:
-      usage("default", 0);
+      usage(0, 0);
       break;
     }
   }
@@ -731,13 +735,14 @@ int main(int argc, char *argv[]) {
     return 56;
 
   // load in .cor files
-  printf("Introducing contestants...\n");
   while (ii < argc) {
     f = fopen(*argv, "r");
     if (f == NULL) {
-      perror("Fatal error: couldn't open file");
+      perror("Fatal error");
       return 1;
     }
+    if (ii == 0)
+      printf("Introducing contestants...\n");
     load_file(&cpu, f, offsets[argc - 1][ii], ii + 1);
     if (fclose(f) != 0)
       return 1;
