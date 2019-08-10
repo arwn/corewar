@@ -174,7 +174,7 @@ char *g_bytes_lower[256] = {
 extern char g_mem_tab[4096];
 // win_debug displays the program and buttons to step through.
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
-  if (nk_begin(ctx, "debug", nk_rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - 20),
+  if (nk_begin(ctx, "debug", nk_rect(40, 400, 1150, 800),
                NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
                     NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
     char buf[44];
@@ -255,8 +255,7 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     // print the program
     for (register int i = 0; i < MEM_SIZE; i++) {
       if (i % 64 == 0)
-        nk_layout_row_dynamic(ctx, 15, 64);
-      // nk_layout_row_static(ctx, 15, 16, 64);
+        nk_layout_row_static(ctx, 7, 13, 64);
 
       buf[0] = g_bytes_upper[cpu->program[i]][0];
       buf[1] = g_bytes_upper[cpu->program[i]][1];
