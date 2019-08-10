@@ -6,8 +6,6 @@ COREWAR:
   Seg fault with 4 players in GUI
     -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
     breaks around cycle 1500
-  No winner output with disabled gui
-    -- `./corewar -r Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
     has no output after introducing players
   Fix fork/lfork -- process calling fork and sometimes adjacent processes
                     incorrectly set instruction_time after forking
@@ -21,5 +19,7 @@ DONE:
     Fix zjmp -- negative offset
     Check invalid header
     Load champions eqidistant from each other
+    No winner output with disabled gui
+    -- `./corewar -r Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
       WONTFIX:
       Error check too small champ

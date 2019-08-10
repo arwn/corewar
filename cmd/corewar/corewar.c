@@ -53,37 +53,48 @@ bool running = 0;
 
 char winbuf[64] = "none";
 
+#define C_BLACK nk_rgba(0, 0, 0, 255)
+#define C_WHITE nk_rgba(255, 255, 255, 255)
+#define C_GREY nk_rgba(238, 238, 238, 255)
+#define C_LIGHTGREY nk_rgba(245, 245, 245, 255)
+#define C_YELLOW nk_rgba(255, 255, 234, 255)
+#define C_DARKYELLOW nk_rgba(153, 153, 76, 255)
+#define C_LIGHTBLUE nk_rgba(224, 235, 245, 255)
+#define C_BLUE nk_rgba(85, 170, 170, 255)
+#define C_GREEN nk_rgba(68, 136, 68, 255)
+#define C_CLEAR nk_rgba(0, 0, 0, 0)
+
 // set_color sets the colorscheme. it should only be called once.
 static void set_color(struct nk_context *ctx) {
   struct nk_color table[NK_COLOR_COUNT];
-  table[NK_COLOR_TEXT] = nk_rgba(210, 210, 210, 255);
-  table[NK_COLOR_WINDOW] = nk_rgba(57, 67, 71, 215);
-  table[NK_COLOR_HEADER] = nk_rgba(51, 51, 56, 220);
-  table[NK_COLOR_BORDER] = nk_rgba(46, 46, 46, 255);
-  table[NK_COLOR_BUTTON] = nk_rgba(48, 83, 111, 255);
-  table[NK_COLOR_BUTTON_HOVER] = nk_rgba(58, 93, 121, 255);
-  table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(63, 98, 126, 255);
-  table[NK_COLOR_TOGGLE] = nk_rgba(50, 58, 61, 255);
-  table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(45, 53, 56, 255);
-  table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(48, 83, 111, 255);
-  table[NK_COLOR_SELECT] = nk_rgba(57, 67, 61, 255);
-  table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(48, 83, 111, 255);
-  table[NK_COLOR_SLIDER] = nk_rgba(50, 58, 61, 255);
-  table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(48, 83, 111, 245);
-  table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(53, 88, 116, 255);
-  table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(58, 93, 121, 255);
-  table[NK_COLOR_PROPERTY] = nk_rgba(50, 58, 61, 255);
-  table[NK_COLOR_EDIT] = nk_rgba(50, 58, 61, 225);
-  table[NK_COLOR_EDIT_CURSOR] = nk_rgba(210, 210, 210, 255);
-  table[NK_COLOR_COMBO] = nk_rgba(50, 58, 61, 255);
-  table[NK_COLOR_CHART] = nk_rgba(50, 58, 61, 255);
-  table[NK_COLOR_CHART_COLOR] = nk_rgba(48, 83, 111, 255);
-  table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba(255, 0, 0, 255);
-  table[NK_COLOR_SCROLLBAR] = nk_rgba(50, 58, 61, 255);
-  table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(48, 83, 111, 255);
-  table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(53, 88, 116, 255);
-  table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(58, 93, 121, 255);
-  table[NK_COLOR_TAB_HEADER] = nk_rgba(48, 83, 111, 255);
+  table[NK_COLOR_TEXT] = C_BLACK;
+  table[NK_COLOR_WINDOW] = C_WHITE;
+  table[NK_COLOR_HEADER] = C_LIGHTBLUE;
+  table[NK_COLOR_BORDER] = C_GREY;
+  table[NK_COLOR_BUTTON] = C_LIGHTGREY;
+  table[NK_COLOR_BUTTON_HOVER] = C_GREY;
+  table[NK_COLOR_BUTTON_ACTIVE] = C_GREY;
+  table[NK_COLOR_TOGGLE] = C_GREY;
+  table[NK_COLOR_TOGGLE_HOVER] = C_GREY;
+  table[NK_COLOR_TOGGLE_CURSOR] = C_GREY;
+  table[NK_COLOR_SELECT] = C_GREY;
+  table[NK_COLOR_SELECT_ACTIVE] = C_GREY;
+  table[NK_COLOR_SLIDER] = C_GREY;
+  table[NK_COLOR_SLIDER_CURSOR] = C_GREY;
+  table[NK_COLOR_SLIDER_CURSOR_HOVER] = C_GREY;
+  table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = C_GREY;
+  table[NK_COLOR_PROPERTY] = C_GREY;
+  table[NK_COLOR_EDIT] = C_GREY;
+  table[NK_COLOR_EDIT_CURSOR] = C_BLUE;
+  table[NK_COLOR_COMBO] = C_GREY;
+  table[NK_COLOR_CHART] = C_GREY;
+  table[NK_COLOR_CHART_COLOR] = C_GREEN;
+  table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = C_GREEN;
+  table[NK_COLOR_SCROLLBAR] = C_GREY;
+  table[NK_COLOR_SCROLLBAR_CURSOR] = C_GREY;
+  table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = C_GREY;
+  table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = C_GREY;
+  table[NK_COLOR_TAB_HEADER] = C_GREEN;
   nk_style_from_table(ctx, table);
 }
 
@@ -97,9 +108,9 @@ static void win_graph(struct nk_context *ctx, struct s_cpu *cpu) {
                              "or",   "xor",  "zjmp",  "ldi", "sti", "fork",
                              "lld",  "lldi", "lfork", "aff"};
     nk_layout_row_dynamic(ctx, 150, 1);
-    nk_chart_begin(ctx, NK_CHART_COLUMN, NK_LEN(instruction_calls), 0, INT_MAX);
+    nk_chart_begin(ctx, NK_CHART_COLUMN, NK_LEN(instruction_calls), 0, 128);
     for (unsigned long i = 0; i < NK_LEN(instruction_calls); i++) {
-      nk_chart_push(ctx, instruction_calls[i]);
+      nk_chart_push(ctx, instruction_calls[i] % 128);
     }
     nk_chart_end(ctx);
     nk_layout_row_dynamic(ctx, 20, 17);
@@ -747,6 +758,7 @@ int main(int argc, char *argv[]) {
     while (cpu.active != 0 && cpu.processes != NULL) {
       cpu.kill_process(&cpu);
     }
+    printf("Winner is player %d\n", abs(cpu.winner));
   }
   if (f_leaks)
     pause();
