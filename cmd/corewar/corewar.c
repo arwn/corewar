@@ -62,6 +62,7 @@ char winbuf[64] = "none";
 #define C_LIGHTBLUE nk_rgba(224, 235, 245, 255)
 #define C_BLUE nk_rgba(85, 170, 170, 255)
 #define C_GREEN nk_rgba(68, 136, 68, 255)
+#define C_LIGHTGREEN nk_rgba(234, 255, 234, 255)
 #define C_CLEAR nk_rgba(0, 0, 0, 0)
 
 // set_color sets the colorscheme. it should only be called once.
@@ -91,9 +92,9 @@ static void set_color(struct nk_context *ctx) {
   table[NK_COLOR_CHART_COLOR] = C_GREEN;
   table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = C_GREEN;
   table[NK_COLOR_SCROLLBAR] = C_GREY;
-  table[NK_COLOR_SCROLLBAR_CURSOR] = C_GREY;
-  table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = C_GREY;
-  table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = C_GREY;
+  table[NK_COLOR_SCROLLBAR_CURSOR] = C_BLUE;
+  table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = C_BLUE;
+  table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = C_BLUE;
   table[NK_COLOR_TAB_HEADER] = C_GREEN;
   nk_style_from_table(ctx, table);
 }
@@ -173,9 +174,9 @@ char *g_bytes_lower[256] = {
 extern char g_mem_tab[4096];
 // win_debug displays the program and buttons to step through.
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
-  if (nk_begin(ctx, "debug", nk_rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT),
+  if (nk_begin(ctx, "debug", nk_rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT - 20),
                NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
-                   NK_WINDOW_TITLE)) {
+                    NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
     char buf[44];
     struct nk_color p1c; // red color for current player 1 instruction
     struct nk_color p2c; // green color for current player 2 instruction
