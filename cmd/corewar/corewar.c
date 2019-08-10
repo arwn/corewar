@@ -215,12 +215,12 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       running = !running;
       glfwSetTime(1);
     }
-    // static int slider = 2;
-    // nk_slider_int(ctx, 2, &slider, 9, 1);
+    static int slider = 2;
+    nk_slider_int(ctx, 2, &slider, 9, 1);
 
-    // double trash;
-    // double time = modf(glfwGetTime(), &trash);
-    // time *= 100;
+    double trash;
+    double time = modf(glfwGetTime(), &trash);
+    time *= 100;
     if (cpu->processes != 0 &&
         running) { // && (int)time % (10 - slider) == 0) {
       cpu->step(cpu);
