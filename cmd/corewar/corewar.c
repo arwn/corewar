@@ -215,13 +215,14 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       running = !running;
       glfwSetTime(1);
     }
-    static int slider = 2;
-    nk_slider_int(ctx, 2, &slider, 9, 1);
+    // static int slider = 2;
+    // nk_slider_int(ctx, 2, &slider, 9, 1);
 
-    double trash;
-    double time = modf(glfwGetTime(), &trash);
-    time *= 100;
-    if (cpu->processes != 0 && running && (int)time % (10 - slider) == 0) {
+    // double trash;
+    // double time = modf(glfwGetTime(), &trash);
+    // time *= 100;
+    if (cpu->processes != 0 &&
+        running) { // && (int)time % (10 - slider) == 0) {
       cpu->step(cpu);
     }
     snprintf(winbuf, sizeof(winbuf), "Winner: %d", cpu->winner);
@@ -268,11 +269,21 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       }
       if (hd != NULL && hd->pc == i) {
         switch (*hd->registers) {
-          case -1:nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);break;
-          case -2:nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);break;
-          case -3:nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);break;
-          case -4:nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);break;
-          default:nk_label(ctx, buf, NK_TEXT_LEFT);break;
+        case -1:
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);
+          break;
+        case -2:
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);
+          break;
+        case -3:
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);
+          break;
+        case -4:
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
+          break;
+        default:
+          nk_label(ctx, buf, NK_TEXT_LEFT);
+          break;
         }
       } else
         nk_label(ctx, buf, NK_TEXT_LEFT);
@@ -449,12 +460,12 @@ static void error_callback(int e, const char *d) {
 }
 
 static void dump_process(struct s_process *proc, int num) {
-  printf("-- [ PROCESS %02d ] --\n", num);
-  printf("pc(%d)\n", proc->pc);
-  printf("last_live(%d)\n", proc->last_live);
-  printf("carry(%d)\n", proc->carry);
+  printf("-- [ PROCESS   %02d ] --\n", num);
+  printf("proc(%d)->pc(%d)\n", proc->pid, proc->pc);
+  printf("proc(%d)->last_live(%d)\n", proc->pid, proc->last_live);
+  printf("proc(%d)->carry(%d)\n",proc->pid, proc->carry);
   for (int i = 0; i < 16; i++) {
-    printf("r%02d(%08x)\n", i, proc->registers[i]);
+    printf("proc(%d)->r%02d(%08x)\n", proc->pid, i, proc->registers[i]);
   }
 }
 
@@ -490,21 +501,21 @@ static void vm_dump_byte(struct s_cpu *cpu, int idx, int space) {
       cur = cur->next;
     }
     if (g_mem_tab[idx] && cur == 0) {
-        switch (g_mem_tab[idx]) {
-        case 1:
-          printf("\e[31m");
-          break;
-        case 2:
-          printf("\e[32m");
-          break;
-        case 3:
-          printf("\e[34m");
-          break;
-        case 4:
-          printf("\e[35m");
-          break;
-        }
+      switch (g_mem_tab[idx]) {
+      case 1:
+        printf("\e[31m");
+        break;
+      case 2:
+        printf("\e[32m");
+        break;
+      case 3:
+        printf("\e[34m");
+        break;
+      case 4:
+        printf("\e[35m");
+        break;
       }
+    }
   }
   printf("%s", buf);
   if (f_color)
@@ -515,11 +526,9 @@ static void vm_dump_core(struct s_cpu *cpu) {
   register int ii, jj, kk;
   int max = MEM_SIZE >> 6;
 
-  if (f_verbose >= 3 && f_verbose != 42) {
-    printf("-- [ CORE DUMP START ] --\n");
-    printf("cpu->active(%d)\n", cpu->active);
-    printf("cpu->clock(%zu)\n", cpu->clock);
-  }
+  printf("-= [ CORE DUMP ] =-\n");
+  printf("cpu->active(%d)\n", cpu->active);
+  printf("cpu->clock(%zu)\n", cpu->clock);
   for (ii = 0; ii < max; ii++) {
     for (kk = 0; kk < 64; ++kk) {
       if (cpu->program[(ii << 6) + kk] != 0x00)
@@ -533,20 +542,18 @@ static void vm_dump_core(struct s_cpu *cpu) {
       printf("\n");
     }
   }
-  if (f_verbose >= 3 && f_verbose != 42)
-    printf("-- [ CORE DUMP END ] --\n");
 }
 
 void vm_dump_processes(struct s_cpu *cpu) {
-  printf("-- [ PROCESSES START ] --\n");
   struct s_process *cur = cpu->first;
   int n = 0;
-  do {
+
+  printf("-= [ PROCESS DUMP ] =-\n");
+  while (cur != 0) {
     dump_process(cur, n);
     cur = cur->next;
     ++n;
-  } while (cur != cpu->first);
-  printf("-- [ PROCESSES END ] --\n");
+  }
 }
 
 void vm_dump_state(struct s_cpu *cpu) {
@@ -555,17 +562,22 @@ void vm_dump_state(struct s_cpu *cpu) {
   if (f_dump)
     vm_dump_core(cpu);
 }
+
 char *bin;
-static void usage(void) {
-  fprintf(stderr, "Usage: %s [OPTION]... FILE...\n", bin);
-  fprintf(stderr, "Try '%s -h' for more information.\n", bin);
+static void usage(const char *msg, const char *ext) {
+  if (msg && ext)
+    fprintf(stderr, "%s%s\n", msg, ext);
+  else if (msg)
+    fprintf(stderr, "%s\n", msg);
+  fprintf(stderr, "Usage: corewar [OPTION]... FILE...\n");
+  fprintf(stderr, "Try 'corewar -h' for more information.\n");
   exit(1);
 }
 
 static void usage_help(void) {
-  fprintf(stderr, "Usage: %s [OPTION]... FILE...\n", bin);
+  fprintf(stderr, "Usage: corewar [OPTION]... FILE...\n");
   fprintf(stderr, "Run each file in the Corewar virtual machine\n");
-  fprintf(stderr, "Example: %s -d 700 zork.cor bigzork.cor\n\n", bin);
+  fprintf(stderr, "Example: corewar -v 0 champ.cor zork.cor\n\n");
   fprintf(stderr, "Options:\n");
   fprintf(stderr, "  -c\t\tenable color in core dump\n");
   fprintf(stderr, "  -d\t\tdump core memory after NUM cycles\n");
@@ -574,18 +586,16 @@ static void usage_help(void) {
   fprintf(stderr, "  -p\t\tdump processes when dumping core\n");
   fprintf(stderr, "  -r\t\tdisable graphical visualizer of vm\n");
   fprintf(stderr, "  -v\t\tverbosity level\n"
-                  "\t\t\t0 = minimal output\n"
-                  "\t\t\t1 = executed instruction\n"
-                  "\t\t\t2 = detailed execution state\n"
-                  "\t\t\t3 = current cycle\n");
+                  "\t\t\t 0 - minimal output\n"
+                  "\t\t\t 1 - live calls\n"
+                  "\t\t\t 2 - current cycle\n"
+                  "\t\t\t 4 - current instruction\n"
+                  "\t\t\t 8 - process removal/death\n"
+                  "\t\t\t16 - current program counter value\n"
+                  "\t\t\t32 - instruction execution debug output\n"
+                  "\t\t\t64 - internal vm debug output\n");
   exit(0);
 }
-
-#define USAGE_ERR(X)                                                           \
-  do {                                                                         \
-    fprintf(stderr, "USAGE: call to usage() at %s:%d\n", __FILE__, __LINE__);  \
-    usage();                                                                   \
-  } while (0)
 
 static void corewar_gui(struct s_cpu *cpu) {
   // Platform
@@ -695,14 +705,12 @@ int main(int argc, char *argv[]) {
     case 'v':
       f_verbose = atoi(optarg);
       break;
-    case '?':
-      USAGE_ERR(0);
-      break;
     case ':':
-      USAGE_ERR(0);
+      usage("./corewar: requires argument -- ", optarg);
       break;
+    case '?':
     default:
-      USAGE_ERR(0);
+      usage("default", 0);
       break;
     }
   }
@@ -713,7 +721,7 @@ int main(int argc, char *argv[]) {
   cpu = new_cpu();
 
   // table for determining the offset based on number of players
-  int binkus[4][4] = {
+  int offsets[4][4] = {
       {OFFSET_1P_P1, 0, 0, 0},
       {OFFSET_2P_P1, OFFSET_2P_P2, 0, 0},
       {OFFSET_3P_P1, OFFSET_3P_P2, OFFSET_3P_P3, 0},
@@ -727,10 +735,10 @@ int main(int argc, char *argv[]) {
   while (ii < argc) {
     f = fopen(*argv, "r");
     if (f == NULL) {
-      perror("Fatal error");
+      perror("Fatal error: couldn't open file");
       return 1;
     }
-    load_file(&cpu, f, binkus[argc - 1][ii], ii + 1);
+    load_file(&cpu, f, offsets[argc - 1][ii], ii + 1);
     if (fclose(f) != 0)
       return 1;
     ++ii;
@@ -738,7 +746,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (cpu.processes == 0 && f_gui == false) {
-    USAGE_ERR(0);
+    usage(0, 0);
   }
 
   // GUI stuff
@@ -746,7 +754,7 @@ int main(int argc, char *argv[]) {
     corewar_gui(&cpu);
   } else {
     while (cpu.active && cpu.processes) {
-      if (f_verbose == 42) {
+      if (f_verbose & OPT_CYCLES) {
         printf("It is now cycle %zu\n", cpu.clock + 1);
       }
       if (f_dump && cpu.clock == dump_cycles) {
@@ -755,10 +763,13 @@ int main(int argc, char *argv[]) {
       }
       cpu.step(&cpu);
     }
+    if (cpu.winner != 0 && cpu.processes == NULL)
+      printf("Winner is player %d, \"%s\"\n", cpu.winner, h.prog_name);
+    else if (cpu.processes == NULL)
+      printf("Stalemate.\n");
     while (cpu.active != 0 && cpu.processes != NULL) {
       cpu.kill_process(&cpu);
     }
-    printf("Winner is player %d\n", abs(cpu.winner));
   }
   if (f_leaks)
     pause();

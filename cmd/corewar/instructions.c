@@ -85,7 +85,7 @@ void print_adv(struct s_cpu *cpu, int len, int initial_pc) {
 // next goes to the next instruction and sets the execution time.
 void next(struct s_cpu *cpu) {
   if (!cpu || !cpu->processes) {
-    if (f_verbose >= 2 && f_verbose != 42)
+    if (f_verbose & OPT_INTLDBG)
       fprintf(stderr, "ERROR: cpu or cpu->processes NULL in next()\n");
     return;
   }
@@ -99,11 +99,11 @@ void next(struct s_cpu *cpu) {
     cpu->processes->instruction_time =
         g_op_tab[instruction - 1].cycles_to_exec - 1;
   } else {
-    if (f_verbose >= 4 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_DBGOUT))
       puts("NOP: next instruction is an error");
     cpu->processes->instruction_time = 0;
   }
-  if (f_verbose >= 3 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: clock(%zu) pid(%d) carry(%d) last_live(%d) pc(%d) "
            "ins_time(%d) ins(%02x) NEXT end\n",
            cpu->clock, cpu->processes->pid, cpu->processes->carry,
@@ -115,7 +115,7 @@ void next(struct s_cpu *cpu) {
 
 // Write VAL into MEM[IDX]
 void write_mem_ins(uint8_t *mem, uint32_t idx, uint32_t val) {
-  if (f_verbose >= 5 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: write_mem_ins idx(%08x) val(%08x)\n", idx, val);
   mem[idx % MEM_SIZE] = (val >> 24) & 0xff;
   mem[(idx + 1) % MEM_SIZE] = (val >> 16) & 0xff;
@@ -125,7 +125,7 @@ void write_mem_ins(uint8_t *mem, uint32_t idx, uint32_t val) {
 
 // Write VAL into register REG for the current process in CPU
 void write_reg(struct s_cpu *cpu, uint32_t reg, uint32_t val) {
-  if (f_verbose >= 5 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: write_reg reg(%08x) val(%08x) lav(%08x)\n", reg, val,
            ntohl(val));
   if (reg > 0 && reg <= REG_NUMBER)
@@ -136,7 +136,7 @@ void write_reg(struct s_cpu *cpu, uint32_t reg, uint32_t val) {
 int read_reg(struct s_cpu *cpu, uint32_t reg) {
   if (reg > 0 && reg <= REG_NUMBER) {
     int ret = cpu->processes->registers[reg - 1];
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_reg reg(%08x) ger(%08x)\n", ret, ntohl(ret));
     return ntohl(ret);
   }
@@ -149,28 +149,28 @@ int read_val(struct s_cpu *cpu, int arg) {
   int val = 0;
   int idx;
 
-  if (f_verbose >= 5 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: read_val arg(%d) pc(%d)\n", arg, cpu->processes->pc);
   if (arg == REG_CODE) {
     val = read_mem_byte(cpu->program, cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val reg val(%08x)\n", val);
     cpu->processes->pc += 1;
   } else if (arg == DIR_CODE) {
     val = read_mem_long(cpu->program, cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val dir val(%08x)\n", val);
     cpu->processes->pc += 4;
   } else if (arg == IND_CODE) {
     idx = read_mem_word(cpu->program, cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val ind idx(%04x)\n", idx);
     val = read_mem_long(cpu->program, idx + cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val ind val(%08x)\n", val);
     cpu->processes->pc += 2;
   }
-  if (f_verbose >= 5 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: read_val end pc(%d)\n", cpu->processes->pc);
   return (val);
 }
@@ -191,14 +191,14 @@ int read_val_idx(struct s_cpu *cpu, int arg, int op) {
   int val = 0;
   int idx;
 
-  if (f_verbose >= 5 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: read_val_idx arg(%d) pc(%d)\n", arg, cpu->processes->pc);
   if (arg == REG_CODE) {
     reg = read_mem_byte(cpu->program, cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_idx REG reg(%02x)\n", reg);
     val = read_reg(cpu, reg);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_idx REG val(%08x)\n", val);
     cpu->processes->pc += 1;
   } else if (arg == DIR_CODE) {
@@ -206,7 +206,7 @@ int read_val_idx(struct s_cpu *cpu, int arg, int op) {
       val = read_mem_word(cpu->program, cpu->processes->pc);
     else
       val = read_mem_long(cpu->program, cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42) {
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG)) {
       if (g_op_tab[op - 1].direct_size)
         printf("DBG: read_val_idx DIR val(%04x)\n", val);
       else
@@ -215,16 +215,16 @@ int read_val_idx(struct s_cpu *cpu, int arg, int op) {
     cpu->processes->pc += (g_op_tab[op - 1].direct_size ? 2 : 4);
   } else if (arg == IND_CODE) {
     idx = read_mem_word(cpu->program, cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_idx IND idx(0x%04x)(%d)\n", idx, idx);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       dump_nbytes(cpu, 6, idx + cpu->processes->pc, 1);
     val = read_mem_long(cpu->program, idx + cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_idx IND val(0x%08x)(%d)\n", val, val);
     cpu->processes->pc += 2;
   }
-  if (f_verbose >= 5 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: read_val_idx end pc(%d)\n", cpu->processes->pc);
   return val;
 }
@@ -235,33 +235,33 @@ int read_val_load(struct s_cpu *cpu, int arg) {
   int val = 0;
   int idx;
 
-  if (f_verbose >= 5 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: read_val_load arg(%d) pc(%d)\n", arg, cpu->processes->pc);
-  if (f_verbose >= 5 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     dump_nbytes(cpu, 8, cpu->processes->pc, 1);
   if (arg == REG_CODE) {
     reg = read_mem_byte(cpu->program, cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_load REG reg(%02x)\n", reg);
     val = read_reg(cpu, reg);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_load REG val(%08x)\n", val);
     cpu->processes->pc += 1;
   } else if (arg == DIR_CODE) {
     val = read_mem_long(cpu->program, cpu->processes->pc);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_load DIR val(%08x)\n", val);
     cpu->processes->pc += 4;
   } else if (arg == IND_CODE) {
     idx = read_mem_word(cpu->program, cpu->processes->pc) & (IDX_MOD - 1);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_load IND idx(%08x)\n", idx);
     val = read_mem_long(cpu->program, cpu->processes->pc + idx - 2);
-    if (f_verbose >= 5 && f_verbose != 42)
+    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_load IND val(%08x)\n", val);
     cpu->processes->pc += 2;
   }
-  if (f_verbose >= 5 && f_verbose != 42)
+  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: read_val_load end pc(%d)\n", cpu->processes->pc);
   return val;
 }
@@ -273,7 +273,7 @@ int read_val_load(struct s_cpu *cpu, int arg) {
 int instruction_live(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_LIVE start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -287,15 +287,16 @@ int instruction_live(struct s_cpu *cpu) {
   int player = abs(name) - 1;
   if (player >= 0 && player <= 3) {
     cpu->lastlive[player] = cpu->clock;
-    cpu->winner = name;
+    cpu->winner = player + 1;
   }
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pc(%d) name(%08x) pid(%d) last_live(%d) nbr_lives(%d) "
            "INS_LIVE end\n",
            cpu->processes->pc, name, cpu->processes->pid,
            cpu->processes->last_live, cpu->nbr_lives);
-  if (f_verbose == 42) {
-    printf("P%5d | live %d\n", cpu->processes->pid, name);
+  if (f_verbose & OPT_INSTR)
+    printf("P %5d | live %d\n", cpu->processes->pid, name);
+  if (f_verbose & OPT_LIVES) {
     printf("Player %d (%s) is said to be alive\n", -name,
            h.prog_name); // TODO: get program name
     print_adv(cpu, cpu->processes->pc - pc, pc);
@@ -311,30 +312,28 @@ int instruction_live(struct s_cpu *cpu) {
 int instruction_ld(struct s_cpu *cpu) {
 
   int pc = cpu->processes->pc;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_LD start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
   int val;
-  if (f_verbose >= 4 && f_verbose != 42)
-    dump_nbytes(cpu, 10, pc, 1);
   cpu->processes->pc += 1;
   uint8_t par = cpu->program[cpu->processes->pc];
   cpu->processes->pc += 1;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pc(%d) INS_LD\n", cpu->processes->pc);
   val = read_val_load(cpu, get_param(par, 1));
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pc(%d) val(%08x) INS_LD\n", cpu->processes->pc, val);
   uint8_t reg = read_mem_byte(cpu->program, cpu->processes->pc);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pc(%d) reg(%02hhx) INS_LD\n", cpu->processes->pc, reg);
   write_reg(cpu, reg, val);
   mod_carry(cpu, (val == 0));
   cpu->processes->pc += 1;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pc(%d) INS_LD end\n", cpu->processes->pc);
-  if (f_verbose == 42) {
+  if (f_verbose & OPT_INSTR) {
     printf("P%5d | ld %d r%d\n", cpu->processes->pid, val, reg);
     print_adv(cpu, cpu->processes->pc - pc, pc);
     // puts("ld executed");
@@ -352,7 +351,7 @@ int instruction_st(struct s_cpu *cpu) {
   short v2;
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_ST start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -365,7 +364,7 @@ int instruction_st(struct s_cpu *cpu) {
   cpu->processes->pc += 1;
   r1 = read_val(cpu, get_param(par, 1));
   v1 = read_reg(cpu, r1);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pc(%d) mem(%02x) v1(%08x) INS_ST\n", cpu->processes->pc,
            cpu->program[cpu->processes->pc], v1);
   if (get_param(par, 2) == REG_CODE) {
@@ -375,15 +374,15 @@ int instruction_st(struct s_cpu *cpu) {
     write_reg(cpu, v2, v1);
     cpu->processes->pc += 1;
   } else {
-    if (f_verbose >= 4 && f_verbose != 42)
+    if (f_verbose & OPT_INTLDBG)
       dump_nbytes(cpu, 5, pc, 1);
     v2 = read_mem_word(cpu->program, cpu->processes->pc);
-    if (f_verbose >= 3 && f_verbose != 42)
+    if (f_verbose & OPT_INTLDBG)
       printf("DBG: ind(%04hx) idx(%d) INS_ST\n", v2, (pc + ((v2) % IDX_MOD)));
     write_mem_ins(cpu->program, pc + ((v2) % IDX_MOD), v1);
     cpu->processes->pc += 2;
   }
-  if (f_verbose == 42) {
+  if (f_verbose & OPT_INSTR) {
     printf("P%5d | st r%d ", cpu->processes->pid, r1);
     if (get_param(par, 2) == REG_CODE)
       printf("r%d\n", v2);
@@ -401,7 +400,7 @@ int instruction_st(struct s_cpu *cpu) {
 int instruction_add(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_ADD start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -413,7 +412,7 @@ int instruction_add(struct s_cpu *cpu) {
   int r3 = read_val(cpu, get_param(par, 3));
   int v1 = read_reg(cpu, r1);
   int v2 = read_reg(cpu, r2);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v1(%08x) v2(%08x) INS_ADD\n", v1, v2);
   write_reg(cpu, r3, v1 + v2);
   mod_carry(cpu, (v1 + v2) == 0);
@@ -429,7 +428,7 @@ int instruction_add(struct s_cpu *cpu) {
 int instruction_sub(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_SUB start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -441,7 +440,7 @@ int instruction_sub(struct s_cpu *cpu) {
   int r3 = read_val(cpu, get_param(par, 3));
   int v1 = read_reg(cpu, r1);
   int v2 = read_reg(cpu, r2);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v1(%08x) v2(%08x) INS_SUB\n", v1, v2);
   write_reg(cpu, r3, v1 - v2);
   mod_carry(cpu, (v1 - v2) == 0);
@@ -459,7 +458,7 @@ int instruction_sub(struct s_cpu *cpu) {
 int instruction_and(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_AND start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -491,13 +490,13 @@ int instruction_and(struct s_cpu *cpu) {
     cpu->processes->pc += 2;
   }
   int v3 = read_val(cpu, get_param(par, 3));
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v1(%08x) v2(%08x) v3(%08x) INS_AND\n", v1, v2, v3);
   write_reg(cpu, v3, v1 & v2);
   mod_carry(cpu, (v1 & v2) == 0);
   if (f_verbose >= 4 && f_verbose != 42)
     dump_nbytes(cpu, 9, cpu->processes->pc, 1);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pc(%d) INS_AND end\n", cpu->processes->pc);
   if (f_verbose == 42) {
     printf("P%5d | and ", cpu->processes->pid);
@@ -520,7 +519,7 @@ int instruction_and(struct s_cpu *cpu) {
 int instruction_or(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_OR start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -549,7 +548,7 @@ int instruction_or(struct s_cpu *cpu) {
                        v2 + cpu->processes->pc - 2 - (p1 == IND_CODE ? 2 : 0));
     cpu->processes->pc += 2;
   }
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v1(%08x) v2(%08x) INS_OR\n", v1, v2);
   write_reg(cpu, read_val(cpu, get_param(par, 3)), v1 | v2);
   mod_carry(cpu, (v1 | v2) == 0);
@@ -575,7 +574,7 @@ int instruction_or(struct s_cpu *cpu) {
 int instruction_xor(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_XOR start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -602,7 +601,7 @@ int instruction_xor(struct s_cpu *cpu) {
                        v2 + cpu->processes->pc - 2 - (p1 == IND_CODE ? 2 : 0));
     cpu->processes->pc += 2;
   }
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v1(%08x) v2(%08x) INS_XOR\n", v1, v2);
   write_reg(cpu, read_val(cpu, get_param(par, 3)), v1 ^ v2);
   mod_carry(cpu, (v1 ^ v2) == 0);
@@ -630,19 +629,19 @@ int instruction_zjmp(struct s_cpu *cpu) {
   ; // TODO: better instruction_zjmp regression tests
   // int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_ZJMP start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
   cpu->processes->pc += 1;
   short v1 = (int16_t)read_mem_word(cpu->program, cpu->processes->pc);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: carry(%d) v1(%04hx)(%d) INS_ZJMP\n", cpu->processes->carry, v1,
            v1 % IDX_MOD);
   if (cpu->processes->carry == true) {
     cpu->processes->pc =
         ((cpu->processes->pc + ((v1 - 1) % IDX_MOD)) % MEM_SIZE);
-    if (f_verbose >= 3 && f_verbose != 42)
+    if (f_verbose & OPT_INTLDBG)
       printf("DBG: jumping to pc(%d) INS_ZJMP\n", cpu->processes->pc);
   } else {
     cpu->processes->pc += 2;
@@ -663,7 +662,7 @@ int instruction_zjmp(struct s_cpu *cpu) {
 int instruction_ldi(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_LDI start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -682,21 +681,21 @@ int instruction_ldi(struct s_cpu *cpu) {
     cpu->processes->pc += 2;
     v1 = read_mem_long(cpu->program, v1 + pc);
   }
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v1(0x%08x)(%d) INS_LDI\n", v1, v1);
   r2 = read_mem_byte(cpu->program, cpu->processes->pc);
   v2 = read_val_idx(cpu, p2, op);
   idx = (pc + (v1 % IDX_MOD)) + v2;
   if (f_verbose >= 4 && f_verbose != 42)
     dump_nbytes(cpu, 4, idx, 1);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: load from %d + %d = %d [with pc and mod=idx(%d)] INS_LDI\n",
            v1, v2, v1 + v2, idx);
   v3 = read_mem_long(cpu->program, idx);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v3(%08x) INS_LDI\n", v3);
   char reg = read_mem_byte(cpu->program, cpu->processes->pc);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: reg(%d) v1(%08x) v2(%08x) v3(%08x) INS_LDI write_reg\n", reg,
            v1, v2, v3);
   write_reg(cpu, reg, v3);
@@ -725,7 +724,7 @@ int instruction_ldi(struct s_cpu *cpu) {
 int instruction_sti(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_STI start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -736,16 +735,16 @@ int instruction_sti(struct s_cpu *cpu) {
   cpu->processes->pc += 1;
   r1 = read_mem_byte(cpu->program, cpu->processes->pc);
   v1 = read_val_idx(cpu, get_param(par, 1), op);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v1(%08x)(%d) INS_STI\n", v1, v1);
   v2 = read_val_idx(cpu, (p2 = get_param(par, 2)), op);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v2(%08x)(%d) INS_STI\n", v2, v2);
   v3 = read_val_idx(cpu, (p3 = get_param(par, 3)), op);
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v3(%08x)(%d) INS_STI\n", v3, v3);
   idx = ((pc + (v2 + v3) % IDX_MOD));
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: store to %d + %d = %d [with pc and mod=idx(%d)] INS_STI\n", v2,
            v3, v2 + v3, idx);
   write_mem_ins(cpu->program, idx, v1);
@@ -777,19 +776,19 @@ int instruction_fork(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
   short new;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_FORK start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
   new = read_mem_word(cpu->program, cpu->processes->pc + 1); // % IDX_MOD;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: new(0x%02hx) pc(%d) INS_FORK read\n", new, pc + new);
   new %= IDX_MOD;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: new(0x%02hx) pc(%d) INS_FORK mod\n", new, pc + new);
   if (new < 0)
     new += MEM_SIZE;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: new(0x%02hx) pc(%d) INS_FORK plusmem\n", new, pc + new);
   cpu->processes->pc += 3;
   cpu->spawn_process(cpu, new + cpu->processes->pc - 3,
@@ -798,7 +797,7 @@ int instruction_fork(struct s_cpu *cpu) {
     printf("P%5d | fork %d (%d)\n", cpu->processes->pid, new, new);
     // print_adv(cpu, cpu->processes->pc - pc, pc);
   }
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
            "pc(%4d) ins_time(%4d) INS_FORK prev_head start\n",
            cpu->clock, prev_head->pid, prev_head->carry, prev_head->last_live,
@@ -812,7 +811,7 @@ int instruction_fork(struct s_cpu *cpu) {
     else
       prev_head->instruction_time = 1;
   }
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
            "pc(%4d) ins_time(%4d) INS_FORK prev_head end\n",
            cpu->clock, prev_head->pid, prev_head->carry, prev_head->last_live,
@@ -828,7 +827,7 @@ int instruction_fork(struct s_cpu *cpu) {
   //       proc->instruction_time = 1;
   //     // next(cpu);
   //   }
-  //   if (f_verbose >= 3 && f_verbose != 42)
+  //   if (f_verbose & OPT_INTLDBG)
   //     printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) pc(%4d) "
   //            "ins_time(%4d)(%4d) prv_time(%d) NEXT loop end\n",
   //            cpu->clock, proc->pid, proc->carry,
@@ -839,7 +838,7 @@ int instruction_fork(struct s_cpu *cpu) {
   if (cpu->clock == 1934)
     ; // pause();
   // next(cpu);
-  // if (f_verbose >= 3 && f_verbose != 42)
+  // if (f_verbose & OPT_INTLDBG)
   //   printf("DBG: clock(%zu) pid(%d) carry(%d) last_live(%d) pc(%d) "
   //          "ins_time(%d) INS_FORK reset proc\n",
   //          cpu->clock, cpu->processes->pid, cpu->processes->carry,
@@ -847,7 +846,7 @@ int instruction_fork(struct s_cpu *cpu) {
   //          cpu->processes->instruction_time);
   // cpu->processes = cpu->first->next;
   // cpu->processes->instruction_time += 1;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: clock(%zu) pid(%d) carry(%d) last_live(%d) pc(%d) "
            "ins_time(%d) INS_FORK end\n",
            cpu->clock, cpu->processes->pid, cpu->processes->carry,
@@ -863,7 +862,7 @@ int instruction_fork(struct s_cpu *cpu) {
 int instruction_lld(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_LLD start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -872,7 +871,7 @@ int instruction_lld(struct s_cpu *cpu) {
   cpu->processes->pc += 1;
   int r1;
   int v1 = read_val_load(cpu, get_param(par, 1));
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: v1(0x%08x)(%d) INS_LDI read_val_load\n", v1, v1);
   r1 = read_mem_byte(cpu->program, cpu->processes->pc + v1);
   write_reg(cpu, r1, v1);
@@ -893,7 +892,7 @@ int instruction_lld(struct s_cpu *cpu) {
 int instruction_lldi(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_LLDI start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -938,7 +937,7 @@ int instruction_lldi(struct s_cpu *cpu) {
 int instruction_lfork(struct s_cpu *cpu) {
   int pc = cpu->processes->pc;
 
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_LFORK start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);
@@ -960,7 +959,7 @@ int instruction_lfork(struct s_cpu *cpu) {
 int instruction_aff(struct s_cpu *cpu) {
 
   int pc = cpu->processes->pc;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_AFF start\n",
            cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc);

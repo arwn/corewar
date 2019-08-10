@@ -25,6 +25,15 @@ enum instructions {
   e_aff = 0x10
 };
 
+#define OPT_SILENT  0x00000000
+#define OPT_CYCLES  0x00000001
+#define OPT_DEATHS  0x00000002
+#define OPT_LIVES   0x00000004
+#define OPT_INSTR   0x00000008
+#define OPT_PCMOVE  0x00000010
+#define OPT_DBGOUT  0x00000020
+#define OPT_INTLDBG 0x00000040
+
 struct s_process {
   struct s_process *next;
   struct s_process *prev;
