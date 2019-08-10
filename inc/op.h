@@ -6,7 +6,7 @@
 /*   By: zaz <marvin@42.fr>                         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2013/10/04 11:33:27 by zaz               #+#    #+#             */
-/*   Updated: 2019/07/29 15:50:20 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/10 09:28:59 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@
 
 #define NUM_OPS (16)
 
-#define COMMENT_CHAR '#'
+#define COMMENT_CHAR ';'
 #define LABEL_CHAR ':'
 #define DIRECT_CHAR '%'
 #define SEPARATOR_CHAR ','

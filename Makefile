@@ -27,7 +27,7 @@ VM_CFILES = corewar.c cpu.c instructions.c
 VM_SRCS = $(addprefix $(VM_SRCDIR), $(VM_CFILES))
 VM_OBJS = $(VM_SRCS:.c=.o)
 
-CHAMP_SRCDIR = cmd/champ/
+CHAMP_SRCDIR = champ/
 CHAMP_NAME = champ.cor
 CHAMP_CFILES = champ.s
 CHAMP_SRCS = $(addprefix $(CHAMP_SRCDIR), $(CHAMP_CFILES))
@@ -52,7 +52,7 @@ $(VM_NAME): $(VM_OBJS) $(ASM_OBJS) $(INTERNAL_OBJS)
 	make deps
 	$(CC) $(CFLAGS) $(LINKERS) $(INCLUDES) $(GUI_INCLUDE) $(GUI_LDFLAGS) $(GUI_FRAMEWORKS) $(INTERNAL_OBJS) $(VM_OBJS) -o $(VM_NAME)
 
-$(CHAMP_NAME): $(ASM) $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME))
+$(CHAMP_NAME): $(ASM_NAME) $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME))
 	cp $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME)) ./
 
 $(addprefix $(CHAMP_SRCDIR), %.cor): $(addprefix $(CHAMP_SRCDIR), %.s)
@@ -77,6 +77,7 @@ fclean: clean
 	-$(RM) $(ASM_NAME) $(VM_NAME)
 	-$(RM) -r $(ASM_NAME).dSYM $(VM_NAME).dSYM
 	-$(RM) $(CHAMP_NAME)
+	-$(RM) $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME))
 
 depclean:
 	make -C $(LIBDIR)glew-2.1.0 clean
