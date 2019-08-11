@@ -29,8 +29,30 @@
 #include "nuklear.h"
 #include "nuklear_glfw_gl3.h"
 
-#define WINDOW_WIDTH 1200  // 1200
-#define WINDOW_HEIGHT 1350 // 800
+#define RECT_BUFFER 10
+
+#define GRAPH_RECT_X (0 + RECT_BUFFER)
+#define GRAPH_RECT_Y (DEBUG_RECT_HEIGHT + DEBUG_RECT_X + RECT_BUFFER)
+#define GRAPH_RECT_WIDTH 800
+#define GRAPH_RECT_HEIGHT 250
+
+#define DEBUG_RECT_X (0 + RECT_BUFFER)
+#define DEBUG_RECT_Y (0 + RECT_BUFFER)
+#define DEBUG_RECT_WIDTH 1110
+#define DEBUG_RECT_HEIGHT 825
+
+#define OPEN_RECT_X (DEBUG_RECT_WIDTH + DEBUG_RECT_X + RECT_BUFFER)
+#define OPEN_RECT_Y (EDIT_RECT_HEIGHT + EDIT_RECT_Y + RECT_BUFFER)
+#define OPEN_RECT_WIDTH 300
+#define OPEN_RECT_HEIGHT 180
+
+#define EDIT_RECT_X OPEN_RECT_X // (DEBUG_RECT_WIDTH + DEBUG_RECT_X + RECT_BUFFER)
+#define EDIT_RECT_Y (0 + RECT_BUFFER)
+#define EDIT_RECT_WIDTH OPEN_RECT_WIDTH
+#define EDIT_RECT_HEIGHT 400
+
+#define WINDOW_WIDTH (EDIT_RECT_WIDTH + EDIT_RECT_X + RECT_BUFFER)
+#define WINDOW_HEIGHT (GRAPH_RECT_HEIGHT + GRAPH_RECT_Y + RECT_BUFFER)
 
 #define MAX_VERTEX_BUFFER 512 * 1536  // 512 * 1024 increase to fix buggy ui
 #define MAX_ELEMENT_BUFFER 128 * 1536 // 128 * 1024
@@ -102,7 +124,8 @@ static void set_color(struct nk_context *ctx) {
 // win_graph displays a graph of the frequency of each instruction call.
 static void win_graph(struct nk_context *ctx, struct s_cpu *cpu) {
   (void)cpu;
-  if (nk_begin(ctx, "graph", nk_rect(300, 30, 800, 250),
+  if (nk_begin(ctx, "graph", nk_rect(GRAPH_RECT_X, GRAPH_RECT_Y,
+									 GRAPH_RECT_WIDTH, GRAPH_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_TITLE)) {
     static char *labels[] = {"live", "ld",   "st",    "add", "sub", "and",
@@ -174,7 +197,8 @@ char *g_bytes_lower[256] = {
 extern char g_mem_tab[4096];
 // win_debug displays the program and buttons to step through.
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
-  if (nk_begin(ctx, "debug", nk_rect(40, 400, 1150, 800),
+  if (nk_begin(ctx, "debug", nk_rect(DEBUG_RECT_X, DEBUG_RECT_Y,
+									 DEBUG_RECT_WIDTH, DEBUG_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
     char buf[44];
@@ -337,7 +361,8 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
 static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
   static int cantopen = nk_false;
 
-  if (nk_begin(ctx, "open", nk_rect(0, 30, 300, 180),
+  if (nk_begin(ctx, "open", nk_rect(OPEN_RECT_X, OPEN_RECT_Y,
+									OPEN_RECT_WIDTH, OPEN_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_TITLE)) {
     static uint32_t offset = 0;
@@ -406,7 +431,8 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
 // win_edit contains an assembly editor, compiler, and loader.
 static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
   (void)cpu;
-  if (nk_begin(ctx, "edit", nk_rect(0, 210, 300, 400),
+  if (nk_begin(ctx, "edit", nk_rect(EDIT_RECT_X, EDIT_RECT_Y,
+									EDIT_RECT_WIDTH, EDIT_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_TITLE)) {
     nk_layout_row_dynamic(ctx, 300, 1);
