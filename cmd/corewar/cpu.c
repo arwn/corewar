@@ -153,13 +153,13 @@ static int step(struct s_cpu *cpu) {
 // space for a few new processes.
 static void spawn_process(struct s_cpu *cpu, int pc, int r1) {
   struct s_process *done = malloc(sizeof(*done));
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: start SPAWN_PROC\n");
   done->carry = 0;
   done->pc = pc;
   done->pid = cpu->active + 1;
   done->prev_time = -1;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pc(%4d) op(%02x) SPAWN_PROC\n", pc,
            cpu->program[pc % MEM_SIZE]);
   done->opcode = cpu->program[pc % MEM_SIZE];
@@ -168,7 +168,7 @@ static void spawn_process(struct s_cpu *cpu, int pc, int r1) {
   else
     done->instruction_time = 1;
   done->last_live = cpu->processes ? cpu->processes->last_live : 0;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     fprintf(stderr,
             "DBG: clock(%5zu) pid(%d) ins_time(%4d) op(0x%02x) SPAWN_PROC\n",
             cpu->clock, done->pid, done->instruction_time, done->opcode);
@@ -182,7 +182,7 @@ static void spawn_process(struct s_cpu *cpu, int pc, int r1) {
     prepend_process(done, cpu);
   }
   cpu->active += 1;
-  if (f_verbose >= 3 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: clock(%5zu) pid(%5d) carry(%d) last_live(%5d) pc(%4d) "
            "ins_time(%4d) prv_time(%4d) SPAWN_PROC end\n",
            cpu->clock, cpu->processes->pid, cpu->processes->carry,
@@ -194,13 +194,13 @@ static void spawn_process(struct s_cpu *cpu, int pc, int r1) {
 // delete_process deletes the current process and sets the current process to
 // the previous process.
 static void delete_process(struct s_cpu *cpu) {
-  if (f_verbose >= 2 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) num_checks(%d) num_lives(%d) prev_check(%d) "
            "DELET_PROC start\n",
            cpu->processes ? cpu->processes->pid : -1, cpu->num_checks,
            cpu->nbr_lives, cpu->prev_check);
   if (!cpu || !cpu->processes) {
-    if (f_verbose >= 2 && f_verbose != 42)
+    if (f_verbose & OPT_INTLDBG)
       fprintf(stderr, "ERROR: cpu or cpu->processes NULL in delete_process\n");
     return;
   }
@@ -218,7 +218,7 @@ static void delete_process(struct s_cpu *cpu) {
 // load loads a PROGRAM of length LENGTH into memory address ADDRESS.
 static void load(struct s_cpu *cpu, char *program, uint32_t length,
                  uint32_t address) {
-  if (f_verbose >= 2 && f_verbose != 42)
+  if (f_verbose & OPT_INTLDBG)
     printf("DBG: length(%d) address(%d) LOAD start\n", length, address);
   for (uint32_t i = 0; i < length; i++) {
     cpu->program[i + address] = (uint8_t)program[i];
@@ -233,6 +233,7 @@ struct s_cpu new_cpu(void) {
   done.first = 0;
   done.processes = 0;
   done.clock = 0;
+  memset(done.players, 0, sizeof(done.players));
   memset(done.program, 0, sizeof(done.program));
   done.program_length = 0;
   done.winner = 0;

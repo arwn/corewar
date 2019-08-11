@@ -46,7 +46,8 @@
 #define OPEN_RECT_WIDTH 300
 #define OPEN_RECT_HEIGHT GRAPH_RECT_HEIGHT
 
-#define EDIT_RECT_X OPEN_RECT_X // (DEBUG_RECT_WIDTH + DEBUG_RECT_X + RECT_BUFFER)
+#define EDIT_RECT_X                                                            \
+  OPEN_RECT_X // (DEBUG_RECT_WIDTH + DEBUG_RECT_X + RECT_BUFFER)
 #define EDIT_RECT_Y (0 + RECT_BUFFER)
 #define EDIT_RECT_WIDTH OPEN_RECT_WIDTH
 #define EDIT_RECT_HEIGHT DEBUG_RECT_HEIGHT
@@ -124,8 +125,9 @@ static void set_color(struct nk_context *ctx) {
 // win_graph displays a graph of the frequency of each instruction call.
 static void win_graph(struct nk_context *ctx, struct s_cpu *cpu) {
   (void)cpu;
-  if (nk_begin(ctx, "graph", nk_rect(GRAPH_RECT_X, GRAPH_RECT_Y,
-									 GRAPH_RECT_WIDTH, GRAPH_RECT_HEIGHT),
+  if (nk_begin(ctx, "graph",
+               nk_rect(GRAPH_RECT_X, GRAPH_RECT_Y, GRAPH_RECT_WIDTH,
+                       GRAPH_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_TITLE)) {
     static char *labels[] = {"live", "ld",   "st",    "add", "sub", "and",
@@ -169,6 +171,7 @@ static const char *g_bytes_upper[256] = {
     "F0", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "FA", "FB",
     "FC", "FD", "FE", "FF",
 };
+
 char *g_bytes_lower[256] = {
     "00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b",
     "0c", "0d", "0e", "0f", "10", "11", "12", "13", "14", "15", "16", "17",
@@ -197,19 +200,20 @@ char *g_bytes_lower[256] = {
 extern char g_mem_tab[4096];
 // win_debug displays the program and buttons to step through.
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
-  if (nk_begin(ctx, "debug", nk_rect(DEBUG_RECT_X, DEBUG_RECT_Y,
-									 DEBUG_RECT_WIDTH, DEBUG_RECT_HEIGHT),
+  if (nk_begin(ctx, "debug",
+               nk_rect(DEBUG_RECT_X, DEBUG_RECT_Y, DEBUG_RECT_WIDTH,
+                       DEBUG_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
     char buf[44];
-    struct nk_color p1c; // red color for current player 1 instruction
-    struct nk_color p2c; // green color for current player 2 instruction
-    struct nk_color p3c; // blue color for current player 3 instruction
-    struct nk_color p4c; // magenta color for current player 4 instruction
-    p1c.r = 255, p1c.g = 100, p1c.b = 100, p1c.a = 255;
-    p2c.r = 100, p2c.g = 255, p2c.b = 100, p2c.a = 255;
-    p3c.r = 100, p3c.g = 100, p3c.b = 255, p3c.a = 255;
-    p4c.r = 255, p4c.g = 100, p4c.b = 255, p4c.a = 255;
+    static struct nk_color p1c = {.r = 255, .g = 100, .b = 100, .a = 255};
+    // red color for current player 1 instruction
+    static struct nk_color p2c = {.r = 100, .g = 255, .b = 100, .a = 255};
+    // green color for current player 2 instruction
+    static struct nk_color p3c = {.r = 100, .g = 100, .b = 255, .a = 255};
+    // blue color for current player 3 instruction
+    static struct nk_color p4c = {.r = 255, .g = 100, .b = 255, .a = 255};
+    // magenta color for current player 4 instruction
 
     // top buttons
     nk_layout_row_static(ctx, 30, 80, 10);
@@ -316,22 +320,28 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
   nk_end(ctx);
 }
 
-header_t h;
+void new_player(struct s_cpu *cpu, header_t *h, int num) {
+  cpu->players[num - 1].player_number = num;
+  cpu->players[num - 1].active_processes = 1;
+  cpu->players[num - 1].last_live = 0;
+  cpu->players[num - 1].prog_size = h->prog_size;
+  cpu->players[num - 1].name = strndup(h->prog_name, NAME_MAX);
+  cpu->players[num - 1].name = strndup(h->comment, COMMENT_LENGTH);
+}
+
 // load_file reads a file into readbuf. if the file starts with
 // COREWAR_EXEC_MAGIC it is loaded via `cpu->load()' otherwise load_file reads
 // the file into `edit_buf'. returns number of bytes read.
 static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
+  header_t h;
   const size_t maxsize = CHAMP_MAX_SIZE + sizeof(header_t);
   char readbuf[maxsize + 1];
-  int magic = -1;
   long len = fread(readbuf, 1, maxsize, f);
   readbuf[maxsize] = 0;
   h = *(header_t *)readbuf;
   h.magic = ntohl(h.magic);
   h.prog_size = ntohl(h.prog_size);
-  rewind(f);
-  fread(&magic, sizeof(int), 1, f);
-  magic = ntohl(magic);
+  new_player(cpu, &h, player);
   if (len > 0) {
     if (valid_header_p(h)) {
       cpu->load(cpu, readbuf + sizeof(header_t), len - sizeof(header_t),
@@ -361,10 +371,11 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
 static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
   static int cantopen = nk_false;
 
-  if (nk_begin(ctx, "open", nk_rect(OPEN_RECT_X, OPEN_RECT_Y,
-									OPEN_RECT_WIDTH, OPEN_RECT_HEIGHT),
-               NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
-                   NK_WINDOW_TITLE)) {
+  if (nk_begin(
+          ctx, "open",
+          nk_rect(OPEN_RECT_X, OPEN_RECT_Y, OPEN_RECT_WIDTH, OPEN_RECT_HEIGHT),
+          NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
+              NK_WINDOW_TITLE)) {
     static uint32_t offset = 0;
     static int select = 0;
 
@@ -427,18 +438,16 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
 // win_edit contains an assembly editor, compiler, and loader.
 static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
   (void)cpu;
-  if (nk_begin(ctx, "edit", nk_rect(EDIT_RECT_X, EDIT_RECT_Y,
-									EDIT_RECT_WIDTH, EDIT_RECT_HEIGHT),
-               NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
-                   NK_WINDOW_TITLE)) {
+  if (nk_begin(
+          ctx, "edit",
+          nk_rect(EDIT_RECT_X, EDIT_RECT_Y, EDIT_RECT_WIDTH, EDIT_RECT_HEIGHT),
+          NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
+              NK_WINDOW_TITLE)) {
     nk_layout_row_dynamic(ctx, EDIT_RECT_HEIGHT - 90, 1);
     nk_edit_string_zero_terminated(ctx, NK_EDIT_BOX, edit_buf,
                                    sizeof(edit_buf) - 1, nk_filter_default);
     nk_layout_row_static(ctx, 30, 80, 1);
     if (nk_button_label(ctx, "Compile")) {
-      // remove("/tmp/corewar.cor");
-      // int file = open("/tmp/corewar.cor", O_RDWR | O_CREAT | O_TRUNC, S_IRUSR
-      // | S_IWUSR | S_IXUSR);
       int file = open("/tmp/corewar.cor", O_RDWR | O_CREAT | O_TRUNC,
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
       if (file < 0) {
@@ -454,7 +463,6 @@ static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
       size_t filesize;
       lseek(file, 0, SEEK_SET);
       char *s = assemble(file, &filesize);
-      // lseek(file, 0, SEEK_SET);
       close(file);
 
       file = open("/tmp/corewar.cor", O_RDWR | O_CREAT | O_TRUNC,
@@ -464,7 +472,6 @@ static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
         nk_end(ctx);
         return;
       }
-      // write(1, s, filesize);
       size = write(file, s, filesize);
 
       if (size < filesize) {
@@ -594,7 +601,7 @@ static void usage(const char *msg, const char *ext) {
     fprintf(stderr, "%s\n", msg);
   fprintf(stderr, "Usage: corewar [OPTION]... FILE...\n"
                   "Try 'corewar -h' for more information.\n");
-  exit(1);
+  exit((msg != 0 || ext != 0) && opterr != 0);
 }
 
 static void usage_help(void) {
@@ -753,8 +760,10 @@ int main(int argc, char *argv[]) {
       {OFFSET_3P_P1, OFFSET_3P_P2, OFFSET_3P_P3, 0},
       {OFFSET_4P_P1, OFFSET_4P_P2, OFFSET_4P_P3, OFFSET_4P_P4},
   };
-  if (argc > 4 || argc < 0)
-    return 56;
+  if (argc > MAX_PLAYERS || argc < 0) {
+    fprintf(stderr, "Fatal error: invalid number of arguments: %d\n", argc);
+    return 2;
+  }
 
   // load in .cor files
   while (ii < argc) {
@@ -766,7 +775,7 @@ int main(int argc, char *argv[]) {
     if (ii == 0)
       printf("Introducing contestants...\n");
     int len = load_file(&cpu, f, offsets[argc - 1][ii], ii + 1);
-    if (len < 1 || len >= CHAMP_MAX_SIZE) {
+    if (len < 1 || (len - sizeof(header_t)) >= CHAMP_MAX_SIZE) {
       fprintf(stderr, "Fatal error: invalid champion file: %s\n", *argv);
       return 1;
     }
@@ -795,7 +804,8 @@ int main(int argc, char *argv[]) {
       cpu.step(&cpu);
     }
     if (cpu.winner != 0 && cpu.processes == NULL)
-      printf("Winner is player %d, \"%s\"\n", cpu.winner, h.prog_name);
+      printf("Winner is player %d, \"%s\"\n", cpu.winner,
+             cpu.players[cpu.winner - 1].name);
     else if (cpu.processes == NULL)
       printf("Stalemate.\n");
     while (cpu.active != 0 && cpu.processes != NULL) {

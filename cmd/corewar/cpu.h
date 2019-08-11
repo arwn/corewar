@@ -47,6 +47,16 @@ struct s_process {
   bool carry;
 };
 
+struct s_player {
+  //struct s_player *next; // XXX: linked list for arbitrary amount of players?
+  int player_number;
+  int active_processes;
+  int last_live;
+  int prog_size;
+  char *name;
+  char *comment;
+};
+
 struct s_cpu {
   struct s_process *first;      //
   struct s_process *processes;  //
@@ -61,6 +71,7 @@ struct s_cpu {
   int nbr_lives;                // maximum number of lives per cycle_to_die
   int winner;                   // winning player
   int lastlive[4];              // TODO: remove?
+  struct s_player players[MAX_PLAYERS];
 
   // spawn_process keeps track of how many *processes are allocated and reallocs
   // if needed. arg1 is the context. arg2 is the program counter. arg3 is r1
