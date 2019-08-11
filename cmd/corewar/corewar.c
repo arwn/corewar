@@ -438,6 +438,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
 // win_edit contains an assembly editor, compiler, and loader.
 static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
   (void)cpu;
+
   if (nk_begin(
           ctx, "edit",
           nk_rect(EDIT_RECT_X, EDIT_RECT_Y, EDIT_RECT_WIDTH, EDIT_RECT_HEIGHT),
@@ -481,7 +482,50 @@ static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
       strncpy(open_buf, "/tmp/corewar.cor", 17);
     }
   }
-  nk_end(ctx); // end a nk_window
+
+  static char **strtab = NULL;
+  static size_t max_strlen = 0;
+  static unsigned num_lines = 0;
+  if (g_errstr) {
+    if (!strtab) {
+      strtab = ft_strsplit(g_errstr, '\n');
+      for (num_lines = 0; strtab[num_lines]; ++num_lines)
+        max_strlen = MAX__(ft_strlen(strtab[num_lines]), max_strlen);
+    }
+    // line length * width_of(line)
+    // num lines * height_of(line) + height_of(ok_button)
+    static struct nk_rect ss = {-80, -10, 350, 170};
+    if (nk_popup_begin(ctx, NK_POPUP_STATIC, "ERROR",
+                       NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, ss)) {
+      nk_layout_row_dynamic(ctx, 20, 1);
+
+      nk_label(ctx, strtab[0], NK_TEXT_LEFT);
+      nk_label(ctx, strtab[1], NK_TEXT_LEFT);
+
+      nk_label(ctx, open_buf, NK_TEXT_LEFT);
+      nk_layout_row_static(ctx, 30, 30, 1);
+      if (nk_button_label(ctx, "ok")) {
+        free(g_errstr);
+        g_errstr = NULL;
+        ft_free_str_tab(&strtab);
+        max_strlen = 0;
+        num_lines = 0;
+      }
+      nk_popup_end(ctx);
+    } else {
+      free(g_errstr);
+      g_errstr = NULL;
+      ft_free_str_tab(&strtab);
+      max_strlen = 0;
+      num_lines = 0;
+    }
+  } else if (strtab) {
+    ft_free_str_tab(&strtab);
+    max_strlen = 0;
+    num_lines = 0;
+  }
+
+  nk_end(ctx);  // end a nk_window
 }
 
 static void error_callback(int e, const char *d) {
