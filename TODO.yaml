@@ -3,6 +3,7 @@ ASM:
 
 COREWAR:
   Test
+  Fix unreadable player PC colors.  More contrast
   Seg fault with 4 players in GUI
     -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
     breaks around cycle 1500

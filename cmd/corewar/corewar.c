@@ -372,6 +372,20 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, open_buf,
                                    sizeof(open_buf) - 1, nk_filter_ascii);
 
+
+	// set custom offset for opening champion
+    nk_layout_row_dynamic(ctx, 30, 1);
+    static char offset_buf[PATH_MAX] = {'0', '\0'};
+    nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, offset_buf,
+                                   sizeof(offset_buf) - 1, nk_filter_ascii);
+
+    // this box lets you select the region of memory you want to load the
+    // program into.
+    nk_layout_row_static(ctx, 25, 200, 1);
+    static const char *players[] = {"One", "Two", "Three", "Four"};
+    select = nk_combo(ctx, players, 4, select, 25, nk_vec2(200, 200));
+	offset = (unsigned)((1024 * select) + ft_atoi(offset_buf)) % MEM_SIZE;
+
     // this button opens a file, reads it into a buffer and copies it to the
     // edit buffer or the debug window depending if it's a compiled corewar bin.
     if (nk_button_label(ctx, "open file") && open_buf[0]) {
@@ -380,29 +394,11 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
         puts("Can't open");
         cantopen = nk_true;
       } else {
-        cantopen = !load_file(cpu, f, offset, select);
+        // Was 'select' instead of 'select + 1' changed because it would not
+        // load players properly
+        cantopen = !load_file(cpu, f, offset, select + 1);
         fclose(f);
       }
-    }
-
-    // this box lets you select the region of memory you want to load the
-    // program into.
-    nk_layout_row_static(ctx, 25, 200, 1);
-    static const char *players[] = {"One", "Two", "Three", "Four"};
-    select = nk_combo(ctx, players, 4, select, 25, nk_vec2(200, 200));
-    switch (select) {
-    case 0:
-      offset = 0;
-      break;
-    case 1:
-      offset = 1024;
-      break;
-    case 2:
-      offset = 1024 * 2;
-      break;
-    case 3:
-      offset = 1024 * 3;
-      break;
     }
 
     // error popup
