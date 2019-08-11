@@ -239,12 +239,12 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       running = !running;
       glfwSetTime(1);
     }
-    // static int slider = 2;
-    // nk_slider_int(ctx, 2, &slider, 9, 1);
+    static int slider = 2;
+    nk_slider_int(ctx, 2, &slider, 9, 1);
 
-    // double trash;
-    // double time = modf(glfwGetTime(), &trash);
-    // time *= 100;
+    double trash;
+    double time = modf(glfwGetTime(), &trash);
+    time *= 100;
     if (cpu->processes != 0 &&
         running) { // && (int)time % (10 - slider) == 0) {
       cpu->step(cpu);
@@ -769,7 +769,11 @@ int main(int argc, char *argv[]) {
     }
     if (ii == 0)
       printf("Introducing contestants...\n");
-    load_file(&cpu, f, offsets[argc - 1][ii], ii + 1);
+    int len = load_file(&cpu, f, offsets[argc - 1][ii], ii + 1);
+    if (len < 1 || len >= CHAMP_MAX_SIZE) {
+      fprintf(stderr, "Fatal error: invalid champion file: %s\n", *argv);
+      return 1;
+    }
     if (fclose(f) != 0)
       return 1;
     ++ii;
