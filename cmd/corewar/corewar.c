@@ -33,7 +33,7 @@
 
 #define GRAPH_RECT_X (0 + RECT_BUFFER)
 #define GRAPH_RECT_Y (DEBUG_RECT_HEIGHT + DEBUG_RECT_X + RECT_BUFFER)
-#define GRAPH_RECT_WIDTH 800
+#define GRAPH_RECT_WIDTH DEBUG_RECT_WIDTH
 #define GRAPH_RECT_HEIGHT 250
 
 #define DEBUG_RECT_X (0 + RECT_BUFFER)
@@ -44,12 +44,12 @@
 #define OPEN_RECT_X (DEBUG_RECT_WIDTH + DEBUG_RECT_X + RECT_BUFFER)
 #define OPEN_RECT_Y (EDIT_RECT_HEIGHT + EDIT_RECT_Y + RECT_BUFFER)
 #define OPEN_RECT_WIDTH 300
-#define OPEN_RECT_HEIGHT 180
+#define OPEN_RECT_HEIGHT GRAPH_RECT_HEIGHT
 
 #define EDIT_RECT_X OPEN_RECT_X // (DEBUG_RECT_WIDTH + DEBUG_RECT_X + RECT_BUFFER)
 #define EDIT_RECT_Y (0 + RECT_BUFFER)
 #define EDIT_RECT_WIDTH OPEN_RECT_WIDTH
-#define EDIT_RECT_HEIGHT 400
+#define EDIT_RECT_HEIGHT DEBUG_RECT_HEIGHT
 
 #define WINDOW_WIDTH (EDIT_RECT_WIDTH + EDIT_RECT_X + RECT_BUFFER)
 #define WINDOW_HEIGHT (GRAPH_RECT_HEIGHT + GRAPH_RECT_Y + RECT_BUFFER)
@@ -435,7 +435,7 @@ static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
 									EDIT_RECT_WIDTH, EDIT_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_TITLE)) {
-    nk_layout_row_dynamic(ctx, 300, 1);
+    nk_layout_row_dynamic(ctx, EDIT_RECT_HEIGHT - 90, 1);
     nk_edit_string_zero_terminated(ctx, NK_EDIT_BOX, edit_buf,
                                    sizeof(edit_buf) - 1, nk_filter_default);
     nk_layout_row_static(ctx, 30, 80, 1);
