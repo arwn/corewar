@@ -363,13 +363,11 @@ int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
     int size = param_total_size(par, 3);
     proc->pc = proc->pc + size + 1;
     if (f_verbose & OPT_INTLDBG)
-      printf("DBG: bad par(%02hhx) size(%d) pc(%04x)(%d) mem(%02hhx)"
-             " INS_ST ret\n",
-             par, size + 1, proc->pc, proc->pc,
-             cpu->program[(proc->pc - 1) % MEM_SIZE]);
+      printf("DBG: par(%02hhx) size(%d) pc(%04x)(%d) mem(%02hhx) invalid param"
+             " INS_ST ret\n", par, size + 1, proc->pc, proc->pc,
+             cpu->program[(proc->pc-1) % MEM_SIZE]);
     if (f_verbose & OPT_PCMOVE)
       print_adv(cpu, proc->pc - pc, pc);
-    next(cpu, proc);
     return 1;
   }
   proc->pc += 1;
@@ -397,7 +395,11 @@ int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
     proc->pc += 2;
   }
   if (f_verbose & OPT_INSTR) {
-    printf("P% 5d | st r%d %d\n", proc->pid, r1, v2);
+    printf("P% 5d | st r%d ", proc->pid, r1);
+    if (get_param(par, 2) == REG_CODE)
+      printf("r%d\n", v2);
+    else
+      printf("%d\n", v2);
   }
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc->pc - pc, pc);
@@ -643,17 +645,17 @@ int instruction_zjmp(struct s_cpu *cpu, struct s_process *proc) {
   if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_ZJMP start\n",
            proc->pid, proc->carry, proc->last_live, proc->pc);
-  // proc->pc += 1;
-  short v1 = read_mem_word(cpu->program, proc->pc + 1);
+  proc->pc += 1;
+  short v1 = read_mem_word(cpu->program, proc->pc);
   if (f_verbose & OPT_INTLDBG)
     printf("DBG: carry(%d) v1(%04hx)(%d) INS_ZJMP\n", proc->carry, v1,
            v1 % IDX_MOD);
   if (proc->carry == true) {
-    proc->pc = ((proc->pc + ((v1) % IDX_MOD)) % MEM_SIZE);
+    proc->pc = ((proc->pc + ((v1 - 1) % IDX_MOD)) % MEM_SIZE);
     if (f_verbose & OPT_INTLDBG)
       printf("DBG: jumping to pc(%d) INS_ZJMP\n", proc->pc);
   } else {
-    proc->pc += 3;
+    proc->pc += 2;
   }
   if (f_verbose & OPT_INSTR) {
     printf("P% 5d | zjmp %d %s\n", proc->pid, v1,
@@ -919,19 +921,6 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   int op = cpu->program[proc->pc];
   proc->pc += 1;
   uint8_t par = cpu->program[proc->pc];
-  if (check_param(par, cpu->program[pc] - 1)) {
-    int size = param_total_size(par, 0x0e); // incorrect size for Gagnant 5424
-    proc->pc = proc->pc + size + 3; // for some reason, Gagnant 4830 prefers + 3
-    if (f_verbose & OPT_INTLDBG)
-      printf("DBG: bad par(%02hhx) size(%d) pc(%04x)(%d) mem(%02hhx)"
-             " INS_LLDI ret\n",
-             par, size + 1, proc->pc, proc->pc,
-             cpu->program[(proc->pc - 1) % MEM_SIZE]);
-    if (f_verbose & OPT_PCMOVE)
-      print_adv(cpu, proc->pc - pc, pc);
-    next(cpu, proc);
-    return 1;
-  }
   proc->pc += 1;
   p1 = get_param(par, 1);
   p2 = get_param(par, 2);

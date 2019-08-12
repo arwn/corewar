@@ -3,11 +3,14 @@ ASM:
 
 COREWAR:
   Test
-  Fix unreadable player PC colors.  More contrast, sometimes no colors appear
-  Unexpected Fatal Error in VM
+  Fix unreadable player PC colors.  More contrast
+  Seg fault with 4 players in GUI
     -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
-    breaks on cycle 7380, due to NULL being passed to delete_process
-  Validate instruction pcb and determine correct offset to move pc
+    breaks around cycle 1500
+    has no output after introducing players
+  Fix fork/lfork -- process calling fork and sometimes adjacent processes
+                    incorrectly set instruction_time after forking
+  helltrain1 -- issues related to fork on cycle 2745
   Fix live -- CYCLE_TO_DIE (tentatively fixed, need to verify more)
 
 DONE:
@@ -16,8 +19,6 @@ DONE:
   COREWAR:
     Fix zjmp -- negative offset
     Check invalid header
-    Fix fork/lfork -- process calling fork and sometimes adjacent processes
-                      incorrectly set instruction_time after forking
     Load champions eqidistant from each other
     No winner output with disabled gui
     -- `./corewar -r Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`

@@ -202,8 +202,7 @@ static void delete_process(struct s_cpu *cpu) {
            cpu->nbr_lives, cpu->prev_check);
   if (!cpu || !cpu->processes) {
     if (f_verbose & OPT_INTLDBG)
-      fprintf(stderr, "Fatal error: cpu or cpu->processes NULL in delete_process\n");
-    exit(-1);
+      fprintf(stderr, "ERROR: cpu or cpu->processes NULL in delete_process\n");
     return;
   }
   struct s_process *tmp = cpu->processes;
