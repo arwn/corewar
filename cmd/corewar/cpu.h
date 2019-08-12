@@ -89,7 +89,7 @@ int f_dump_processes; /* dump processes */
 int f_gui;            /* graphical visualizer of vm */
 int f_verbose;        /* verbosity level */
 
-extern int instruction_calls[18];
+extern int instruction_calls[NUM_OPS];
 
 extern void next(struct s_cpu *cpu);
 

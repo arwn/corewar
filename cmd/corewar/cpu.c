@@ -34,7 +34,7 @@ static void prepend_process(struct s_process *done, struct s_cpu *cpu) {
 #define CASE_INSTRUCTION(type)                                                 \
   case e_##type:                                                               \
     done = instruction_##type(cpu);                                            \
-    instruction_calls[e_##type] += done;                                       \
+    instruction_calls[e_##type - 1] += done;                                       \
     break;
 
 // bugs: the first instruction will be ran instantly because the

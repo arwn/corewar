@@ -68,7 +68,7 @@ char edit_buf[4096] = {"beans haha lol."};
 // display.
 
 // instruction_calls is the number of instruction calls in the current program.
-int instruction_calls[18] = {0};
+int instruction_calls[NUM_OPS] = {0};
 
 // running keeps track of if the program should be stepped through
 // automatically.
@@ -139,7 +139,7 @@ static void win_graph(struct nk_context *ctx, struct s_cpu *cpu) {
       nk_chart_push(ctx, instruction_calls[i] % 128);
     }
     nk_chart_end(ctx);
-    nk_layout_row_dynamic(ctx, 20, 17);
+    nk_layout_row_dynamic(ctx, 20, NUM_OPS);
     for (unsigned long i = 0; i < NK_LEN(labels); i++) {
       nk_label(ctx, labels[i], NK_TEXT_CENTERED);
     }
@@ -206,13 +206,13 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
                NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
     char buf[44];
-    static struct nk_color p1c = {.r = 255, .g = 100, .b = 100, .a = 255};
+    static struct nk_color p1c = {.r = 255, .g = 50, .b = 50, .a = 255};
     // red color for current player 1 instruction
-    static struct nk_color p2c = {.r = 100, .g = 255, .b = 100, .a = 255};
+    static struct nk_color p2c = {.r = 50, .g = 129, .b = 50, .a = 255};
     // green color for current player 2 instruction
-    static struct nk_color p3c = {.r = 100, .g = 100, .b = 255, .a = 255};
+    static struct nk_color p3c = {.r = 50, .g = 50, .b = 192, .a = 255};
     // blue color for current player 3 instruction
-    static struct nk_color p4c = {.r = 255, .g = 100, .b = 255, .a = 255};
+    static struct nk_color p4c = {.r = 129, .g = 50, .b = 129, .a = 255};
     // magenta color for current player 4 instruction
     static struct nk_color defaultc = {.r = 213, .g = 198, .b = 182, .a = 255};
 
