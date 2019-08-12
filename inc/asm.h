@@ -6,7 +6,7 @@
 /*   By: acarlson <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/11 14:08:29 by acarlson          #+#    #+#             */
-/*   Updated: 2019/08/11 15:03:23 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/11 17:07:41 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,8 +94,17 @@ struct	s_arg {
 			(tok)->type = err;										\
 		})
 
-# define WARNING_MOD TE(BOL) FG(LMGN)
-# define ERR_MOD TE(BOL) FG(LRED)
+# ifdef COLORS
+#  define WARNING_MOD TE(BOL) FG(LMGN)
+#  define ERR_MOD TE(BOL) FG(LRED)
+# else
+#  ifdef NC
+#   undef NC
+#  endif
+#  define NC ""
+#  define WARNING_MOD ""
+#  define ERR_MOD ""
+# endif
 
 # define ERR_FIRST_BIT ERR_MOD"ERROR"NC" LINE %u:%u\n"
 # define ERR_SECOND_BIT "[%s]"

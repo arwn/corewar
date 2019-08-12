@@ -214,6 +214,7 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     // blue color for current player 3 instruction
     static struct nk_color p4c = {.r = 255, .g = 100, .b = 255, .a = 255};
     // magenta color for current player 4 instruction
+    static struct nk_color defaultc = {.r = 213, .g = 198, .b = 182, .a = 255};
 
     // top buttons
     nk_layout_row_static(ctx, 30, 80, 10);
@@ -249,8 +250,7 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     double trash;
     double time = modf(glfwGetTime(), &trash);
     time *= 100;
-    if (cpu->processes != 0 &&
-        running) { // && (int)time % (10 - slider) == 0) {
+    if (cpu->processes != 0 && running && (int)time % (10 - slider) == 0) {
       cpu->step(cpu);
     }
     snprintf(winbuf, sizeof(winbuf), "Winner: %d", cpu->winner);
@@ -310,11 +310,11 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
           nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
           break;
         default:
-          nk_label(ctx, buf, NK_TEXT_LEFT);
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
           break;
         }
       } else
-        nk_label(ctx, buf, NK_TEXT_LEFT);
+        nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
     }
   }
   nk_end(ctx);
@@ -383,8 +383,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, open_buf,
                                    sizeof(open_buf) - 1, nk_filter_ascii);
 
-
-	// set custom offset for opening champion
+    // set custom offset for opening champion
     nk_layout_row_dynamic(ctx, 30, 1);
     static char offset_buf[PATH_MAX] = {'0', '\0'};
     nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, offset_buf,
@@ -395,7 +394,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     nk_layout_row_static(ctx, 25, 200, 1);
     static const char *players[] = {"One", "Two", "Three", "Four"};
     select = nk_combo(ctx, players, 4, select, 25, nk_vec2(200, 200));
-	offset = (unsigned)((1024 * select) + ft_atoi(offset_buf)) % MEM_SIZE;
+    offset = (unsigned)((1024 * select) + ft_atoi(offset_buf)) % MEM_SIZE;
 
     // this button opens a file, reads it into a buffer and copies it to the
     // edit buffer or the debug window depending if it's a compiled corewar bin.
@@ -479,31 +478,41 @@ static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
         printf("Error: wrote %d bytes instead of %zu\n", err, filesize);
       }
       close(file);
-      strncpy(open_buf, "/tmp/corewar.cor", 17);
+      if (!g_errstr)
+        strncpy(open_buf, "/tmp/corewar.cor", 17);
     }
   }
+
+#define ROW_HEIGHT 20
+#define CHAR_WIDTH 10
+#define BUTTON_HEIGHT 30
 
   static char **strtab = NULL;
   static size_t max_strlen = 0;
   static unsigned num_lines = 0;
+  static struct nk_rect err_rect;
   if (g_errstr) {
     if (!strtab) {
+      max_strlen = BUTTON_HEIGHT;
       strtab = ft_strsplit(g_errstr, '\n');
       for (num_lines = 0; strtab[num_lines]; ++num_lines)
         max_strlen = MAX__(ft_strlen(strtab[num_lines]), max_strlen);
+      // line length * width_of(line)
+      // num lines * height_of(line) + height_of(ok_button)
+      printf("%zu\n", max_strlen);
+      err_rect.w = max_strlen * CHAR_WIDTH;
+      err_rect.h = (num_lines * (ROW_HEIGHT + 30)) + BUTTON_HEIGHT;
+      err_rect.y = EDIT_RECT_HEIGHT - 50 - err_rect.h;
+      err_rect.x = EDIT_RECT_WIDTH - 50 - err_rect.w;
     }
-    // line length * width_of(line)
-    // num lines * height_of(line) + height_of(ok_button)
-    static struct nk_rect ss = {-80, -10, 350, 170};
     if (nk_popup_begin(ctx, NK_POPUP_STATIC, "ERROR",
-                       NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, ss)) {
-      nk_layout_row_dynamic(ctx, 20, 1);
+                       NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, err_rect)) {
+      nk_layout_row_dynamic(ctx, ROW_HEIGHT, 1);
 
-      nk_label(ctx, strtab[0], NK_TEXT_LEFT);
-      nk_label(ctx, strtab[1], NK_TEXT_LEFT);
+      for (int ii = 0; strtab[ii]; ++ii)
+        nk_label(ctx, strtab[ii], NK_TEXT_LEFT);
 
-      nk_label(ctx, open_buf, NK_TEXT_LEFT);
-      nk_layout_row_static(ctx, 30, 30, 1);
+      nk_layout_row_static(ctx, BUTTON_HEIGHT, BUTTON_HEIGHT, 1);
       if (nk_button_label(ctx, "ok")) {
         free(g_errstr);
         g_errstr = NULL;
@@ -525,7 +534,7 @@ static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
     num_lines = 0;
   }
 
-  nk_end(ctx);  // end a nk_window
+  nk_end(ctx); // end a nk_window
 }
 
 static void error_callback(int e, const char *d) {
