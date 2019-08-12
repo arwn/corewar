@@ -325,16 +325,8 @@ void new_player(struct s_cpu *cpu, header_t *h, int num) {
   cpu->players[num - 1].active_processes = 1;
   cpu->players[num - 1].last_live = 0;
   cpu->players[num - 1].prog_size = h->prog_size;
-  // cpu->players[num - 1].name = strndup(h->prog_name, NAME_MAX);
-  // if (f_verbose & OPT_INTLDBG) {
-  //   printf("DBG:      name(%s) NEW_PLAYER\n", cpu->players[num - 1].name);
-  //   printf("DBG: prog_name(%s) NEW_PLAYER\n", h->prog_name);
-  // }
-  // cpu->players[num - 1].comment = strndup(h->comment, COMMENT_LENGTH);
-  // if (f_verbose & OPT_INTLDBG) {
-  //   printf("DBG: comment(%s) NEW_PLAYER\n", cpu->players[num - 1].comment);
-  //   printf("DBG: comment(%s) NEW_PLAYER\n", h->comment);
-  // }
+  cpu->players[num - 1].name = strndup(h->prog_name, NAME_MAX);
+  cpu->players[num - 1].name = strndup(h->comment, COMMENT_LENGTH);
 }
 
 // load_file reads a file into readbuf. if the file starts with
@@ -349,22 +341,12 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
   h = *(header_t *)readbuf;
   h.magic = ntohl(h.magic);
   h.prog_size = ntohl(h.prog_size);
-  cpu->players[player - 1].name = strndup(h.prog_name, NAME_MAX);
-  if (f_verbose & OPT_INTLDBG) {
-    printf("DBG:      name(%s) NEW_PLAYER\n", cpu->players[player - 1].name);
-    printf("DBG: prog_name(%s) NEW_PLAYER\n", h.prog_name);
-  }
-  cpu->players[player - 1].comment = strndup(h.comment, COMMENT_LENGTH);
-  if (f_verbose & OPT_INTLDBG) {
-    printf("DBG: comment(%s) NEW_PLAYER\n", cpu->players[player - 1].comment);
-    printf("DBG: comment(%s) NEW_PLAYER\n", h.comment);
-  }
   new_player(cpu, &h, player);
   if (len > 0) {
     if (valid_header_p(h)) {
       cpu->load(cpu, readbuf + sizeof(header_t), len - sizeof(header_t),
                 location);
-      cpu->spawn_process(cpu, 0, location, -player);
+      cpu->spawn_process(cpu, location, -player); // player id reg must be < 0
       printf("* Player %d, weighing %d bytes, \"%s\" (\"%s\") !\n", player,
              h.prog_size, h.prog_name, h.comment);
       for (int jj = location, ll = (len - sizeof(header_t)); jj < ll + location;
@@ -626,7 +608,6 @@ static void vm_dump_core(struct s_cpu *cpu) {
   register int ii, jj, kk;
   int max = MEM_SIZE >> 6;
 
-if ((f_verbose & OPT_DBGOUT) && (f_verbose & OPT_INTLDBG))
   printf("-= [ CORE DUMP ] =-\n"
          "cpu->active(%d)\n"
          "cpu->clock(%zu)\n",
@@ -647,10 +628,10 @@ if ((f_verbose & OPT_DBGOUT) && (f_verbose & OPT_INTLDBG))
 }
 
 void vm_dump_processes(struct s_cpu *cpu) {
-  struct s_process *cur = cpu->processes;
+  struct s_process *cur = cpu->first;
   int n = 0;
-if ((f_verbose & OPT_DBGOUT) && (f_verbose & OPT_INTLDBG))
-    printf("-= [ PROCESS DUMP ] =-\n");
+
+  printf("-= [ PROCESS DUMP ] =-\n");
   while (cur != 0) {
     dump_process(cur, n);
     cur = cur->next;
@@ -866,6 +847,9 @@ int main(int argc, char *argv[]) {
     corewar_gui(&cpu);
   } else {
     while (cpu.active && cpu.processes) {
+      if (f_verbose & OPT_CYCLES) {
+        printf("It is now cycle %zu\n", cpu.clock + 1);
+      }
       if (f_dump && cpu.clock == dump_cycles) {
         vm_dump_state(&cpu);
         break;

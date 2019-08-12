@@ -94,7 +94,7 @@ ins_time+=(['helltrain']=27438)      # 27439
 ins_time+=(['fluttershy']=25092)     # 25093
 ins_time+=(['overwatch']=27438)      # 27439
 ins_time+=(['Asombra']=30360)        # 30361
-ins_time+=(['Gagnant']=4675)        # 26024
+ins_time+=(['Gagnant']=270)        # 26024
 
 out=/tmp
 input_file=""
@@ -245,12 +245,7 @@ for ins in "${input_args[@]}"; do
             $invm -d "$tim" "$out/$ins$i.cor" | grep -E '^0x0[[:xdigit:]]{2}0 : ' | awk '{$1=$1};1' > "$out/$ins$i.in"
         fi
         if [[ $experimental -eq 1 ]]; then
-            timeout 2 $outvm -r -v 31 -d "$tim" "$out/$ins$i.cor" > "$out/out.tmp"
-            status=$?
-            if (( status!=124 )); then
-                cat "$out/out.tmp" | awk '{$1=$1};1' > "$out/$ins$i.out"
-            fi
-            # $outvm -r -v 31 -d "$tim" "$out/$ins$i.cor" | awk '{$1=$1};1' > "$out/$ins$i.out"
+            $outvm -r -v 1 -d "$tim" "$out/$ins$i.cor" | awk '{$1=$1};1' > "$out/$ins$i.out"
         else
             timeout 2 $outvm -r -d "$tim" "$out/$ins$i.cor" > "$out/out.tmp"
             status=$?
@@ -266,7 +261,7 @@ for ins in "${input_args[@]}"; do
         elif ! diff -q "$out/$ins$i.in" "$out/$ins$i.out" >/dev/null; then
             if [[ $verbose -gt 0 ]]; then
                 if [[ $verbose -gt 1 ]]; then
-                    diff -U 3 "$out/$ins$i.in" "$out/$ins$i.out"
+                    diff "$out/$ins$i.in" "$out/$ins$i.out"
                 else
                     printf "\e[31mKO\e[0m\n"
                 fi

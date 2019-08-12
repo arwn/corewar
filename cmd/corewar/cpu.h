@@ -75,7 +75,7 @@ struct s_cpu {
 
   // spawn_process keeps track of how many *processes are allocated and reallocs
   // if needed. arg1 is the context. arg2 is the program counter. arg3 is r1
-  void (*spawn_process)(struct s_cpu *, struct s_process *, int, int);
+  void (*spawn_process)(struct s_cpu *, int, int);
   void (*kill_process)(struct s_cpu *);
   int (*step)(struct s_cpu *);
   void (*load)(struct s_cpu *, char *, uint32_t, uint32_t);
@@ -91,7 +91,7 @@ int f_verbose;        /* verbosity level */
 
 extern int instruction_calls[NUM_OPS];
 
-extern void next(struct s_cpu *cpu, struct s_process *proc);
+extern void next(struct s_cpu *cpu);
 
 struct s_cpu new_cpu(void);
 
