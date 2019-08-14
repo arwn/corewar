@@ -326,16 +326,8 @@ void new_player(struct s_cpu *cpu, header_t *h, int num) {
   cpu->players[num - 1].active_processes = 1;
   cpu->players[num - 1].last_live = 0;
   cpu->players[num - 1].prog_size = h->prog_size;
-  // cpu->players[num - 1].name = strndup(h->prog_name, NAME_MAX);
-  // if (f_verbose & OPT_INTLDBG) {
-  //   printf("DBG:      name(%s) NEW_PLAYER\n", cpu->players[num - 1].name);
-  //   printf("DBG: prog_name(%s) NEW_PLAYER\n", h->prog_name);
-  // }
-  // cpu->players[num - 1].comment = strndup(h->comment, COMMENT_LENGTH);
-  // if (f_verbose & OPT_INTLDBG) {
-  //   printf("DBG: comment(%s) NEW_PLAYER\n", cpu->players[num - 1].comment);
-  //   printf("DBG: comment(%s) NEW_PLAYER\n", h->comment);
-  // }
+  cpu->players[num - 1].name = strndup(h->prog_name, NAME_MAX);
+  cpu->players[num - 1].name = strndup(h->comment, COMMENT_LENGTH);
 }
 
 // load_file reads a file into readbuf. if the file starts with
@@ -350,16 +342,6 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
   h = *(header_t *)readbuf;
   h.magic = ntohl(h.magic);
   h.prog_size = ntohl(h.prog_size);
-  cpu->players[player - 1].name = strndup(h.prog_name, NAME_MAX);
-  if (f_verbose & OPT_INTLDBG) {
-    printf("DBG:      name(%s) NEW_PLAYER\n", cpu->players[player - 1].name);
-    printf("DBG: prog_name(%s) NEW_PLAYER\n", h.prog_name);
-  }
-  cpu->players[player - 1].comment = strndup(h.comment, COMMENT_LENGTH);
-  if (f_verbose & OPT_INTLDBG) {
-    printf("DBG: comment(%s) NEW_PLAYER\n", cpu->players[player - 1].comment);
-    printf("DBG: comment(%s) NEW_PLAYER\n", h.comment);
-  }
   new_player(cpu, &h, player);
   if (len > 0) {
     if (valid_header_p(h)) {
@@ -415,6 +397,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     select = nk_combo(ctx, players, 4, select, 25, nk_vec2(200, 200));
     offset = (unsigned)((1024 * select) + ft_atoi(offset_buf)) % MEM_SIZE;
 
+    nk_layout_row_dynamic(ctx, 30, 2);
     // this button opens a file, reads it into a buffer and copies it to the
     // edit buffer or the debug window depending if it's a compiled corewar bin.
     if (nk_button_label(ctx, "open file") && open_buf[0]) {
@@ -431,10 +414,8 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     }
 
     // error popup
-    // bugs: "open" win freezes until you click on another window or mouse over
-    // the background.
-    if (cantopen) {
-      static struct nk_rect s = {-10, -10, 200, 150};
+    if (cantopen != nk_false) {
+      static struct nk_rect s = {-75, -75, 200, 150};
       if (nk_popup_begin(ctx, NK_POPUP_STATIC, "ERROR",
                          NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, s)) {
         nk_layout_row_dynamic(ctx, 20, 1);
@@ -449,23 +430,77 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
         cantopen = nk_false;
       }
     }
-  }
-  nk_end(ctx); // end a nk_window
-}
 
-// win_edit contains an assembly editor, compiler, and loader.
-static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
-  (void)cpu;
+    // save button
+    if (nk_button_label(ctx, "Save")) {
+      int file = open(open_buf, O_RDWR | O_CREAT | O_TRUNC,
+                      S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+      if (file < 0) {
+        printf("Error opening %s\n", open_buf);
+        nk_end(ctx);
+        return;
+      }
+	  size_t buflen = ft_strlen(edit_buf);
+      size_t size = write(file, edit_buf, buflen);
+      if (size != buflen) {
+        printf("Error writing to file: %zu bytes written\n", size);
+      }
+      close(file);
+    }
 
-  if (nk_begin(
-          ctx, "edit",
-          nk_rect(EDIT_RECT_X, EDIT_RECT_Y, EDIT_RECT_WIDTH, EDIT_RECT_HEIGHT),
-          NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
-              NK_WINDOW_TITLE)) {
-    nk_layout_row_dynamic(ctx, EDIT_RECT_HEIGHT - 90, 1);
-    nk_edit_string_zero_terminated(ctx, NK_EDIT_BOX, edit_buf,
-                                   sizeof(edit_buf) - 1, nk_filter_default);
-    nk_layout_row_static(ctx, 30, 80, 1);
+#define ROW_HEIGHT 20
+#define CHAR_WIDTH 10
+#define BUTTON_HEIGHT 30
+
+    // display compilation error if one is thrown
+    static char **strtab = NULL;
+    static size_t max_strlen = 0;
+    static unsigned num_lines = 0;
+    static struct nk_rect err_rect;
+    if (g_errstr) {
+      if (!strtab) {
+        max_strlen = BUTTON_HEIGHT;
+        strtab = ft_strsplit(g_errstr, '\n');
+        for (num_lines = 0; strtab[num_lines]; ++num_lines)
+          max_strlen = MAX__(ft_strlen(strtab[num_lines]), max_strlen);
+        // line length * width_of(line)
+        // num lines * height_of(line) + height_of(ok_button)
+        printf("%zu\n", max_strlen);
+        err_rect.w = max_strlen * CHAR_WIDTH;
+        err_rect.h = (num_lines * (ROW_HEIGHT + 30)) + BUTTON_HEIGHT;
+        err_rect.y = 50 - err_rect.h;
+        err_rect.x = 50 - err_rect.w;
+      }
+
+      if (nk_popup_begin(ctx, NK_POPUP_STATIC, "ERROR",
+                         NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, err_rect)) {
+        nk_layout_row_dynamic(ctx, ROW_HEIGHT, 1);
+
+        for (int ii = 0; strtab[ii]; ++ii)
+          nk_label(ctx, strtab[ii], NK_TEXT_LEFT);
+
+        nk_layout_row_static(ctx, BUTTON_HEIGHT, BUTTON_HEIGHT, 1);
+        if (nk_button_label(ctx, "ok")) {
+          free(g_errstr);
+          g_errstr = NULL;
+          ft_free_str_tab(&strtab);
+          max_strlen = 0;
+          num_lines = 0;
+        }
+        nk_popup_end(ctx);
+      } else {
+        free(g_errstr);
+        g_errstr = NULL;
+        ft_free_str_tab(&strtab);
+        max_strlen = 0;
+        num_lines = 0;
+      }
+    } else if (strtab) {
+      ft_free_str_tab(&strtab);
+      max_strlen = 0;
+      num_lines = 0;
+    }
+
     if (nk_button_label(ctx, "Compile")) {
       int file = open("/tmp/corewar.cor", O_RDWR | O_CREAT | O_TRUNC,
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -500,59 +535,56 @@ static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
       if (!g_errstr)
         strncpy(open_buf, "/tmp/corewar.cor", 17);
     }
-  }
 
-#define ROW_HEIGHT 20
-#define CHAR_WIDTH 10
-#define BUTTON_HEIGHT 30
-
-  static char **strtab = NULL;
-  static size_t max_strlen = 0;
-  static unsigned num_lines = 0;
-  static struct nk_rect err_rect;
-  if (g_errstr) {
-    if (!strtab) {
-      max_strlen = BUTTON_HEIGHT;
-      strtab = ft_strsplit(g_errstr, '\n');
-      for (num_lines = 0; strtab[num_lines]; ++num_lines)
-        max_strlen = MAX__(ft_strlen(strtab[num_lines]), max_strlen);
-      // line length * width_of(line)
-      // num lines * height_of(line) + height_of(ok_button)
-      printf("%zu\n", max_strlen);
-      err_rect.w = max_strlen * CHAR_WIDTH;
-      err_rect.h = (num_lines * (ROW_HEIGHT + 30)) + BUTTON_HEIGHT;
-      err_rect.y = EDIT_RECT_HEIGHT - 50 - err_rect.h;
-      err_rect.x = EDIT_RECT_WIDTH - 50 - err_rect.w;
-    }
-    if (nk_popup_begin(ctx, NK_POPUP_STATIC, "ERROR",
-                       NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, err_rect)) {
-      nk_layout_row_dynamic(ctx, ROW_HEIGHT, 1);
-
-      for (int ii = 0; strtab[ii]; ++ii)
-        nk_label(ctx, strtab[ii], NK_TEXT_LEFT);
-
-      nk_layout_row_static(ctx, BUTTON_HEIGHT, BUTTON_HEIGHT, 1);
-      if (nk_button_label(ctx, "ok")) {
-        free(g_errstr);
-        g_errstr = NULL;
-        ft_free_str_tab(&strtab);
-        max_strlen = 0;
-        num_lines = 0;
+    // button for disassembling file
+    if (nk_button_label(ctx, "Un-Compile")) {
+      int file = open(open_buf, O_RDONLY);
+      if (file < 0) {
+        printf("Error opening %s\n", open_buf);
+        nk_end(ctx);
+        return;
       }
-      nk_popup_end(ctx);
-    } else {
-      free(g_errstr);
-      g_errstr = NULL;
-      ft_free_str_tab(&strtab);
-      max_strlen = 0;
-      num_lines = 0;
+      size_t filesize = 0;
+      size_t size;
+      // lseek(file, 0, SEEK_SET);
+      char *s = disassemble(file, &filesize);
+      close(file);
+      char *filename = "/tmp/corewar.s";
+
+      file = open(filename, O_RDWR | O_CREAT | O_TRUNC,
+                  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+      if (file < 0) {
+        printf("Error opening %s\n", filename);
+        nk_end(ctx);
+        return;
+      }
+      size = write(file, s, filesize);
+
+      if (size < filesize) {
+        printf("Error: wrote %d bytes instead of %zu\n", err, filesize);
+      }
+      close(file);
+      if (!g_errstr)
+        strncpy(open_buf, filename, 17);
     }
-  } else if (strtab) {
-    ft_free_str_tab(&strtab);
-    max_strlen = 0;
-    num_lines = 0;
   }
 
+  nk_end(ctx); // end a nk_window
+}
+
+// win_edit contains an assembly editor, compiler, and loader.
+static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
+  (void)cpu;
+
+  if (nk_begin(
+          ctx, "edit",
+          nk_rect(EDIT_RECT_X, EDIT_RECT_Y, EDIT_RECT_WIDTH, EDIT_RECT_HEIGHT),
+          NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
+              NK_WINDOW_TITLE)) {
+    nk_layout_row_dynamic(ctx, EDIT_RECT_HEIGHT - 55, 1);
+    nk_edit_string_zero_terminated(ctx, NK_EDIT_BOX, edit_buf,
+                                   sizeof(edit_buf) - 1, nk_filter_default);
+  }
   nk_end(ctx); // end a nk_window
 }
 

@@ -9,6 +9,7 @@ static void initial_process(struct s_process *done, struct s_cpu *cpu) {
   done->next = NULL; // done;
   done->prev = NULL; // done;
   cpu->processes = done;
+  cpu->first = done;
   // if (cpu->program && cpu->program[0] >= 0x01 && cpu->program[0] <= 0x10)
   //   done->instruction_time = g_op_tab[cpu->program[0]-1].cycles_to_exec;
   // else
@@ -18,15 +19,16 @@ static void initial_process(struct s_process *done, struct s_cpu *cpu) {
 // evaluated next cycle. we prepend because the newest process should go after
 // the oldest and before the newest.
 static void prepend_process(struct s_process *done, struct s_cpu *cpu) {
-  done->next = cpu->processes;
+  done->next = cpu->first;
   done->prev = NULL;
-  // cpu->first->prev = done;
+  cpu->first->prev = done;
   // struct s_process *last = cpu->first->prev;
   // last->next = done;
   // done->next = cpu->first;
   // done->prev = last;
   // cpu->first->prev = done;
-  cpu->processes = done;
+  cpu->first = done;
+  cpu->processes = cpu->first;
 }
 
 #define CASE_INSTRUCTION(type)                                                 \
@@ -145,11 +147,10 @@ static void check_alive(struct s_cpu *cpu) {
   cpu->num_checks += 1;
   if (NBR_LIVE < cpu->nbr_lives || cpu->num_checks == MAX_CHECKS) {
     cpu->cycle_to_die -= CYCLE_DELTA;
-    if (f_verbose & OPT_CYCLES)
-      printf("Cycle to die is now %d\n", cpu->cycle_to_die);
     cpu->num_checks = 0;
   }
   cpu->nbr_lives = 0;
+  cpu->processes = cpu->first;
 }
 
 static int step(struct s_cpu *cpu) {

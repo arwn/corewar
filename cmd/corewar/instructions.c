@@ -217,19 +217,19 @@ void write_mem_ins(uint8_t *mem, uint32_t idx, uint32_t val) {
   mem[(idx + 3) % MEM_SIZE] = val & 0xff;
 }
 
-// Write VAL into register REG for the process PROC
-void write_reg(struct s_process *proc, uint32_t reg, uint32_t val) {
+// Write VAL into register REG for the current process in CPU
+void write_reg(struct s_cpu *cpu, uint32_t reg, uint32_t val) {
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: write_reg reg(%08x) val(%08x) lav(%08x)\n", reg, val,
            ntohl(val));
   if (reg > 0 && reg <= REG_NUMBER)
-    proc->registers[reg - 1] = ntohl(val);
+    cpu->processes->registers[reg - 1] = ntohl(val);
 }
 
-// Read register REG for the process PROC
-int read_reg(struct s_process *proc, uint32_t reg) {
+// Read register REG for the current process in CPU
+int read_reg(struct s_cpu *cpu, uint32_t reg) {
   if (reg > 0 && reg <= REG_NUMBER) {
-    int ret = proc->registers[reg - 1];
+    int ret = cpu->processes->registers[reg - 1];
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_reg reg(%08x) ger(%08x)\n", ret, ntohl(ret));
     return ntohl(ret);
@@ -239,22 +239,22 @@ int read_reg(struct s_process *proc, uint32_t reg) {
 
 // Parse the argument size specified by ARG, read accordingly, and then return
 // VAL
-int read_val(struct s_cpu *cpu, struct s_process *proc, int arg) {
+int read_val(struct s_cpu *cpu, int arg) {
   int val = 0;
   int idx;
 
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val arg(%d) pc(%d)\n", arg, proc->pc);
+    printf("DBG: read_val arg(%d) pc(%d)\n", arg, cpu->processes->pc);
   if (arg == REG_CODE) {
     val = (char)read_mem_1(cpu->program, proc->pc);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val reg val(%08x)\n", val);
-    proc->pc += 1;
+    cpu->processes->pc += 1;
   } else if (arg == DIR_CODE) {
     val = (int)read_mem_4(cpu->program, proc->pc);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val dir val(%08x)\n", val);
-    proc->pc += 4;
+    cpu->processes->pc += 4;
   } else if (arg == IND_CODE) {
     idx = (short)read_mem_2(cpu->program, proc->pc);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
@@ -262,39 +262,39 @@ int read_val(struct s_cpu *cpu, struct s_process *proc, int arg) {
     val = (int)read_mem_4(cpu->program, idx + proc->pc);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val ind val(%08x)\n", val);
-    proc->pc += 2;
+    cpu->processes->pc += 2;
   }
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val end pc(%d)\n", proc->pc);
+    printf("DBG: read_val end pc(%d)\n", cpu->processes->pc);
   return (val);
 }
 
 // Modify the carry flag for the current process based on VAL
-void mod_carry(struct s_process *proc, int val) {
+void mod_carry(struct s_cpu *cpu, int val) {
   if (val) {
-    proc->carry = 1;
+    cpu->processes->carry = 1;
   } else {
-    proc->carry = 0;
+    cpu->processes->carry = 0;
   }
 }
 
 // Read the specified ARG, adjusting size based on OP direct_size member in
 // G_OP_TAB. Used primarily in LDI, STI, & LLDI
-int read_val_idx(struct s_cpu *cpu, struct s_process *proc, int arg, int op) {
+int read_val_idx(struct s_cpu *cpu, int arg, int op) {
   int reg;
   int val = 0;
   int idx;
 
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val_idx arg(%d) pc(%d)\n", arg, proc->pc);
+    printf("DBG: read_val_idx arg(%d) pc(%d)\n", arg, cpu->processes->pc);
   if (arg == REG_CODE) {
     reg = (char)read_mem_1(cpu->program, proc->pc);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_idx REG reg(%02x)\n", reg);
-    val = read_reg(proc, reg);
+    val = read_reg(cpu, reg);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_idx REG val(%08x)\n", val);
-    proc->pc += 1;
+    cpu->processes->pc += 1;
   } else if (arg == DIR_CODE) {
     if (g_op_tab[op].direct_size)
       val = (short)read_mem_2(cpu->program, proc->pc);
@@ -316,36 +316,36 @@ int read_val_idx(struct s_cpu *cpu, struct s_process *proc, int arg, int op) {
     val = (int)read_mem_4(cpu->program, idx + proc->pc);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_idx IND val(0x%08x)(%d)\n", val, val);
-    proc->pc += 2;
+    cpu->processes->pc += 2;
   }
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val_idx end pc(%d)\n", proc->pc);
+    printf("DBG: read_val_idx end pc(%d)\n", cpu->processes->pc);
   return val;
 }
 
 // Read the specified ARG, reading the current value of a register if necessary
-int read_val_load(struct s_cpu *cpu, struct s_process *proc, int arg) {
+int read_val_load(struct s_cpu *cpu, int arg) {
   int reg;
   int val = 0;
   int idx;
 
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val_load arg(%d) pc(%d)\n", arg, proc->pc);
+    printf("DBG: read_val_load arg(%d) pc(%d)\n", arg, cpu->processes->pc);
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    dump_nbytes(cpu, 8, proc->pc, 1);
+    dump_nbytes(cpu, 8, cpu->processes->pc, 1);
   if (arg == REG_CODE) {
     reg = (char)read_mem_1(cpu->program, proc->pc);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_load REG reg(%02x)\n", reg);
-    val = read_reg(proc, reg);
+    val = read_reg(cpu, reg);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_load REG val(%08x)\n", val);
-    proc->pc += 1;
+    cpu->processes->pc += 1;
   } else if (arg == DIR_CODE) {
     val = (int)read_mem_4(cpu->program, proc->pc);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_load DIR val(%08x)\n", val);
-    proc->pc += 4;
+    cpu->processes->pc += 4;
   } else if (arg == IND_CODE) {
     idx = (short)read_mem_2(cpu->program, proc->pc) & (IDX_MOD - 1);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
@@ -353,10 +353,10 @@ int read_val_load(struct s_cpu *cpu, struct s_process *proc, int arg) {
     val = (int)read_mem_4(cpu->program, proc->pc + idx - 2);
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_val_load IND val(%08x)\n", val);
-    proc->pc += 2;
+    cpu->processes->pc += 2;
   }
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val_load end pc(%d)\n", proc->pc);
+    printf("DBG: read_val_load end pc(%d)\n", cpu->processes->pc);
   return val;
 }
 
