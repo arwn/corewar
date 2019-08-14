@@ -9,26 +9,16 @@ static void initial_process(struct s_process *done, struct s_cpu *cpu) {
   done->next = NULL; // done;
   done->prev = NULL; // done;
   cpu->processes = done;
-  cpu->first = done;
-  // if (cpu->program && cpu->program[0] >= 0x01 && cpu->program[0] <= 0x10)
-  //   done->instruction_time = g_op_tab[cpu->program[0]-1].cycles_to_exec;
-  // else
 }
 
 // prepend_process prepends a process to the beginning of the process list to be
 // evaluated next cycle. we prepend because the newest process should go after
 // the oldest and before the newest.
 static void prepend_process(struct s_process *done, struct s_cpu *cpu) {
-  done->next = cpu->first;
+  done->next = cpu->processes;
   done->prev = NULL;
-  cpu->first->prev = done;
-  // struct s_process *last = cpu->first->prev;
-  // last->next = done;
-  // done->next = cpu->first;
-  // done->prev = last;
-  // cpu->first->prev = done;
-  cpu->first = done;
-  cpu->processes = cpu->first;
+  cpu->processes->prev = done;
+  cpu->processes = done;
 }
 
 #define CASE_INSTRUCTION(type)                                                 \
@@ -150,7 +140,6 @@ static void check_alive(struct s_cpu *cpu) {
     cpu->num_checks = 0;
   }
   cpu->nbr_lives = 0;
-  cpu->processes = cpu->first;
 }
 
 static int step(struct s_cpu *cpu) {
@@ -280,7 +269,6 @@ static void load(struct s_cpu *cpu, char *program, uint32_t length,
 struct s_cpu new_cpu(void) {
   static struct s_cpu done;
   done.active = 0;
-  // done.first = 0; // TODO: remove
   done.processes = 0;
   done.clock = 0;
   memset(done.players, 0, sizeof(done.players));
