@@ -31,57 +31,53 @@ static void prepend_process(struct s_process *done, struct s_cpu *cpu) {
 
 #define CASE_INSTRUCTION(type)                                                 \
   case e_##type:                                                               \
-    done = instruction_##type(cpu, proc);                                      \
-    instruction_calls[e_##type - 1] += done;                                   \
+    proc->pc = instruction_##type(cpu, proc);                                  \
+    instruction_calls[e_##type - 1] += 1;                                      \
     break;
 
 // bugs: the first instruction will be ran instantly because the
 // instruction_time starts at 0 pleas send patches.
-static int execute_instruction(struct s_cpu *cpu, struct s_process *proc) {
-  int done = 0;
+// static int execute_instruction(struct s_cpu *cpu, struct s_process *proc) {
+//   int done = 0;
 
-  if (proc->instruction_time) {
-    proc->prev_time = proc->instruction_time;
-    proc->instruction_time -= 1;
-  } else {
-    switch (proc->opcode) {
-      CASE_INSTRUCTION(live);
-      CASE_INSTRUCTION(ld);
-      CASE_INSTRUCTION(st);
-      CASE_INSTRUCTION(add);
-      CASE_INSTRUCTION(sub);
-      CASE_INSTRUCTION(and);
-      CASE_INSTRUCTION(or);
-      CASE_INSTRUCTION(xor);
-      CASE_INSTRUCTION(zjmp);
-      CASE_INSTRUCTION(ldi);
-      CASE_INSTRUCTION(sti);
-      CASE_INSTRUCTION(fork);
-      CASE_INSTRUCTION(lld);
-      CASE_INSTRUCTION(lldi);
-      CASE_INSTRUCTION(lfork);
-      CASE_INSTRUCTION(aff);
-    default:
-      if (f_verbose & OPT_INTLDBG)
-        puts("NOP: instruction not implemented yet");
-      if (proc->pc >= MEM_SIZE)
-        proc->pc = 0;
-      else
-        proc->pc++;
-      next(cpu, proc);
-      done = 1; // invalid instructions are still instructions
-      break;
-    }
-  }
-  if (f_verbose & OPT_INTLDBG)
-    printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
-           "pc(%4d) ins_time(%4d) EXEC_INS end --\n",
-           cpu->clock, proc->pid, proc->carry,
-           proc->last_live, proc->pc,
-           proc->instruction_time);
-  return done;
-}
-
+//   if (proc->instruction_time != 0) {
+//     proc->prev_time = proc->instruction_time;
+//     proc->instruction_time -= 1;
+//   } else {
+//     switch (proc->opcode) {
+//       CASE_INSTRUCTION(live);
+//       CASE_INSTRUCTION(ld);
+//       CASE_INSTRUCTION(st);
+//       CASE_INSTRUCTION(add);
+//       CASE_INSTRUCTION(sub);
+//       CASE_INSTRUCTION(and);
+//       CASE_INSTRUCTION(or);
+//       CASE_INSTRUCTION(xor);
+//       CASE_INSTRUCTION(zjmp);
+//       CASE_INSTRUCTION(ldi);
+//       CASE_INSTRUCTION(sti);
+//       CASE_INSTRUCTION(fork);
+//       CASE_INSTRUCTION(lld);
+//       CASE_INSTRUCTION(lldi);
+//       CASE_INSTRUCTION(lfork);
+//       CASE_INSTRUCTION(aff);
+//     default:
+//       if (f_verbose & OPT_INTLDBG)
+//         puts("NOP: instruction not implemented yet");
+//       done = 1; // invalid instructions are still instructions
+//       break;
+//     }
+//     if (proc->opcode == 0)
+//       next_instruction(cpu, proc);
+//   }
+//   if (f_verbose & OPT_INTLDBG)
+//     printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
+//            "pc(%4d) ins_time(%4d) prev_time(%4d) player(%d) EXEC_INS end
+//            --\n", cpu->clock, proc->pid, proc->carry, proc->last_live,
+//            proc->pc, proc->instruction_time, proc->prev_time, proc->player);
+//   return done;
+// }
+extern void ft_nop(void);
 // valid_header_p validates a header
 bool valid_header_p(header_t $header) {
   if ($header.magic != COREWAR_EXEC_MAGIC)
@@ -91,22 +87,62 @@ bool valid_header_p(header_t $header) {
   return true;
 }
 
+// execute op or decrement instruction_time
+int run_op(struct s_cpu *cpu, struct s_process *proc) {
+  int new_pc;
+
+  proc->instruction_time -= 1;
+  if (proc->instruction_time == 0) {
+    if (f_verbose & OPT_INTLDBG)
+      printf("DBG: proc->opcode(%02x) mem(%02x)\n", proc->opcode, cpu->program[proc->pc]);
+    new_pc = inst_tab[proc->opcode](cpu, proc);
+    if (cpu->program[2792] == 0xcd) ft_nop();
+    if (new_pc >= MEM_SIZE)
+      new_pc %= MEM_SIZE;
+    instruction_calls[proc->opcode] += 1;
+    if (new_pc < 0)
+      new_pc += MEM_SIZE;
+    proc->pc = new_pc;
+    proc->opcode = 0;
+    return 1;
+  }
+  return 0;
+}
+
+// run processes
+int run_processes(struct s_cpu *cpu) {
+  struct s_process *proc;
+  int ret = 0;
+
+  proc = cpu->processes;
+  while (proc != 0) {
+    if (proc->opcode == 0)
+      next_cpu_op(cpu, proc);
+    if (proc->opcode != 0)
+      ret = run_op(cpu, proc);
+    proc = proc->next;
+  }
+  return ret;
+}
 // Check for living processes
 static void check_alive(struct s_cpu *cpu) {
   struct s_process *proc;
 
   proc = cpu->processes;
   while (proc != NULL) {
-    if (cpu->clock - proc->last_live < (unsigned)cpu->cycle_to_die) {
+    // printf("DBG: stupid(%d)\n", cpu->clock - proc->last_live);
+    if ((cpu->clock - proc->last_live) < cpu->cycle_to_die) {
+      if (!proc || !proc->next)
+        break;
       proc = proc->next;
     } else {
-      if (cpu->active == 1)
-        cpu->winner = -(*proc->registers);
-      cpu->kill_process(cpu);
+      if (cpu->active == 0)
+        cpu->winner = 1;
+      cpu->kill_process(cpu, &proc);
     }
   }
   cpu->prev_check = cpu->clock;
-  cpu->num_checks++;
+  cpu->num_checks += 1;
   if (NBR_LIVE < cpu->nbr_lives || cpu->num_checks == MAX_CHECKS) {
     cpu->cycle_to_die -= CYCLE_DELTA;
     if (f_verbose & OPT_CYCLES)
@@ -117,103 +153,114 @@ static void check_alive(struct s_cpu *cpu) {
 }
 
 static int step(struct s_cpu *cpu) {
-  int ii;
-  int done = 0;
-  struct s_process *proc;
-
-  if ((unsigned)cpu->cycle_to_die <= cpu->clock - cpu->prev_check)
-    check_alive(cpu);
+  if (cpu == NULL) {
+    fprintf(stderr, "Fatal Error: cpu is NULL in step()\n");
+    exit(-2);
+  }
   cpu->clock += 1;
   if (f_verbose & OPT_CYCLES)
-    printf("It is now cycle %zu\n", cpu->clock);
-  proc = cpu->processes;
-  ii = proc->pid;
-  while (proc != 0) {
-    done = execute_instruction(cpu, proc);
-    if (f_verbose & OPT_INTLDBG)
-      printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
-             "pc(%4d) ins_time(%4d) prev_time(%4d) CPU_STEP loop\n",
-             cpu->clock, proc->pid, proc->carry,
-             proc->last_live, proc->pc,
-             proc->instruction_time, proc->prev_time);
-    if (proc->pid > ii) {
-      if (f_verbose & OPT_INTLDBG)
-        printf("DBG: pid(%d) != ii(%d) CPU_STEP loop\n", proc->pid, ii);
-    }
-    --ii;
-    proc = proc->next;
-  }
-  return done;
+    printf("It is now cycle %d\n", cpu->clock);
+  // printf("DBG: nbr_lives(%d) prev_check(%d) cycledie(%d)\n", cpu->nbr_lives, cpu->prev_check, cpu->cycle_to_die);
+  int ret = run_processes(cpu);
+  if (cpu->cycle_to_die <= cpu->clock - cpu->prev_check)
+    check_alive(cpu);
+  // int done = 0;
+  // struct s_process *proc;
+  // proc = cpu->processes;
+  // while (proc != 0) {
+  //   if (proc->opcode == 0)
+  //     next(cpu, proc);
+  //   done = execute_instruction(cpu, proc);
+  //   if (f_verbose & OPT_INTLDBG)
+  //     printf("DBG: clock(%5zu) pid(%4d) carry(%d) last_live(%5d) "
+  //            "pc(%4d) ins_time(%4d) prev_time(%4d) player(%d) CPU_STEP
+  //            loop\n", cpu->clock, proc->pid, proc->carry, proc->last_live,
+  //            proc->pc, proc->instruction_time, proc->prev_time,
+  //            proc->player);
+  //   proc = proc->next;
+  // }
+  return ret;
 }
 
 // spawn_process makes a new process. sometimes spawn_process allocates more
 // space for a few new processes.
-static void spawn_process(struct s_cpu *cpu, struct s_process *parent, int pc, int player) {
+static void spawn_process(struct s_cpu *cpu, int pc, int player) {
   struct s_process *done = malloc(sizeof(*done));
+
+  if (done == NULL) {
+    perror("Fatal error");
+    exit(-1);
+  }
+  bzero(done, sizeof(*done));
   if (f_verbose & OPT_INTLDBG)
-    printf("DBG: start SPAWN_PROC\n");
-  done->carry = parent ? parent->carry : 0;
+    printf("DBG: clock(%5d) pc(%4d) player(%d) SPAWN_PROC start\n", cpu->clock,
+           pc, player);
+  done->carry = 0;
   if (pc >= MEM_SIZE)
     pc %= MEM_SIZE;
   if (pc < 0)
     pc += MEM_SIZE;
+  if (player >= -4 && player <= -1) {
+    done->player = player;
+  }
   done->pc = pc;
   done->pid = cpu->active + 1;
-  done->prev_time = -1;
-  if (f_verbose & OPT_INTLDBG)
-    printf("DBG: pc(%4d) op(%02x) SPAWN_PROC\n", done->pc,
-           cpu->program[done->pc]);
-  done->opcode = cpu->program[done->pc];
-  if (done->opcode >= 1 && done->opcode <= 16)
-    done->instruction_time = g_op_tab[done->opcode - 1].cycles_to_exec - 1;
-  else
-    done->instruction_time = 1;
-  done->last_live = parent ? parent->last_live : 0;
-  if (f_verbose & OPT_INTLDBG)
-    fprintf(stderr,
-            "DBG: clock(%5zu) pid(%d) ins_time(%4d) op(0x%02x) SPAWN_PROC\n",
-            cpu->clock, done->pid, done->instruction_time, done->opcode);
+  done->prev_time = 0;
+  done->opcode = 0;
+  done->instruction_time = 0;
+  done->last_live = 0;
   for (int i = 0; i < REG_NUMBER; i++) {
-    done->registers[i] = parent ? parent->registers[i] : 0;
+    done->registers[i] = 0;
   }
-  if (parent == 0) {
-    *done->registers = player;
+  *done->registers = player;
+  if (cpu->processes == 0) {
     initial_process(done, cpu);
   } else {
     prepend_process(done, cpu);
   }
   cpu->active += 1;
-  next(cpu, done);
   if (f_verbose & OPT_INTLDBG)
-    printf("DBG: clock(%5zu) pid(%5d) carry(%d) last_live(%5d) pc(%4d) "
-           "ins_time(%4d) prv_time(%4d) SPAWN_PROC end\n",
+    printf("DBG: clock(%5d) pid(%4d) carry(%d) last_live(%5d) pc(%4d) "
+           "ins_time(%4d) prev_time(%4d) player(%d) SPAWN_PROC end\n",
            cpu->clock, cpu->processes->pid, cpu->processes->carry,
            cpu->processes->last_live, cpu->processes->pc,
-           cpu->processes->instruction_time, cpu->processes->prev_time);
+           cpu->processes->instruction_time, cpu->processes->prev_time,
+           cpu->processes->player);
 }
 
 // delete_process deletes the current process and sets the current process to
 // the previous process.
-static void delete_process(struct s_cpu *cpu) {
-  if (f_verbose & OPT_INTLDBG)
-    printf("DBG: pid(%d) num_checks(%d) num_lives(%d) prev_check(%d) "
-           "DELET_PROC start\n",
-           cpu->processes ? cpu->processes->pid : -1, cpu->num_checks,
-           cpu->nbr_lives, cpu->prev_check);
-  if (!cpu || !cpu->processes) {
-    if (f_verbose & OPT_INTLDBG)
-      fprintf(stderr, "Fatal error: cpu or cpu->processes NULL in delete_process\n");
-    exit(-1);
+static void delete_process(struct s_cpu *cpu, struct s_process **proc) {
+  // if (f_verbose & OPT_INTLDBG) {
+  //   printf("DBG: pid(%d) num_checks(%d) nbr_lives(%d) prev_check(%d) "
+  //          "DELET_PROC start\n",
+  //          cpu->processes ? cpu->processes->pid : -1, cpu->num_checks,
+  //          cpu->nbr_lives, cpu->prev_check);
+  // }
+  // if (!cpu) {
+  //   if (f_verbose & OPT_INTLDBG)
+  //     fprintf(stderr,
+  //             "Fatal error: cpu or cpu->processes NULL in delete_process\n");
+  //   exit(-1);
+  //   return;
+  // }
+  // if (cpu->winner == 1)
+    // return;
+  if(proc == 0 || *proc == 0) {
+    fprintf(stderr, "ERROR: proc is null in delete_process\n");
     return;
   }
-  struct s_process *tmp = cpu->processes;
-  cpu->processes = cpu->processes->next;
-  if (tmp->next != NULL)
-    tmp->next->prev = tmp->prev;
-  if (tmp->prev != NULL)
-    tmp->prev->next = tmp->next;
-  free(tmp);
-  // cpu->first = cpu->processes;
+  struct s_process *current = *proc;
+  if (f_verbose & OPT_DEATHS)
+    printf("Process %d hasn\'t lived for %d cycles (CTD %d)\n", current->pid, cpu->clock - current->last_live, cpu->cycle_to_die);
+  *proc = (*proc)->next;
+  if (current->next != NULL)
+    current->next->prev = current->prev;
+  if (current->prev != NULL)
+    current->prev->next = current->next;
+  current->next = 0;
+  current->prev = 0;
+  free(current);
   cpu->active -= 1;
 }
 
@@ -230,9 +277,9 @@ static void load(struct s_cpu *cpu, char *program, uint32_t length,
 
 // new_cpu makes a new cpu.
 struct s_cpu new_cpu(void) {
-  struct s_cpu done;
+  static struct s_cpu done;
   done.active = 0;
-  done.first = 0;
+  // done.first = 0; // TODO: remove
   done.processes = 0;
   done.clock = 0;
   memset(done.players, 0, sizeof(done.players));
@@ -242,6 +289,7 @@ struct s_cpu new_cpu(void) {
   done.cycle_to_die = CYCLE_TO_DIE;
   done.prev_check = 0;
   done.num_checks = 0;
+  done.nbr_lives = 0;
   memset(done.lastlive, 0, sizeof(int) * 4);
   done.spawn_process = spawn_process;
   done.kill_process = delete_process;

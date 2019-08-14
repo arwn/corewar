@@ -94,7 +94,7 @@ ins_time+=(['helltrain']=27438)      # 27439
 ins_time+=(['fluttershy']=25092)     # 25093
 ins_time+=(['overwatch']=27438)      # 27439
 ins_time+=(['Asombra']=30360)        # 30361
-ins_time+=(['Gagnant']=5424)        # 26024
+ins_time+=(['Gagnant']=2810)        # 26024
 
 out=/tmp
 input_file=""

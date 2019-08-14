@@ -18,4 +18,8 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc);
 int instruction_lfork(struct s_cpu *cpu, struct s_process *proc);
 int instruction_aff(struct s_cpu *cpu, struct s_process *proc);
 
+typedef int (*t_inst)(struct s_cpu*, struct s_process *);
+
+extern t_inst inst_tab[NUM_OPS + 1];
+
 #endif /* INSTRUCTIONS_H */

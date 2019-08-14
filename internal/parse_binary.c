@@ -27,26 +27,26 @@ unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx, uint8_t
 	unsigned ii = 0;
 	unsigned char	opcode = progbuf[ii++];
 
-	if (opcode < 1 || opcode > sizeof(g_op_tab) / sizeof(*g_op_tab)) {
+	if (opcode < 1 || opcode > sizeof(g_op_tab) / sizeof(*g_op_tab)) { // YTHO?
 		*err = 1;
 		asprintf(&g_errstr, ERR_UNKNOWN_OPCODE, progbuf[ii-1]);
 		return (ii);
 	}
 
-	if (g_op_tab[opcode-1].param_encode) {
+	if (g_op_tab[opcode].param_encode) {
 		find_arg_types(argtypes, progbuf[ii++]);
 	}
 	else {
 		for (unsigned jj = 0; jj < MAX_ARGS_NUMBER; ++jj)
-			argtypes[jj] = g_op_tab[opcode-1].argtypes[jj];
+			argtypes[jj] = g_op_tab[opcode].argtypes[jj];
 	}
 
 	if (*bufidx >= bufsize)
 		return (larger_than_bufsize(err, ii));
 
-	ft_strcat(linebuf + *bufidx, g_op_tab[opcode-1].name);
+	ft_strcat(linebuf + *bufidx, g_op_tab[opcode].name);
 	*bufidx += g_op_len_tab[opcode-1];
-	for (int jj = 0; *bufidx < bufsize && jj < g_op_tab[opcode-1].numargs && ii < progbuf_size; ++jj) {
+	for (int jj = 0; *bufidx < bufsize && jj < g_op_tab[opcode].numargs && ii < progbuf_size; ++jj) {
 		ft_strcat(linebuf + *bufidx, jj ? "," : " ");
 		*bufidx += 1;
 
@@ -72,16 +72,16 @@ unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx, uint8_t
 
 		switch (num_bytes) {
 		case 1:
-			nn = (int8_t)read_mem_byte(progbuf, ii);
+			nn = (int8_t)read_mem_1(progbuf, ii);
 			break ;
 		case 2:
-			nn = (int16_t)read_mem_word(progbuf, ii);
+			nn = (int16_t)read_mem_2(progbuf, ii);
 			break ;
 		case 4:
-			nn = (int32_t)read_mem_long(progbuf, ii);
+			nn = (int32_t)read_mem_4(progbuf, ii);
 			break ;
 		case 8:
-			nn = (int64_t)read_mem_quad(progbuf, ii);
+			nn = (int64_t)read_mem_8(progbuf, ii);
 			break ;
 		}
 		ii += num_bytes;

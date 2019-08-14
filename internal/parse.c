@@ -13,7 +13,7 @@ static t_list *handle_label(t_list *tok, t_arg *arg)
 	}
 	arg->type |= T_LAB;
 	if (T(tok)->type == instruction)
-		arg->str = g_op_tab[T(tok)->opcode - 1].name;
+		arg->str = g_op_tab[T(tok)->opcode].name;
 	else
 		arg->str = T(tok)->str;
 	return (tok->next);
@@ -110,7 +110,7 @@ t_list		*getargs(t_list *tok, t_cmd *cmd)
 	t_arg		arg;
 	unsigned	ii;
 	char		sep;
-	unsigned	numargs = g_op_tab[cmd->opcode-1].numargs;
+	unsigned	numargs = g_op_tab[cmd->opcode].numargs;
 
 	tmp = tok;
 	sep = 0;
@@ -152,7 +152,7 @@ t_list		*getargs(t_list *tok, t_cmd *cmd)
 		TOK_TO_ERR(T(tok));
 		return (tok);
 	}
-	cmd->num_bytes += 1 + (g_op_tab[cmd->opcode - 1].param_encode ? ENC_SIZE : 0);
+	cmd->num_bytes += 1 + (g_op_tab[cmd->opcode].param_encode ? ENC_SIZE : 0);
 	return (tok);
 }
 
@@ -272,7 +272,7 @@ t_list		*getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict, unsig
 
 static int			chkcmd(t_cmd *cmd)
 {
-	t_op	*op = &g_op_tab[cmd->opcode - 1];
+	t_op	*op = &g_op_tab[cmd->opcode];
 
 	for (int ii = 0; ii < op->numargs; ++ii) {
 		if (!(op->argtypes[ii] & (cmd->argtypes[ii] & ~T_LAB)))
@@ -328,13 +328,13 @@ t_list		*parse(t_list *tokens, size_t bufsize,
 			int idx;
 			if ((idx = chkcmd(&cmd)))
 			{
-				asprintf(&g_errstr, g_errarr, cmd.linenum, cmd.cols[idx-1], g_op_tab[cmd.opcode-1].name, g_arg_to_str[cmd.argtypes[idx-1] & ~T_LAB]);
+				asprintf(&g_errstr, g_errarr, cmd.linenum, cmd.cols[idx-1], g_op_tab[cmd.opcode].name, g_arg_to_str[cmd.argtypes[idx-1] & ~T_LAB]);
 				ft_lstdel(&cmds, free_);
 				return (NULL);
 			}
 			{
 				cmd.encoding = 0;
-				for (int ii = 1; ii <= g_op_tab[cmd.opcode-1].numargs; ++ii) {
+				for (int ii = 1; ii <= g_op_tab[cmd.opcode].numargs; ++ii) {
 					cmd.encoding |= (g_cmd_encoding[cmd.argtypes[ii-1] & ~T_LAB]) << ((ENC_SIZE * 8) - (ii * 2));
 				}
 			}

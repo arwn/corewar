@@ -1,8 +1,11 @@
 ASM:
+  Fix Makefile
   Hardcode test everything
 
 COREWAR:
   Test
+  Fix incorrect behavior with Gagnant.cor, specifically not forking
+    -- `./corewar -r -v31 -d2810 Gagnant.cor`
   Fix unreadable player PC colors.  More contrast, sometimes no colors appear
   Unexpected Fatal Error in VM
     -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`

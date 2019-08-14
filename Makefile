@@ -12,8 +12,8 @@ LIBGLFW = $(GLFWBUILDDIR)src/libglfw3.a
 
 LFTDIR = $(LIBDIR)libft/
 LFT = $(LFTDIR)libft.a
-LINKERS = -L $(LFTDIR) -lft
-INCLUDES = -I $(LFTDIR)includes/ -I inc/
+CWLINKERS = -L $(LFTDIR) -lft
+CWINCLUDES = -I $(LFTDIR)includes/ -I inc/
 
 ASM_SRCDIR = cmd/asm/
 ASM_NAME = asm
@@ -45,15 +45,21 @@ CFLAGS = $(CCFLAGS) $(INCLUDES)
 
 all: $(ASM_NAME) $(VM_NAME) $(CHAMP_NAME)
 
+$(ASM_NAME): LINKERS = $(CWLINKERS)
+$(ASM_NAME): INCLUDES = $(CWINCLUDES)
+$(ASM_NAME): CFLAGS = $(CCFLAGS) $(INCLUDES) $(LINKERS)
 $(ASM_NAME): $(LFT) $(ASM_OBJS) $(INTERNAL_OBJS)
-	$(CC) $(CFLAGS) $(LINKERS) $(INCLUDES) $(INTERNAL_OBJS) $(ASM_OBJS) -o $(ASM_NAME)
+	$(CC) $(CFLAGS) $(INTERNAL_OBJS) $(ASM_OBJS) -o $(ASM_NAME)
 
+$(VM_NAME): LINKERS = $(CWLINKERS) $(GUI_LDFLAGS) $(GUI_FRAMEWORKS)
+$(VM_NAME): INCLUDES = $(CWINCLUDES) $(GUI_INCLUDE)
+$(VM_NAME): CFLAGS = $(CCFLAGS) $(INCLUDES) $(LINKERS)
 $(VM_NAME): $(VM_OBJS) $(ASM_OBJS) $(INTERNAL_OBJS)
 	make deps
-	$(CC) $(CFLAGS) $(LINKERS) $(INCLUDES) $(GUI_INCLUDE) $(GUI_LDFLAGS) $(GUI_FRAMEWORKS) $(INTERNAL_OBJS) $(VM_OBJS) -o $(VM_NAME)
+	$(CC) $(CFLAGS) $(INTERNAL_OBJS) $(VM_OBJS) -o $(VM_NAME)
 
 $(CHAMP_NAME): $(ASM_NAME) $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME))
-	cp $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME)) ./
+	mv $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME)) ./
 
 $(addprefix $(CHAMP_SRCDIR), %.cor): $(addprefix $(CHAMP_SRCDIR), %.s)
 	./$(ASM_NAME) $<
@@ -61,11 +67,13 @@ $(addprefix $(CHAMP_SRCDIR), %.cor): $(addprefix $(CHAMP_SRCDIR), %.s)
 deps: $(LFT) $(LIBGLEW) $(LIBGLFW)
 
 $(LIBGLFW):
-	mkdir -p $(GLFWBUILDDIR) && cd $(GLFWBUILDDIR) && cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_EXECUTABLE_FORMAT=MACHO -DGLFW_BUILD_DOCS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_INSTALL=OFF -DGLFW_USE_OSMESA=OFF -DGLFW_VULKAN_STATIC=OFF
+	mkdir -p $(GLFWBUILDDIR)
+	cd $(GLFWBUILDDIR)
+	cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_EXECUTABLE_FORMAT=MACHO -DGLFW_BUILD_DOCS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_INSTALL=OFF -DGLFW_USE_OSMESA=OFF -DGLFW_VULKAN_STATIC=OFF
 	make -C $(GLFWBUILDDIR)
 
 $(LIBGLEW):
-	make -C $(GLEWDIR)
+	make -C $(GLEWDIR) glew.lib.static
 
 $(LFT):
 	make -C $(LFTDIR)
@@ -83,9 +91,11 @@ depclean:
 	make -C $(LIBDIR)glew-2.1.0 clean
 	make -C $(LIBDIR)glfw-3.3/build clean
 	-$(RM) -r $(LIBDIR)glfw-3.3/build
-	make -C $(LIBDIR)libft clean
+	make -C $(LIBDIR)libft fclean
 
 re: fclean all
 
 er:
-	@echo "Make 'er?  I barely know 'er!"
+	@printf "Make 'er?"
+	@sleep 2
+	@printf "\rI barely know 'er!\n"
