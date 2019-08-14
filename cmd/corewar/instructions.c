@@ -3,8 +3,10 @@
 #include "util.h"
 #include <stdio.h>
 
+// clang-format off
 // must be included after 'cpu.h'
 #include "instructions.h"
+// clang-format on
 
 // Write N bytes of CPU->PROGRAM at offset PC
 void dump_nbytes(struct s_cpu *cpu, int n, int pc, int opt) {
