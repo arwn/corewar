@@ -327,7 +327,7 @@ void new_player(struct s_cpu *cpu, header_t *h, int num) {
   cpu->players[num - 1].last_live = 0;
   cpu->players[num - 1].prog_size = h->prog_size;
   cpu->players[num - 1].name = strndup(h->prog_name, NAME_MAX);
-  cpu->players[num - 1].name = strndup(h->comment, COMMENT_LENGTH);
+  cpu->players[num - 1].comment = strndup(h->comment, COMMENT_LENGTH);
 }
 
 // load_file reads a file into readbuf. if the file starts with
@@ -711,22 +711,22 @@ static void usage_help(void) {
                   "Run each file in the Corewar virtual machine\n"
                   "Example: corewar -v 0 champ.cor zork.cor\n\n"
                   "Options:\n"
-                  "  -a\t\tenable output from AFF instruction\n"
-                  "  -c\t\tenable color in core dump\n"
-                  "  -d\t\tdump core memory after NUM cycles\n"
-                  "  -h\t\tdisplay this help output\n"
-                  "  -l\t\tcall 'pause()' at the end of main\n"
-                  "  -p\t\tdump processes when dumping core\n"
-                  "  -r\t\tdisable graphical visualizer of vm\n"
-                  "  -v\t\tverbosity level\n"
-                  "\t\t\t 0 - minimal output\n"
-                  "\t\t\t 1 - live calls\n"
-                  "\t\t\t 2 - current cycle\n"
-                  "\t\t\t 4 - current instruction\n"
-                  "\t\t\t 8 - process removal/death\n"
-                  "\t\t\t16 - current program counter value\n"
-                  "\t\t\t32 - instruction execution debug output\n"
-                  "\t\t\t64 - internal vm debug output\n");
+                  "  -a\tenable output from AFF instruction\n"
+                  "  -c\tenable color in core dump\n"
+                  "  -d\tdump core memory after NUM cycles\n"
+                  "  -h\tdisplay this help output\n"
+                  "  -l\tcall 'pause()' at the end of main\n"
+                  "  -n\tenable graphical visualizer of vm\n"
+                  "  -p\tdump processes when dumping core\n"
+                  "  -v\tverbosity level\n"
+                  "\t\t 0 - minimal output\n"
+                  "\t\t 1 - live calls\n"
+                  "\t\t 2 - current cycle\n"
+                  "\t\t 4 - current instruction\n"
+                  "\t\t 8 - process removal/death\n"
+                  "\t\t16 - current program counter value\n"
+                  "\t\t32 - instruction execution debug output\n"
+                  "\t\t64 - internal vm debug output\n");
   exit(0);
 }
 
@@ -740,7 +740,7 @@ static void corewar_gui(struct s_cpu *cpu) {
   // GLFW
   glfwSetErrorCallback(error_callback);
   if (!glfwInit()) {
-    fprintf(stdout, "[GFLW] failed to init!\n");
+    fprintf(stdout, "Fatal error: [GFLW] failed to init!\n");
     exit(1);
   }
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -821,6 +821,14 @@ void cpu_cleanup(struct s_cpu *cpu) {
   }
 }
 void ft_nop(void) {return;}
+static int valid_number_arg(const char *str) {
+  while (*str) {
+    if (ISDIGIT(*str) == 0)
+      return 0;
+    ++str;
+  }
+  return 1;
+}
 int main(int argc, char *argv[]) {
   int ch = 0;
   int ii = 0;
@@ -828,10 +836,9 @@ int main(int argc, char *argv[]) {
   FILE *f;
   static struct s_cpu cpu;
 
-  f_enable_aff = f_color = f_dump = f_leaks = f_dump_processes = f_verbose = 0;
-  f_gui = 1;
+  f_gui = f_enable_aff = f_color = f_dump = f_leaks = f_dump_processes = f_verbose = 0;
   bin = *argv;
-  while ((ch = getopt(argc, argv, "acd:hlprv:")) != -1) {
+  while ((ch = getopt(argc, argv, "acd:hlnpv:")) != -1) {
     switch (ch) {
     case 'a':
       f_enable_aff = 1;
@@ -841,7 +848,7 @@ int main(int argc, char *argv[]) {
       break;
     case 'd':
       f_dump = 1;
-      if (optarg && ISDIGIT(*optarg))
+      if (optarg && valid_number_arg(optarg))
         dump_cycles = atoi(optarg);
       else
         usage("corewar: invalid \'-d\' argument: ", optarg);
@@ -852,24 +859,28 @@ int main(int argc, char *argv[]) {
     case 'l':
       f_leaks = 1;
       break;
+    case 'n':
+      f_gui = 1;
+      break;
     case 'p':
       f_dump_processes = 1;
       break;
-    case 'r':
-      f_gui = 0;
-      break;
     case 'v':
-      if (optarg && ISDIGIT(*optarg))
+      if (optarg && valid_number_arg(optarg))
         f_verbose = atoi(optarg);
       else
         usage("corewar: invalid \'-v\' argument: ", optarg);
       break;
     case '?':
     default:
+      if (f_verbose & OPT_INTLDBG)
+        printf("DBG: ch(%c) optarg(%s) optind(%d) opterr(%d) optopt(%d) DEFAULT\n", ch, optarg, optind, opterr, optopt);
       usage(0, 0);
       break;
     }
   }
+  if (f_verbose & OPT_INTLDBG)
+    printf("DBG: ch(%c) optarg(%s) optind(%d) opterr(%d) optopt(%d) END\n", ch, optarg, optind, opterr, optopt);
   argc -= optind;
   argv += optind;
 
@@ -884,8 +895,8 @@ int main(int argc, char *argv[]) {
       {OFFSET_4P_P1, OFFSET_4P_P2, OFFSET_4P_P3, OFFSET_4P_P4},
   };
   if (argc > MAX_PLAYERS || argc < 0) {
-    fprintf(stderr, "Fatal error: invalid number of arguments: %d\n", argc);
-    return 2;
+    fprintf(stderr, "Error: invalid number of arguments: %d\n", argc);
+    return 1;
   }
 
   // load in .cor files
@@ -902,8 +913,10 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "Fatal error: invalid champion file: %s\n", *argv);
       return 1;
     }
-    if (fclose(f) != 0)
+    if (fclose(f) != 0) {
+      perror("Fatal error");
       return 1;
+    }
     ++ii;
     ++argv;
   }
@@ -922,7 +935,6 @@ int main(int argc, char *argv[]) {
         break;
       }
       cpu.step(&cpu);
-      if (cpu.program[2792] == 0xcd) ft_nop();
     }
     int winner_out = 0;
     for (ii = 0; ii < MAX_PLAYERS; ++ii) {
@@ -931,7 +943,7 @@ int main(int argc, char *argv[]) {
     }
     cpu.winner = winner_out + 1;
     if (cpu.winner != 0 && cpu.processes == NULL)
-      printf("Winner is player %d, \"%s\"\n", cpu.winner,
+      printf("Contestant %d, \"%s\", has won !\n", cpu.winner,
              cpu.players[cpu.winner - 1].name);
     else if (cpu.processes == NULL)
       printf("Stalemate.\n");

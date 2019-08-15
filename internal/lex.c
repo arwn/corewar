@@ -15,6 +15,8 @@ static char *get_str(char *s, unsigned *col) {
 	++start;
 
 	end = ft_strcspn(s + start, "\"");
+	if (end > COMMENT_LENGTH)
+		return (NULL);
 	ii = start + end + 1;
 	while (s[ii] == ' ' || s[ii] == '\t')
 		++ii;
@@ -102,7 +104,7 @@ t_tok getnexttoken(char **s, char *str) {
 		*s += ft_strspn(*s, "0123456789");
 		return (tok);
 		break;
-	case COMMENT_CHAR:
+	case COMMENT_CHAR: case '#':
 		tok = ((t_tok){.type = comment_char, .col = *s - str});
 		inc = 0;
 		**s = '\0';

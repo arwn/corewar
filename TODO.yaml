@@ -1,5 +1,11 @@
 ASM:
-  Fix Makefile
+  Fix error on redefinition of an unused label
+    -- `./asm fast.s`
+  Fix error on valid multi-line .comment
+    -- `./asm Explosive_Kitty.s`
+  Fix error for Asombra.s
+  Fix error for barriere.s being truncated too early
+  Fix pai_mu_tan.s
   Hardcode test everything
 
 COREWAR:
@@ -20,6 +26,7 @@ COREWAR:
 
 DONE:
   ASM:
+    Fix Makefile
     Fix names
   COREWAR:
     Fix zjmp -- negative offset

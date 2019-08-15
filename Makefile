@@ -69,7 +69,7 @@ $(VM_NAME): $(VM_OBJS) $(ASM_OBJS) $(INTERNAL_OBJS)
 $(VM_OBJS): CFLAGS = $(CCFLAGS) $(CWINCLUDES) $(GUI_INCLUDE)
 
 $(CHAMP_NAME): $(CHAMP_SRCDIR)$(CHAMP_NAME) $(ASM_NAME)
-	mv $(CHAMP_SRCDIR)$(CHAMP_NAME) ./
+	cp $(CHAMP_SRCDIR)$(CHAMP_NAME) ./
 
 $(CHAMP_SRCDIR)$(CHAMP_NAME): $(CHAMP_SRCDIR)$(CHAMP_CFILES) $(ASM_NAME)
 	./$(ASM_NAME) $<
@@ -98,10 +98,10 @@ fclean: clean
 	-$(RM) $(CHAMP_SRCDIR)$(CHAMP_NAME)
 
 depclean:
-	make -C $(LIBDIR)glew-2.1.0 clean
-	make -C $(LIBDIR)glfw-3.3/build clean
+	-make -C $(LIBDIR)glew-2.1.0 clean
+	-make -C $(LIBDIR)glfw-3.3/build clean
 	-$(RM) -r $(LIBDIR)glfw-3.3/build
-	make -C $(LIBDIR)libft fclean
+	-make -C $(LIBDIR)libft fclean
 
 re: fclean all
 

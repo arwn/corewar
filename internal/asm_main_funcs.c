@@ -77,7 +77,8 @@ char*(*g_tab[])(int,size_t*) = {
 	disassemble,
 };
 
-// determines and writes filled buffer to output file
+// determines and writes filled buffer to output file, and doesn't
+// overwrite an existing '.s' file when disassembling
 int		write_to_file(int opts, char *filename, char *buf, size_t bufsize)
 {
 	char	ofilename[1024];
@@ -87,11 +88,11 @@ int		write_to_file(int opts, char *filename, char *buf, size_t bufsize)
 
 	ft_bzero(ofilename, sizeof(ofilename));
 	end = ft_strrchr(filename, '.');
-	// makes sure there is enough space for '.cor' or '.s'
+	// makes sure there is enough space for '.cor' or '.disasm.s'
 	s = ft_strncpy(ofilename, filename,
 				   MIN((sizeof(ofilename) / sizeof(*ofilename)) - 5,
 					   ((size_t)end - (size_t)filename)));
-	ft_strcat(s, (!(opts & opt_getoptcode(g_asm_opts, 'd', NULL))) ? ".cor" : ".s");
+	ft_strcat(s, (!(opts & opt_getoptcode(g_asm_opts, 'd', NULL))) ? ".cor" : ".disasm.s");
 
 
 	fd = open(ofilename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);

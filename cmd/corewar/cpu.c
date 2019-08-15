@@ -252,6 +252,11 @@ static void delete_process(struct s_cpu *cpu, struct s_process **proc) {
   current->prev = 0;
   free(current);
   cpu->active -= 1;
+  if (cpu->active == 0 && cpu->processes) {
+    if (f_verbose & OPT_INTLDBG)
+      printf("DBG: processes(%p) NO MORE ACTIVE PLAYERS\n", cpu->processes);
+    cpu->processes = 0;
+  }
 }
 
 // load loads a PROGRAM of length LENGTH into memory address ADDRESS.

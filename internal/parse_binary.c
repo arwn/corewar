@@ -27,7 +27,7 @@ unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx, uint8_t
 	unsigned ii = 0;
 	unsigned char	opcode = progbuf[ii++];
 
-	if (opcode < 1 || opcode > sizeof(g_op_tab) / sizeof(*g_op_tab)) { // YTHO?
+	if (opcode < 1 || opcode > sizeof(g_op_tab) / sizeof(*g_op_tab)) {
 		*err = 1;
 		asprintf(&g_errstr, ERR_UNKNOWN_OPCODE, progbuf[ii-1]);
 		return (ii);
@@ -55,7 +55,7 @@ unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx, uint8_t
 
 		int num_bytes = CMD_NUM_BYTES(argtypes[jj], opcode);
 
-		printf("%zu\n", *bufidx);
+		printf("%zu\n", *bufidx); // TODO: remove
 		uint64_t nn = argtypes[jj];	// T_INT || T_DIR || T_REG
 		if (!nn || nn > T_IND || !g_cmd_encoding[nn]) {
 			*err = 1;

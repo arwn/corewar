@@ -89,7 +89,7 @@ void fill_tbls(void) {
 		g_name_hash_tab[ii] = ft_hash(g_name_tab[ii]);
 
 	for (unsigned ii = 0; ii < sizeof(g_op_len_tab) / sizeof(*g_op_len_tab); ++ii)
-		g_op_len_tab[ii] = ft_strlen(g_op_tab[ii+1].name); // TODO: actually change other g_*_tab tables to be like g_op_talb
+		g_op_len_tab[ii] = ft_strlen(g_op_tab[ii+1].name); // TODO: actually change other g_op_*_tab tables to be like g_op_tab
 
 	for (unsigned ii = 0; ii < sizeof(g_op_hash_tab) / sizeof(*g_op_hash_tab); ++ii)
 		g_op_hash_tab[ii] = ft_hash(g_op_tab[ii+1].name);
