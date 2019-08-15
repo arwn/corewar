@@ -6,7 +6,7 @@
 /*   By: acarlson <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/11 12:08:39 by acarlson          #+#    #+#             */
-/*   Updated: 2019/08/09 10:49:17 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/15 10:01:59 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
 			if (s && !(opts & opt_getoptcode(g_asm_opts, 'n', NULL)))
 				r |= write_to_file(opts, argv[ii], s, size);
 			else
-				r |= !!s;
+				r |= !s;
 			close(fd);
 		}
 
