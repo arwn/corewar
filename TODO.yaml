@@ -3,7 +3,6 @@ ASM:
 
 COREWAR:
   Test
-  Fix unreadable player PC colors.  More contrast
   Seg fault with 4 players in GUI
     -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
     breaks around cycle 1500
@@ -19,6 +18,7 @@ DONE:
   	Fix labels with names conflicting with types
   COREWAR:
     Fix zjmp -- negative offset
+    Fix unreadable player PC colors.  More contrast
     Check invalid header
     Load champions eqidistant from each other
     No winner output with disabled gui

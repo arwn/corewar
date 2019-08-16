@@ -87,8 +87,7 @@ t_tok getnexttoken(char **s, char *str) {
 
 	tok = TOK_ERR(*s - str, ERR_UNKNOWN_CMD);
 	if ((ii = ft_strspn(*s, LABEL_CHARS))
-		&& ((*s != str && (*s)[-1] == LABEL_CHAR)
-			|| ((*s)[ii] == LABEL_CHAR)))
+		&& ((*s != str && (*s)[-1] == LABEL_CHAR) || ((*s)[ii] == LABEL_CHAR)))
 		return (complex_token(s, str, tok));
 	switch (**s) {
 	case ' ':
