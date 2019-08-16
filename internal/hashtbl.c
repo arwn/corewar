@@ -6,7 +6,7 @@
 /*   By: acarlson <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/17 12:27:08 by acarlson          #+#    #+#             */
-/*   Updated: 2019/07/29 14:26:04 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/16 15:28:17 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,10 @@ int				dictInsert(struct s_dict *dict, char *str, size_t value)
 	while (ii)
 	{
 		if (!ft_strcmp(str, ii->str))
-			return (-1);
+		{
+			free(item);
+			return (1);
+		}
 		ii = ii->next;
 	}
 	item->str = ft_strdup(str);
@@ -84,7 +87,8 @@ size_t			dictSearch(struct s_dict *dict, char *str)
 	return (-1);
 }
 
-void			killDict(struct s_dict *dict) {
+void			killDict(struct s_dict *dict)
+{
 	unsigned		ii;
 	struct s_item	*item;
 
