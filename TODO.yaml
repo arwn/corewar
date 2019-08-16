@@ -16,6 +16,7 @@ COREWAR:
 DONE:
   ASM:
     Fix names
+  	Fix labels with names conflicting with types
   COREWAR:
     Fix zjmp -- negative offset
     Check invalid header

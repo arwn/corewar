@@ -83,10 +83,13 @@ t_tok complex_token(char **s, char *str, t_tok tok) {
 
 t_tok getnexttoken(char **s, char *str) {
 	t_tok tok;
-	int inc;
+	int ii = 0;
 
 	tok = TOK_ERR(*s - str, ERR_UNKNOWN_CMD);
-	inc = 1;
+	if ((ii = ft_strspn(*s, LABEL_CHARS))
+		&& ((*s != str && (*s)[-1] == LABEL_CHAR)
+			|| ((*s)[ii] == LABEL_CHAR)))
+		return (complex_token(s, str, tok));
 	switch (**s) {
 	case ' ':
 	case '\t':
@@ -102,10 +105,11 @@ t_tok getnexttoken(char **s, char *str) {
 		*s += ft_strspn(*s, "0123456789");
 		return (tok);
 		break;
+	case COMMENT_CHAR_ALT:
 	case COMMENT_CHAR:
 		tok = ((t_tok){.type = comment_char, .col = *s - str});
-		inc = 0;
 		**s = '\0';
+		return (tok);
 		break;
 	case LABEL_CHAR:
 		tok = ((t_tok){.type = label_char, .col = *s - str});
@@ -122,8 +126,7 @@ t_tok getnexttoken(char **s, char *str) {
 	}
 	if (tok.type == err)
 		return (complex_token(s, str, tok));
-	if (inc)
-		++*s;
+	++*s;
 	return (tok);
 }
 
