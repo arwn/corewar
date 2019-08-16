@@ -9,12 +9,15 @@ static char *get_str(char *s, unsigned *col) {
 	int ii;
 	unsigned start = ft_strspn(s, " \t");
 
-	*col = start;
+	*col = start + 1;
 	if (start[s] != '"')
 		return (NULL);
 	++start;
 
 	end = ft_strcspn(s + start, "\"");
+	*col += end;
+	if ((start+end)[s] != '"')
+		return (NULL);
 	ii = start + end + 1;
 	while (s[ii] == ' ' || s[ii] == '\t')
 		++ii;

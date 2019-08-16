@@ -1,4 +1,5 @@
 ASM:
+  Missing close quote comment/name
   Hardcode test everything
 
 COREWAR:
@@ -15,7 +16,8 @@ COREWAR:
 DONE:
   ASM:
     Fix names
-  	Fix labels with names conflicting with types
+    Fix labels with names conflicting with types
+    Separator char with nothing after it
   COREWAR:
     Fix zjmp -- negative offset
     Fix unreadable player PC colors.  More contrast

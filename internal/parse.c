@@ -148,7 +148,7 @@ t_list		*getargs(t_list *tok, t_cmd *cmd)
 		++ii;
 		sep = 0;
 	}
-	if (ii != numargs) {
+	if (ii != numargs || sep & SEP) {
 		TOK_TO_ERR(T(tok));
 		return (tok);
 	}
