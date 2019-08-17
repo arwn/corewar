@@ -90,11 +90,11 @@ ins_time+=(['lldi']=100)
 ins_time+=(['lfork']=1050)
 ins_time+=(['aff']=2)
 ins_time+=(['zork']=57954)           # 57955
-ins_time+=(['helltrain']=27438)      # 27439
+ins_time+=(['helltrain']=1130)      # 27439
 ins_time+=(['fluttershy']=25092)     # 25093
 ins_time+=(['overwatch']=27438)      # 27439
 ins_time+=(['Asombra']=30360)        # 30361
-ins_time+=(['Gagnant']=2810)        # 26024
+ins_time+=(['Gagnant']=26024)        # 26024
 
 out=/tmp
 input_file=""
@@ -196,7 +196,7 @@ if [[ $input_file != "" ]]; then
     fi
     $invm -d "$tim" "$out/$bn.cor" > /tmp/in
     grep -E '^0x0[[:xdigit:]]{2}0 : ' /tmp/in | awk '{$1=$1};1'> "$out/$bn.in"
-    $outvm -r -d "$tim" "$out/$bn.cor" > /tmp/out
+    $outvm -d "$tim" "$out/$bn.cor" > /tmp/out
     grep -E '^0x0[[:xdigit:]]{2}0 : ' /tmp/out | awk '{$1=$1};1' > "$out/$bn.out"
     if ! diff -q "$out/$bn.in" "$out/$bn.out"; then
         diff "$out/$bn.in" "$out/$bn.out"
@@ -245,9 +245,9 @@ for ins in "${input_args[@]}"; do
             $invm -d "$tim" "$out/$ins$i.cor" | grep -E '^0x0[[:xdigit:]]{2}0 : ' | awk '{$1=$1};1' > "$out/$ins$i.in"
         fi
         if [[ $experimental -eq 1 ]]; then
-            $outvm -r -v 1 -d "$tim" "$out/$ins$i.cor" | awk '{$1=$1};1' > "$out/$ins$i.out"
+            $outvm -a -v 31 -d "$tim" "$out/$ins$i.cor" | awk '{$1=$1};1' > "$out/$ins$i.out"
         else
-            timeout 2 $outvm -r -d "$tim" "$out/$ins$i.cor" > "$out/out.tmp"
+            timeout 5 $outvm -d "$tim" "$out/$ins$i.cor" > "$out/out.tmp"
             status=$?
             if (( status!=124 )); then
                 grep -E '^0x0[[:xdigit:]]{2}0 : ' "$out/out.tmp" | awk '{$1=$1};1' > "$out/$ins$i.out"

@@ -4,6 +4,7 @@
 #include "asm.h"
 #include "op.h"
 #include "libft.h"
+#include <assert.h> // TODO: remove
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -48,7 +49,13 @@ struct s_process {
   int pc;
   bool carry;
 };
+// write pc blank live
+struct s_mem_colors {
+  int player;
+  int writes;
+};
 
+struct s_mem_colors *g_mem_colors;
 struct s_player {
   // struct s_player *next; // XXX: linked list for arbitrary amount of players?
   int player_number;
@@ -65,6 +72,7 @@ struct s_cpu {
   uint8_t program[MEM_SIZE];   // vm core memory.
   int program_length;          // TODO: remove
   int active;                  // total number of active processes.
+  int pid_next;                // next pid to spawn
   int clock;                //
   int lives[MAX_PLAYERS];      // perhaps remove
   int cycle_to_die;            // cycles until processes are removed

@@ -88,6 +88,8 @@ char winbuf[64] = "none";
 #define C_LIGHTGREEN nk_rgba(234, 255, 234, 255)
 #define C_CLEAR nk_rgba(0, 0, 0, 0)
 
+void ft_nop(void) {return;} // TODO: remove
+
 // set_color sets the colorscheme. it should only be called once.
 static void set_color(struct nk_context *ctx) {
   struct nk_color table[NK_COLOR_COUNT];
@@ -197,7 +199,6 @@ char *g_bytes_lower[256] = {
     "fc", "fd", "fe", "ff",
 };
 
-extern char g_mem_tab[4096];
 // win_debug displays the program and buttons to step through.
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
   if (nk_begin(ctx, "debug",
@@ -206,14 +207,35 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
                NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
     char buf[44];
-    // red color for current player 1 instruction
+
+    // red color for current player 1 instruction pointer
     static struct nk_color p1c = {.r = 255, .g = 50, .b = 50, .a = 255};
-    // green color for current player 2 instruction
+    // player 1 occupied memory
+    static struct nk_color p1m = {.r = 255, .g = 50, .b = 50, .a = 128};
+    // player 1 recently written memory
+    static struct nk_color p1w = {.r = 255, .g = 50, .b = 50, .a = 64};
+
+    // green color for current player 2 instruction pointer
     static struct nk_color p2c = {.r = 50, .g = 129, .b = 50, .a = 255};
-    // blue color for current player 3 instruction
+    // player 2 occupied memory
+    static struct nk_color p2m = {.r = 50, .g = 129, .b = 50, .a = 128};
+    // player 2 recently written memory
+    static struct nk_color p2w = {.r = 50, .g = 129, .b = 50, .a = 64};
+
+    // blue color for current player 3 instruction pointer
     static struct nk_color p3c = {.r = 50, .g = 50, .b = 192, .a = 255};
-    // magenta color for current player 4 instruction
+    // player 3 occupied memory
+    static struct nk_color p3m = {.r = 50, .g = 50, .b = 192, .a = 128};
+    // player 3 recently written memory
+    static struct nk_color p3w = {.r = 50, .g = 50, .b = 192, .a = 64};
+
+    // magenta color for current player 4 instruction pointer
     static struct nk_color p4c = {.r = 129, .g = 50, .b = 129, .a = 255};
+    // player 4 occupied memory
+    static struct nk_color p4m = {.r = 129, .g = 50, .b = 129, .a = 128};
+    // player 4 recently written memory
+    static struct nk_color p4w = {.r = 129, .g = 50, .b = 129, .a = 64};
+
     // default color for unknown player
     static struct nk_color defaultc = {.r = 213, .g = 198, .b = 182, .a = 255};
 
@@ -245,14 +267,16 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       running = !running;
       glfwSetTime(1);
     }
-    static int slider = 2;
-    nk_slider_int(ctx, 2, &slider, 9, 1);
+    static int slider = 1;
+    nk_slider_int(ctx, 1, &slider, 20, 1);
 
     double trash;
     double time = modf(glfwGetTime(), &trash);
     time *= 100;
-    if (cpu->processes != 0 && running && (int)time % (10 - slider) == 0) {
-      cpu->step(cpu);
+    if (cpu->processes != 0 && running) {// && (int)time % (21 - slider) == 0) {
+      for (int ii = slider; ii; ii--) {
+        cpu->step(cpu);
+      }
     }
     snprintf(winbuf, sizeof(winbuf), "Winner: %d", cpu->winner);
 
@@ -283,39 +307,91 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     }
 
     // print the program
-    for (register int i = 0; i < MEM_SIZE; i++) {
-      if (i % 64 == 0)
+    for (int ii = 0; ii < MEM_SIZE; ii++) {
+      if (ii % 64 == 0)
         nk_layout_row_static(ctx, 7, 13, 64);
 
-      buf[0] = g_bytes_upper[cpu->program[i]][0];
-      buf[1] = g_bytes_upper[cpu->program[i]][1];
+      buf[0] = g_bytes_upper[cpu->program[ii]][0];
+      buf[1] = g_bytes_upper[cpu->program[ii]][1];
       buf[2] = 0;
       struct s_process *hd = cpu->processes;
       while (hd != NULL) {
-        if (hd->pc == i)
-          break;
-        hd = hd->next;
-      }
-      if (hd != NULL && hd->pc == i) {
-        switch (hd->player) {
-        case -1:
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);
-          break;
-        case -2:
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);
-          break;
-        case -3:
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);
-          break;
-        case -4:
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
-          break;
-        default:
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
+        if (hd->pc == ii) {
+          switch (hd->player) {
+          case -1:
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);
+            break;
+          case -2:
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);
+            break;
+          case -3:
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);
+            break;
+          case -4:
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
+            break;
+          }
           break;
         }
-      } else
-        nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
+        hd = hd->next;
+      }
+      if (hd == 0) {
+        if (g_mem_colors[ii].player) {
+          switch (g_mem_colors[ii].player) { // TODO: change colors for player occupied memory
+          case -1:
+            if (g_mem_colors[ii].writes)
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1w);
+            else
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1m);
+            break;
+          case -2:
+            if (g_mem_colors[ii].writes)
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2w);
+            else
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2m);
+            break;
+          case -3:
+            if (g_mem_colors[ii].writes)
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3w);
+            else
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3m);
+            break;
+          case -4:
+            if (g_mem_colors[ii].writes)
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4w);
+            else
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4m);
+            break;
+          }
+        } else {
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
+        }
+      }
+      // while (hd != NULL) {
+      //   if (hd->pc == ii)
+      //     break;
+      //   hd = hd->next;
+      // }
+      // if (hd != NULL && hd->pc == ii) {
+      //   switch (hd->player) {
+      //   case -1:
+      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);
+      //     break;
+      //   case -2:
+      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);
+      //     break;
+      //   case -3:
+      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);
+      //     break;
+      //   case -4:
+      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
+      //     break;
+      //   default:
+      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
+      //     break;
+      //   }
+      // } else
+      //   nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
     }
   }
   nk_end(ctx);
@@ -352,7 +428,7 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
              h.prog_size, h.prog_name, h.comment);
       for (int jj = location, ll = (len - sizeof(header_t)); jj < ll + location;
            ++jj) {
-        g_mem_tab[jj] = player;
+        g_mem_colors[jj].player = -player;
       }
     } else {
       rewind(f);
@@ -600,13 +676,14 @@ static void dump_process(struct s_process *proc) {
   printf("\n");
 }
 
-char g_mem_tab[4096] = {0};
 static void vm_dump_byte(struct s_cpu *cpu, int idx, int space) {
   char buf[3];
 
   buf[0] = g_bytes_lower[cpu->program[idx]][0];
   buf[1] = g_bytes_lower[cpu->program[idx]][1];
   buf[2] = 0;
+  if (idx == 112)
+    ft_nop();
   if (space)
     printf(" ");
   if (f_color) {
@@ -631,20 +708,34 @@ static void vm_dump_byte(struct s_cpu *cpu, int idx, int space) {
       }
       cur = cur->next;
     }
-    if (g_mem_tab[idx] && cur == 0) {
-      switch (g_mem_tab[idx]) {
-      case 1:
-        printf("\e[31m");
-        break;
-      case 2:
-        printf("\e[32m");
-        break;
-      case 3:
-        printf("\e[34m");
-        break;
-      case 4:
-        printf("\e[35m");
-        break;
+    if (cur == 0) {
+      if (g_mem_colors[idx].player) {
+        switch (g_mem_colors[idx].player) {
+        case -1:
+          if (g_mem_colors[idx].writes == 0)
+            printf("\e[31m");
+          else
+            printf("\e[91;4m");
+          break;
+        case -2:
+          if (g_mem_colors[idx].writes == 0)
+            printf("\e[32m");
+          else
+            printf("\e[92;4m");
+          break;
+        case -3:
+          if (g_mem_colors[idx].writes == 0)
+            printf("\e[34m");
+          else
+            printf("\e[92;4m");
+          break;
+        case -4:
+          if (g_mem_colors[idx].writes == 0)
+            printf("\e[35m");
+          else
+            printf("\e[95;4m");
+          break;
+        }
       }
     }
   }
@@ -691,7 +782,7 @@ void vm_dump_processes(struct s_cpu *cpu) {
 void vm_dump_state(struct s_cpu *cpu) {
   if (f_dump_processes)
     vm_dump_processes(cpu);
-  if (f_dump)
+  if (f_dump && (f_verbose & OPT_INTLDBG) == 0)
     vm_dump_core(cpu);
 }
 
@@ -820,7 +911,8 @@ void cpu_cleanup(struct s_cpu *cpu) {
     free(tofree);
   }
 }
-void ft_nop(void) {return;}
+
+// A valid numeric argument consists of only ascii digits
 static int valid_number_arg(const char *str) {
   while (*str) {
     if (ISDIGIT(*str) == 0)
@@ -829,6 +921,7 @@ static int valid_number_arg(const char *str) {
   }
   return 1;
 }
+
 int main(int argc, char *argv[]) {
   int ch = 0;
   int ii = 0;
@@ -881,6 +974,10 @@ int main(int argc, char *argv[]) {
   }
   if (f_verbose & OPT_INTLDBG)
     printf("DBG: ch(%c) optarg(%s) optind(%d) opterr(%d) optopt(%d) END\n", ch, optarg, optind, opterr, optopt);
+  if (f_color || f_gui) {
+    g_mem_colors = calloc(4096, sizeof(*g_mem_colors));
+    assert(g_mem_colors != NULL);
+  }
   argc -= optind;
   argv += optind;
 
@@ -948,6 +1045,8 @@ int main(int argc, char *argv[]) {
     else if (cpu.processes == NULL)
       printf("Stalemate.\n");
     cpu_cleanup(&cpu);
+    if (f_color)
+      free(g_mem_colors);
   }
   if (f_leaks)
     pause();

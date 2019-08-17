@@ -116,12 +116,14 @@ int run_processes(struct s_cpu *cpu) {
   }
   return ret;
 }
+extern void ft_nop(void);
 // Check for living processes
 static void check_alive(struct s_cpu *cpu) {
   struct s_process *proc;
 
   proc = cpu->processes;
-  while (proc != NULL) {
+  if (cpu->clock == 25458) ft_nop();
+  while (proc != NULL && cpu->processes != NULL) {
     // printf("DBG: stupid(%d)\n", cpu->clock - proc->last_live);
     if ((cpu->clock - proc->last_live) < cpu->cycle_to_die) {
       if (!proc || !proc->next)
@@ -130,14 +132,24 @@ static void check_alive(struct s_cpu *cpu) {
     } else {
       if (cpu->active == 0)
         cpu->winner = 1;
-      cpu->kill_process(cpu, &proc);
+      if (proc->next) {
+        proc = proc->next;
+        cpu->kill_process(cpu, &proc->prev);
+      } else {
+        cpu->kill_process(cpu, &proc);
+      }
+      // printf("proc->prev(%p)\n", proc->prev);
     }
   }
   cpu->prev_check = cpu->clock;
   cpu->num_checks += 1;
-  if (NBR_LIVE < cpu->nbr_lives || cpu->num_checks == MAX_CHECKS) {
+  if (f_verbose & OPT_INTLDBG)
+    printf("DBG: nbr_lives(%d) prev_check(%d) cycledie(%d) num_checks(%d)\n", cpu->nbr_lives, cpu->prev_check, cpu->cycle_to_die, cpu->num_checks);
+  if (cpu->nbr_lives >= NBR_LIVE || cpu->num_checks == MAX_CHECKS) {
     cpu->cycle_to_die -= CYCLE_DELTA;
     cpu->num_checks = 0;
+    if (f_verbose & OPT_CYCLES)
+      printf("Cycle to die is now %d\n", cpu->cycle_to_die);
   }
   cpu->nbr_lives = 0;
 }
@@ -147,13 +159,18 @@ static int step(struct s_cpu *cpu) {
     fprintf(stderr, "Fatal Error: cpu is NULL in step()\n");
     exit(-2);
   }
+
   cpu->clock += 1;
   if (f_verbose & OPT_CYCLES)
     printf("It is now cycle %d\n", cpu->clock);
-  // printf("DBG: nbr_lives(%d) prev_check(%d) cycledie(%d)\n", cpu->nbr_lives, cpu->prev_check, cpu->cycle_to_die);
   int ret = run_processes(cpu);
+
   if (cpu->cycle_to_die <= cpu->clock - cpu->prev_check)
     check_alive(cpu);
+  for (int ii = 0; ii < MEM_SIZE; ++ii) {
+    if (g_mem_colors[ii].writes != 0)
+      g_mem_colors[ii].writes -= 1;
+  }
   // int done = 0;
   // struct s_process *proc;
   // proc = cpu->processes;
@@ -209,6 +226,7 @@ static void spawn_process(struct s_cpu *cpu, int pc, int player) {
     prepend_process(done, cpu);
   }
   cpu->active += 1;
+  cpu->pid_next += 1;
   if (f_verbose & OPT_INTLDBG)
     printf("DBG: clock(%5d) pid(%4d) carry(%d) last_live(%5d) pc(%4d) "
            "ins_time(%4d) prev_time(%4d) player(%d) SPAWN_PROC end\n",
@@ -217,46 +235,80 @@ static void spawn_process(struct s_cpu *cpu, int pc, int player) {
            cpu->processes->instruction_time, cpu->processes->prev_time,
            cpu->processes->player);
 }
+void dump_process_list(struct s_cpu *cpu) {
+  int print_space = 0;
+  struct s_process *proc = cpu->processes;
 
+  while (proc != 0) {
+    // printf("[%p{%d} <- %p{%d} -> %p{%d}]\n");
+    if (print_space == 0)
+      print_space = 1;
+    else
+      printf(" ");
+    printf("[%p{%2d} <- ", proc->prev, proc->prev != 0 ? proc->prev->pid : 0);
+    printf("%p{%d} -> ", proc, proc != 0 ? proc->pid : 0);
+    printf("%p{%d}]", proc->next, proc->next != 0 ? proc->next->pid : 0);
+    proc = proc->next;
+  }
+  printf("\n");
+}
 // delete_process deletes the current process and sets the current process to
 // the previous process.
 static void delete_process(struct s_cpu *cpu, struct s_process **proc) {
-  // if (f_verbose & OPT_INTLDBG) {
-  //   printf("DBG: pid(%d) num_checks(%d) nbr_lives(%d) prev_check(%d) "
-  //          "DELET_PROC start\n",
-  //          cpu->processes ? cpu->processes->pid : -1, cpu->num_checks,
-  //          cpu->nbr_lives, cpu->prev_check);
-  // }
-  // if (!cpu) {
-  //   if (f_verbose & OPT_INTLDBG)
-  //     fprintf(stderr,
-  //             "Fatal error: cpu or cpu->processes NULL in delete_process\n");
-  //   exit(-1);
-  //   return;
-  // }
-  // if (cpu->winner == 1)
-    // return;
+  assert(proc != NULL); // TODO: remove
+  assert(*proc != NULL); // TODO: remove
+  struct s_process *expired = *proc;
+
+  if (f_verbose & OPT_DEATHS)
+    printf("Process %d hasn\'t lived for %d cycles (CTD %d)\n", expired->pid, cpu->clock - expired->last_live, cpu->cycle_to_die);
+  if (f_verbose & OPT_INTLDBG)
+    printf("DBG: curr(%p) curr->prev(%p) curr->next(%p) DELETE_PROC end\n", expired, expired->prev, expired->next);
+
+  if (expired->prev)
+    expired->prev->next = expired->next;
+  else
+    cpu->processes = expired->next;
+  if (expired->next)
+    expired->next->prev = expired->prev;
+  free(expired);
+
+  cpu->active -= 1;
+  if (cpu->active < 1) {
+    cpu->processes = 0;
+  }
+#if 0
   if(proc == 0 || *proc == 0) {
     fprintf(stderr, "ERROR: proc is null in delete_process\n");
     return;
   }
   struct s_process *current = *proc;
-  if (f_verbose & OPT_DEATHS)
-    printf("Process %d hasn\'t lived for %d cycles (CTD %d)\n", current->pid, cpu->clock - current->last_live, cpu->cycle_to_die);
+
   *proc = (*proc)->next;
+  if (current->prev == NULL && cpu->processes == current)
+    cpu->processes = cpu->processes->next;
+
+  if (f_verbose & OPT_INTLDBG)
+    printf("DBG: curr(%p) curr->prev(%p) curr->next(%p) DELETE_PROC end\n", current, current->prev, current->next);
+
   if (current->next != NULL)
     current->next->prev = current->prev;
+
   if (current->prev != NULL)
     current->prev->next = current->next;
+
   current->next = 0;
   current->prev = 0;
   free(current);
   cpu->active -= 1;
+  if (f_verbose & OPT_INTLDBG)
+    dump_process_list(cpu);
+  //   printf("DBG: proc(%p) proc->prev(%p) proc->next(%p) DELETE_PROC end\n", *proc, (*proc)->prev, (*proc)->next);
   if (cpu->active == 0 && cpu->processes) {
     if (f_verbose & OPT_INTLDBG)
       printf("DBG: processes(%p) NO MORE ACTIVE PLAYERS\n", cpu->processes);
     cpu->processes = 0;
   }
+#endif
 }
 
 // load loads a PROGRAM of length LENGTH into memory address ADDRESS.
@@ -280,6 +332,7 @@ struct s_cpu new_cpu(void) {
   memset(done.program, 0, sizeof(done.program));
   done.program_length = 0;
   done.winner = 0;
+  done.pid_next = 0;
   done.cycle_to_die = CYCLE_TO_DIE;
   done.prev_check = 0;
   done.num_checks = 0;
