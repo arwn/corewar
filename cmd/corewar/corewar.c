@@ -426,9 +426,11 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
       cpu->spawn_process(cpu, location, -player);
       printf("* Player %d, weighing %d bytes, \"%s\" (\"%s\") !\n", player,
              h.prog_size, h.prog_name, h.comment);
-      for (int jj = location, ll = (len - sizeof(header_t)); jj < ll + location;
-           ++jj) {
-        g_mem_colors[jj].player = -player;
+      if (f_color || f_gui) {
+        for (int jj = location, ll = (len - sizeof(header_t)); jj < ll + location;
+            ++jj) {
+          g_mem_colors[jj].player = -player;
+        }
       }
     } else {
       rewind(f);
@@ -671,7 +673,7 @@ static void error_callback(int e, const char *d) {
 static void dump_process(struct s_process *proc) {
   printf("pid(%4d) player(%d) pc(%4d) last_live(%5d) carry(%d) opcode(%02x) ins_time(%4d)", proc->pid, proc->player, proc->pc, proc->last_live, proc->carry, proc->opcode,proc->instruction_time);
   for (int i = 0; i < 16; i++) {
-    printf(" r%02d(%08x)", i, proc->registers[i]);
+    printf(" r%d(%08x)", i+1, proc->registers[i]);
   }
   printf("\n");
 }
@@ -782,7 +784,7 @@ void vm_dump_processes(struct s_cpu *cpu) {
 void vm_dump_state(struct s_cpu *cpu) {
   if (f_dump_processes)
     vm_dump_processes(cpu);
-  if (f_dump && (f_verbose & OPT_INTLDBG) == 0)
+  if (f_dump)
     vm_dump_core(cpu);
 }
 

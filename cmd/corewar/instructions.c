@@ -17,33 +17,11 @@ void dump_nbytes(struct s_cpu *cpu, int n, int pc, int opt) {
   }
 }
 
-// Get the number of bytes expected from the given type and opcode
-int param_type_size(int type, int opcode) {
-  int ret;
-
-  switch (type) {
-  case T_REG:
-    ret = REG_SIZE;
-    break;
-  case T_IND:
-    ret = IND_SIZE;
-    break;
-  case T_DIR:
-    if (g_op_tab[opcode].direct_size == 0)
-      ret = DIR_SIZE;
-    else
-      ret = SPECIAL_DIR_SIZE;
-    break;
-  default:
-    ret = 0;
-    break;
-  }
-  return ret;
-}
-
+// Get the type of the N'th argument from the pcb
 int type_from_pcb(uint8_t pcb, int arg) {
   uint8_t param;
   int ret;
+
   param = (pcb >> (('\x03' - (char)arg) * '\x02' & 0x1fU)) & 3;
   if (param == DIR_CODE) {
     ret = T_DIR;
@@ -63,6 +41,7 @@ int type_from_pcb(uint8_t pcb, int arg) {
 
 int size_from_pt(int type, int opcode) {
   int ret;
+
   if (type == T_REG) {
     ret = REG_SIZE;
   } else {
@@ -85,6 +64,7 @@ int size_from_pt(int type, int opcode) {
 int size_from_pcb(uint8_t pcb, int opcode) {
   int ret, tmp;
   int ii;
+
   ii = 0;
   ret = 0;
   while (ii < g_op_tab[opcode].numargs) {
@@ -113,8 +93,11 @@ int check_pcb(uint8_t pcb, int op) {
 
 // prints the movement of the program counter for PROC
 void print_adv(struct s_cpu *cpu, struct s_process *proc, int new) {
-  int ii = 0;
-  int len = new - proc->pc;
+  int ii;
+  int len;
+
+  ii = 0;
+  len = new - proc->pc;
   printf("ADV %d (0x%04x -> 0x%04x) ", len, proc->pc, new);
   while (ii < len) {
     printf((!ii ? "%02x" : " %02x"), read_mem_1(cpu->program, proc->pc + ii));
@@ -154,28 +137,36 @@ void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx, uint32_t 
 
   if (f_verbose & OPT_INTLDBG)
     printf("DBG: idx(%d) WRITE_MEM_INS start\n", idx);
-  if (g_mem_colors[idx1].writes == 0 || g_mem_colors[idx1].player != proc->player)
-    g_mem_colors[idx1].writes = 49;
-  if (!g_mem_colors[idx1].player || g_mem_colors[idx1].player != proc->player)
-    g_mem_colors[idx1].player = proc->player;
+  if (f_color || f_gui) {
+    if (g_mem_colors[idx1].writes == 0 || g_mem_colors[idx1].player != proc->player)
+      g_mem_colors[idx1].writes = 49;
+    if (!g_mem_colors[idx1].player || g_mem_colors[idx1].player != proc->player)
+      g_mem_colors[idx1].player = proc->player;
+  }
   mem[idx1] = (val >> 24) & 0xff;
 
-  if (g_mem_colors[idx2].writes == 0 || g_mem_colors[idx2].player != proc->player)
-    g_mem_colors[idx2].writes = 49;
-  if (!g_mem_colors[idx2].player || g_mem_colors[idx2].player != proc->player)
-    g_mem_colors[idx2].player = proc->player;
+  if (f_color || f_gui) {
+    if (g_mem_colors[idx2].writes == 0 || g_mem_colors[idx2].player != proc->player)
+      g_mem_colors[idx2].writes = 49;
+    if (!g_mem_colors[idx2].player || g_mem_colors[idx2].player != proc->player)
+      g_mem_colors[idx2].player = proc->player;
+  }
   mem[idx2] = (val >> 16) & 0xff;
 
-  if (g_mem_colors[idx3].writes == 0 || g_mem_colors[idx3].player != proc->player)
-    g_mem_colors[idx3].writes = 49;
-  if (!g_mem_colors[idx3].player || g_mem_colors[idx3].player != proc->player)
-    g_mem_colors[idx3].player = proc->player;
+  if (f_color || f_gui) {
+    if (g_mem_colors[idx3].writes == 0 || g_mem_colors[idx3].player != proc->player)
+      g_mem_colors[idx3].writes = 49;
+    if (!g_mem_colors[idx3].player || g_mem_colors[idx3].player != proc->player)
+      g_mem_colors[idx3].player = proc->player;
+  }
   mem[idx3] = (val >> 8) & 0xff;
 
-  if (g_mem_colors[idx4].writes == 0 || g_mem_colors[idx4].player != proc->player)
-    g_mem_colors[idx4].writes = 49;
-  if (!g_mem_colors[idx4].player || g_mem_colors[idx4].player != proc->player)
-    g_mem_colors[idx4].player = proc->player;
+  if (f_color || f_gui) {
+    if (g_mem_colors[idx4].writes == 0 || g_mem_colors[idx4].player != proc->player)
+      g_mem_colors[idx4].writes = 49;
+    if (!g_mem_colors[idx4].player || g_mem_colors[idx4].player != proc->player)
+      g_mem_colors[idx4].player = proc->player;
+  }
   mem[idx4] = val & 0xff;
 }
 
@@ -185,7 +176,7 @@ void write_reg(struct s_process *proc, uint32_t reg, uint32_t val) {
     printf("DBG: write_reg reg(%08x) val(%08x) lav(%08x)\n", reg, val,
            ntohl(val));
   if (reg > 0 && reg <= REG_NUMBER)
-    proc->registers[reg - 1] = ntohl(val);
+    proc->registers[reg - 1] = val;
 }
 
 // Read register REG for the process PROC
@@ -194,7 +185,7 @@ int read_reg(struct s_process *proc, uint32_t reg) {
     int ret = proc->registers[reg - 1];
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
       printf("DBG: read_reg reg(%08x) ger(%08x)\n", ret, ntohl(ret));
-    return ntohl(ret);
+    return (ret);
   }
   return 0;
 }
@@ -423,13 +414,16 @@ int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
 // TODO: validate pcb
 int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
+  int check;
   int type;
   int valid_reg;
   int val;
   int reg;
+  int ivar2;
+  int uvar3;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
-  int check = check_pcb(pcb, 3);
+  check = check_pcb(pcb, 3);
   if (check != 0) {
     reg = read_mem_1(cpu->program, proc->pc + 2);
     type = type_from_pcb(pcb, 1);
@@ -440,17 +434,17 @@ int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
     }
     valid_reg = validate_register(reg);
     if (valid_reg != 0) {
-      if ((type == 1) && (valid_reg = validate_register(val)) != 0) {
+      if ((type == T_REG) && (valid_reg = validate_register(val)) != 0) {
         if (f_verbose & OPT_INSTR)
           printf("P% 5d | st r%d %d\n", proc->pid, reg, val);
         reg = read_reg(proc, reg);
-        write_reg(proc, val, read_reg(proc, reg));
+        write_reg(proc, val, reg);
       } else {
-        if (type == 2) {
+        if (type == T_IND) {
           if (f_verbose & OPT_INSTR)
             printf("P% 5d | st r%d %d\n", proc->pid, reg, val);
-          int ivar2 = proc->pc;
-          int uvar3 = read_reg(proc, reg);
+          ivar2 = proc->pc;
+          uvar3 = read_reg(proc, reg);
           write_mem_ins(proc, cpu->program, (ivar2 + val % IDX_MOD), uvar3);
         }
       }
@@ -847,7 +841,7 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
       uvar1 = read_mem_1(cpu->program, proc->pc + 2);
       type = validate_register(uvar1);
       if (type == 0) {
-        printf("LDI BAD REGISTER uvar1(%d)\n", uvar1);
+        // printf("LDI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
         type = proc->pc;
         uvar3 = size_from_pcb(pcb, 10);
         if (f_verbose & OPT_PCMOVE)
@@ -869,7 +863,7 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
       uvar1 = read_mem_1(cpu->program, proc->pc + 2 + ivar2);
       type = validate_register(uvar1);
       if (type == 0) {
-        printf("LDI BAD REGISTER uvar1(%d)\n", uvar1);
+        // printf("LDI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
         type = proc->pc;
         uvar3 = size_from_pcb(pcb, 10);
         if (f_verbose & OPT_PCMOVE)
@@ -884,7 +878,7 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
     uvar1 = read_mem_1(cpu->program, proc->pc + 2 + ivar2 + uvar5);
     type = validate_register(uvar1);
     if (type == 0) {
-      printf("LDI BAD REGISTER uvar1(%d)\n", uvar1);
+      // printf("LDI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
       type = proc->pc;
       uvar3 = size_from_pcb(pcb, 10);
       if (f_verbose & OPT_PCMOVE)
@@ -929,7 +923,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
     reg = read_mem_1(cpu->program, proc->pc + 2);
     type = validate_register(reg);
     if (type == 0) {
-      printf("STI BAD REGISTER reg(%d)\n", reg);
+      // printf("STI BAD REGISTER reg(%d) pid(%d) pc(%d) clock(%d)\n", reg, proc->pid, proc->pc, cpu->clock);
       type = proc->pc;
       reg = size_from_pcb(pcb, 0xb);
       if (f_verbose & OPT_PCMOVE) {
@@ -946,7 +940,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
       uvar1 = read_mem_1(cpu->program, proc->pc + 3);
       type = validate_register(uvar1);
       if (type == 0) {
-        printf("STI BAD REGISTER uvar1(%d)\n", uvar1);
+        // printf("STI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
         if (f_verbose & OPT_PCMOVE) {
           type = proc->pc;
           reg = size_from_pcb(pcb, 0xb);
@@ -970,7 +964,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
       uvar1 = read_mem_1(cpu->program, proc->pc + 3 + uvar2);
       type = validate_register(uvar1);
       if (type == 0) {
-        printf("STI BAD REGISTER uvar1(%d)\n", uvar1);
+        // printf("STI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
         if (f_verbose & OPT_PCMOVE) {
           type = proc->pc;
           reg = size_from_pcb(pcb, 0xb);
@@ -1054,10 +1048,10 @@ int instruction_fork(struct s_cpu *cpu, struct s_process *proc) {
   short uvar2;
 
   uvar2 = read_mem_2(cpu->program, proc->pc + 1);
-  idx = proc->pc + uvar2;
+  idx = uvar2 % IDX_MOD;
   if (f_verbose & OPT_INSTR)
-    printf("P% 5d | fork %d (%d)\n", proc->pid, uvar2, idx);
-  fork_process(cpu, proc, idx % IDX_MOD);
+    printf("P% 5d | fork %d (%d)\n", proc->pid, uvar2, proc->pc + idx);
+  fork_process(cpu, proc, proc->pc + idx);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, proc->pc + 3);
   proc->opcode = 0;
@@ -1111,8 +1105,6 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
 // carry. 'lldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3)), adding 4
 // to this sum S. Read REG_SIZE bytes at address (PC + (S)), which are copied to
 // 'r1'. TODO: fix broken
-// TODO: validate pcb
-extern void ft_nop(void);
 int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t uvar1;
@@ -1126,8 +1118,6 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   int local_c;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
-  if (cpu->clock == 16917)
-    ft_nop();
   uvar4 = check_pcb(pcb, 0xe);
   if (uvar4 != 0) {
     uvar4 = type_from_pcb(pcb, 0);

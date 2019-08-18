@@ -15,8 +15,6 @@ static char *get_str(char *s, unsigned *col) {
 	++start;
 
 	end = ft_strcspn(s + start, "\"");
-	if (end > COMMENT_LENGTH)
-		return (NULL);
 	ii = start + end + 1;
 	while (s[ii] == ' ' || s[ii] == '\t')
 		++ii;

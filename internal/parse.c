@@ -6,10 +6,8 @@
 static t_list *handle_label(t_list *tok, t_arg *arg)
 {
 	tok = tok->next;
-	// printf("handle_label ");
 	if (T(tok)->type != label_def && T(tok)->type != instruction)
 	{
-		// printf("(%d)err ", T(tok)->type);
 		TOK_TO_ERR(T(tok));
 		return (tok);
 	}
@@ -18,13 +16,11 @@ static t_list *handle_label(t_list *tok, t_arg *arg)
 		arg->str = g_op_tab[T(tok)->opcode].name;
 	else
 		arg->str = T(tok)->str;
-	// printf("ret ");
 	return (tok->next);
 }
 
 static t_list *handle_num(t_list *tok, t_arg *arg)
 {
-	// printf("handle_numret ");
 	arg->num = T(tok)->num;
 	return (tok->next);
 }
@@ -38,15 +34,13 @@ t_list		*getarg(t_list *tok, t_arg *arg, char *sep)
 {
 	(void)tok;
 	(void)arg;
-// printf("getarg ");
+
 	switch (T(tok)->type)
 	{
 	case space:
-		// printf("space ");
 		*sep |= SPC;
 		return (tok->next);
 	case registry:
-		// printf("registry ");
 		tok = tok->next;
 		if (T(tok)->type != num)
 			return (NULL);
@@ -55,14 +49,12 @@ t_list		*getarg(t_list *tok, t_arg *arg, char *sep)
 		return (tok->next);
 		break ;
 	case num:
-		// printf("num ");
 		arg->type = T_IND;
 		return (handle_num(tok, arg));
 		break ;
 	case direct_char:
 		arg->type |= T_DIR;
 		tok = tok->next;
-		// printf("direct_char ");
 		switch (T(tok)->type)
 		{
 		case num:
@@ -72,40 +64,32 @@ t_list		*getarg(t_list *tok, t_arg *arg, char *sep)
 			return (handle_label(tok, arg));
 			break ;
 		default:
-			// printf("default ");
 			TOK_TO_ERR(T(tok));
 			return (tok);
 		}
 		break ;
 	case label_char:
-		// printf("label_char ");
 		arg->type = T_IND;
 		return (handle_label(tok, arg));
 		break ;
 	case separator:
-		// printf("separator ");
 		if (*sep & SEP)
 		{
 			TOK_TO_ERR(T(tok));
-			// printf("err ");
 			return (tok);
 		}
 		*sep |= SEP;
 		break ;
 	default:
-		// printf("defaulterr ");
 		TOK_TO_ERR(T(tok));
 		return (tok);
 	}
 	// valid tokens
 	if (T(tok)->type >= label_def || T(tok)->type == space || T(tok)->type == separator) {
-		// printf("lblspcsepret ");
 		return (tok->next);
 	} else if (T(tok)->type == newline) {
-		// printf("newlineret ");
 		return (tok);
 	}
-	// printf("nullret ");
 	return (NULL);
 }
 
@@ -140,10 +124,9 @@ t_list		*getargs(t_list *tok, t_cmd *cmd)
 	{
 		if (!tmp)
 			return (tmp);
-		else if (T(tmp)->type == err) {
-			// printf("err type ret ");
+		else if (T(tmp)->type == err)
 			return (tmp);
-		} else if (!arg.type)
+		else if (!arg.type)
 		{
 			tok = tmp;
 			continue ;
@@ -151,7 +134,6 @@ t_list		*getargs(t_list *tok, t_cmd *cmd)
 		cmd->cols[ii] = T(tok)->col;
 		if (!sep || ii >= numargs)
 		{
-			// printf("tokerr ret ");
 			TOK_TO_ERR(T(tok));
 			return (tok);
 		}
@@ -198,31 +180,20 @@ t_list		*getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict, unsig
 		tok = tok->next;
 	if (!tok)
 		return (tok);
-	// printf("DBG: line(%d) ", *linenum);
-	// if (tok->content) {
-	// 	if ((intptr_t)T(tok)->str > 0x0000000100000000)
-	// 		printf("str(%s) ", T(tok)->str);
-	// 	else
-	// 		printf("num(%ld) ", T(tok)->num);
-	// }
 	switch (T(tok)->type)
 	{
 	case newline:
-		// printf("newline ");
 		*linenum = *linenum + 1;
 		break ;
 	case space:
-		// printf("space ");
 		break ;
 	case bot_name:
 		ft_strncpy(header->prog_name, T(tok)->str, PROG_NAME_LENGTH);
 		tok = tok->next;
 		while (tok && (T(tok)->type == space))
 			tok = tok->next;
-		// printf("bot_name ");
 		if (tok && T(tok)->type != newline)
 		{
-			// printf("Unexpected symbol\n");
 			ft_strcat(g_errarr, ERR_FIRST_BIT"Unexpected symbol [");
 			ft_strcat(g_errarr, g_tok_to_str_safe[T(tok)->type]);
 			ft_strcat(g_errarr, "]");
@@ -236,10 +207,8 @@ t_list		*getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict, unsig
 		tok = tok->next;
 		while (tok && (T(tok)->type == space))
 			tok = tok->next;
-		// printf("bot_comment ");
 		if (tok && T(tok)->type != newline)
 		{
-			// printf("Unexpected symbol\n");
 			ft_strcat(g_errarr, ERR_FIRST_BIT"Unexpected symbol [");
 			ft_strcat(g_errarr, g_tok_to_str_safe[T(tok)->type]);
 			ft_strcat(g_errarr, "]");
@@ -250,10 +219,8 @@ t_list		*getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict, unsig
 		break ;
 	case label_def:
 		ii = dictInsert(dict, T(tok)->str, *position);
-		// printf("label_def ");
 		if (ii < 1)
 		{
-			// printf("Redefinition\n");
 			ft_strcat(g_errarr, ERR_FIRST_BIT"Redefinition of label \"");
 			ft_strcat(g_errarr, T(tok)->str);
 			ft_strcat(g_errarr, "\"");
@@ -261,11 +228,8 @@ t_list		*getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict, unsig
 			return (tok);
 		}
 		tok = tok->next;
-		if (tok && T(tok)->type == label_char) {
-			// printf("ret\n");
+		if (tok && T(tok)->type == label_char)
 			return (tok->next);
-		}
-		// printf("Unexpected symbol\n");
 		ft_strcat(g_errarr, ERR_FIRST_BIT"Unexpected symbol [");
 		ft_strcat(g_errarr, g_tok_to_str_safe[T(tok)->type]);
 		ft_strcat(g_errarr, "]");
@@ -276,21 +240,17 @@ t_list		*getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict, unsig
 		cmd->opcode = T(tok)->opcode;
 		tok = tok->next;
 		tok = getargs(tok, cmd);
-		// printf("instruction ");
 		if (tok && T(tok)->type != newline)
 		{
-			// printf("Unexpected symbol\n");
 			ft_strcat(g_errarr, ERR_FIRST_BIT"Unexpected symbol [");
 			ft_strcat(g_errarr, g_tok_to_str_safe[T(tok)->type == err ? T(tok)->_type : T(tok)->type]);
 			ft_strcat(g_errarr, "]");
 			TOK_TO_ERR(T(tok));
 			return (tok);
 		}
-		// printf("ret\n");
 		*linenum = *linenum + 1;
 		return (tok->next);
 	default:
-		// printf("default\n");
 		if (T(tok)->type == label_def || T(tok)->type == bot_name || T(tok)->type == bot_comment)
 		{
 			free(T(tok)->str);
@@ -300,7 +260,6 @@ t_list		*getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict, unsig
 		ft_strcat(g_errarr, ERR_UNEXPECTED_SYMBOL);
 		return (tok);
 	}
-	// printf("ret\n");
 	tok = tok->next;
 	return (tok);
 

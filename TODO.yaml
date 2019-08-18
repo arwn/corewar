@@ -1,38 +1,34 @@
 ASM:
-  Fix error on redefinition of an unused label
-    -- `./asm fast.s`
-  Fix error on valid multi-line .comment
-    -- `./asm Explosive_Kitty.s`
-  Fix error for Asombra.s
-  Fix error for barriere.s being truncated too early
-  Fix pai_mu_tan.s
   Hardcode test everything
 
 COREWAR:
   Test
-  Fix incorrect behavior with Gagnant.cor, specifically not forking
-    -- `./corewar -r -v31 -d2810 Gagnant.cor`
-  Fix unreadable player PC colors.  More contrast, sometimes no colors appear
-  Unexpected Fatal Error in VM
-  Fix unreadable player PC colors.  More contrast
-  Seg fault with 4 players in GUI
-    -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
-    breaks around cycle 1500
-    has no output after introducing players
-  Fix fork/lfork -- process calling fork and sometimes adjacent processes
-                    incorrectly set instruction_time after forking
-  helltrain1 -- issues related to fork on cycle 2745
-  Fix live -- CYCLE_TO_DIE (tentatively fixed, need to verify more)
+  GUI win condition display
+  Fix unreadable player PC colors.  More contrast, sometimes no colors appear, -c
+  Potentially incorrect winner
+    -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor` should result
+    in player 3 winning
 
 DONE:
   ASM:
     Fix Makefile
     Fix names
   COREWAR:
+    Fix live -- CYCLE_TO_DIE (tentatively fixed, need to verify more)
+    Fix incorrect behavior with Gagnant.cor, specifically not forking
+      -- `./corewar -r -v31 -d2810 Gagnant.cor`
+    Fix fork/lfork -- process calling fork and sometimes adjacent processes
+      incorrectly set instruction_time after forking
+    helltrain1 -- issues related to fork on cycle 2745
     Fix zjmp -- negative offset
     Check invalid header
     Load champions eqidistant from each other
+    Seg fault with 4 players in GUI
+      -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
+      breaks around cycle 1500
+      has no output after introducing players
     No winner output with disabled gui
-    -- `./corewar -r Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
-      WONTFIX:
+      -- `./corewar -r Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
+    Unexpected Fatal Error in VM. Improve cli argument parsing
+    WONTFIX:
       Error check too small champ

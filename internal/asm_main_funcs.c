@@ -90,7 +90,7 @@ int		write_to_file(int opts, char *filename, char *buf, size_t bufsize)
 	end = ft_strrchr(filename, '.');
 	// makes sure there is enough space for '.cor' or '.disasm.s'
 	s = ft_strncpy(ofilename, filename,
-				   MIN((sizeof(ofilename) / sizeof(*ofilename)) - 5,
+				   MIN((sizeof(ofilename) / sizeof(*ofilename)) - 10,
 					   ((size_t)end - (size_t)filename)));
 	ft_strcat(s, (!(opts & opt_getoptcode(g_asm_opts, 'd', NULL))) ? ".cor" : ".disasm.s");
 
