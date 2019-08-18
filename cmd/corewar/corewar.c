@@ -9,6 +9,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "colors.h"
 #include "cpu.h"
 #include "libasm.h"
 #include "op.h"
@@ -198,6 +199,21 @@ char *g_bytes_lower[256] = {
     "fc", "fd", "fe", "ff",
 };
 
+// this makes it easier to change values and stuff
+#define MAKE_PLAYER_COLOR(n, suffix, r_, g_, b_, a_)                           \
+  static struct nk_color p##n##suffix = {                                      \
+      .r = MIN(r_, 255), .g = MIN(g_, 255), .b = MIN(b_, 255), .a = a_};
+
+#define MAKE_PROFILE(n, r_, g_, b_)                                            \
+  MAKE_PLAYER_COLOR(n, c, r_, g_, b_, 255);                                    \
+  MAKE_PLAYER_COLOR(n, m, r_, g_, b_, 64);                                     \
+  static struct nk_color p##n##w = {.r = 0, .g = 0, .b = 0, .a = 255};         \
+  if (p##n##w.r == 0 && p##n##w.g == 0 && p##n##w.b == 0) {                    \
+    struct s_hsv hsv##n = to_hsv(r_, g_, b_);                                  \
+    struct nk_color tmp_p##n##w = to_rgb(hsv##n.h - 30, hsv##n.s, hsv##n.v);   \
+    p##n##w = tmp_p##n##w;                                                     \
+  }
+
 // win_debug displays the program and buttons to step through.
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
   if (nk_begin(ctx, "debug",
@@ -207,33 +223,10 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
                    NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
     char buf[44];
 
-    // red color for current player 1 instruction pointer
-    static struct nk_color p1c = {.r = 255, .g = 50, .b = 50, .a = 255};
-    // player 1 occupied memory
-    static struct nk_color p1m = {.r = 255, .g = 50, .b = 50, .a = 128};
-    // player 1 recently written memory
-    static struct nk_color p1w = {.r = 255, .g = 50, .b = 50, .a = 64};
-
-    // green color for current player 2 instruction pointer
-    static struct nk_color p2c = {.r = 50, .g = 129, .b = 50, .a = 255};
-    // player 2 occupied memory
-    static struct nk_color p2m = {.r = 50, .g = 129, .b = 50, .a = 128};
-    // player 2 recently written memory
-    static struct nk_color p2w = {.r = 50, .g = 129, .b = 50, .a = 64};
-
-    // blue color for current player 3 instruction pointer
-    static struct nk_color p3c = {.r = 50, .g = 50, .b = 192, .a = 255};
-    // player 3 occupied memory
-    static struct nk_color p3m = {.r = 50, .g = 50, .b = 192, .a = 128};
-    // player 3 recently written memory
-    static struct nk_color p3w = {.r = 50, .g = 50, .b = 192, .a = 64};
-
-    // magenta color for current player 4 instruction pointer
-    static struct nk_color p4c = {.r = 129, .g = 50, .b = 129, .a = 255};
-    // player 4 occupied memory
-    static struct nk_color p4m = {.r = 129, .g = 50, .b = 129, .a = 128};
-    // player 4 recently written memory
-    static struct nk_color p4w = {.r = 129, .g = 50, .b = 129, .a = 64};
+    MAKE_PROFILE(1, 255, 50, 50);
+    MAKE_PROFILE(2, 50, 129, 50);
+    MAKE_PROFILE(3, 50, 129, 255);
+    MAKE_PROFILE(4, 129, 50, 129);
 
     // default color for unknown player
     static struct nk_color defaultc = {.r = 213, .g = 198, .b = 182, .a = 255};

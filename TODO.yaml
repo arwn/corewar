@@ -3,6 +3,8 @@ ASM:
 
 COREWAR:
   Test
+  Fix GUI un-compile error dimensions
+  Maybe change recently-written colors.  Make darker
   GUI win condition display
   Fix unreadable player PC colors.  More contrast, sometimes no colors appear, -c
   Potentially incorrect winner

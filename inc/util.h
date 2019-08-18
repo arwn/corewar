@@ -1,6 +1,9 @@
 #ifndef UTIL_H
 # define UTIL_H
 
+# include <stdint.h>
+# include <unistd.h>
+
 // for use with lstdel.  Deletes elements of list
 void free_(void *a, size_t b);
 
