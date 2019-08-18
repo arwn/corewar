@@ -1,5 +1,6 @@
-asm
-corewar
+/asm
+/corewar
+*.out
 lib/glew-2.1.0/bin
 lib/glew-2.1.0/glew.pc
 lib/glew-2.1.0/lib
