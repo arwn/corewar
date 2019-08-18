@@ -20,7 +20,7 @@ void		resolve_labels(t_list *cmds, t_dict *htbl)
 	position = 0;
 	for (t_list *lst = cmds; lst; lst = lst->next) {
 		t_cmd *c = C(lst);
-		for (int ii = 0; ii < g_op_tab[c->opcode - 1].numargs; ++ii)
+		for (int ii = 0; ii < g_op_tab[c->opcode].numargs; ++ii)
 		{
 			if (c->argtypes[ii] & T_LAB)
 			{

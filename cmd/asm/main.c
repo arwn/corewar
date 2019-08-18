@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
 				ft_dprintf(STDERR_FILENO, "%s\n", g_errstr);
 				free(g_errstr);
 				g_errstr = NULL;
+				r = 1;
 			}
 			if (s && !(opts & opt_getoptcode(g_asm_opts, 'n', NULL)))
 				r |= write_to_file(opts, argv[ii], s, size);

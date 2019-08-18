@@ -20,18 +20,18 @@ int get_param(uint8_t byte, int par) {
 }
 
 // Read a single byte from buffer PROGRAM at IDX, swapping endianness
-uint8_t read_mem_byte(uint8_t *program, uint32_t idx) {
+uint8_t read_mem_1(uint8_t *program, uint32_t idx) {
   return (program[idx % MEM_SIZE]);
 }
 
 // Read two bytes from buffer PROGRAM at IDX, swapping endianness
-uint16_t read_mem_word(uint8_t *program, uint32_t idx) {
+uint16_t read_mem_2(uint8_t *program, uint32_t idx) {
   return ((uint16_t)program[idx % MEM_SIZE] << 8) |
          ((uint16_t)program[(idx + 1) % MEM_SIZE]);
 }
 
 // Read four bytes from buffer PROGRAM at IDX, swapping endianness
-uint32_t read_mem_long(uint8_t *program, uint32_t idx) {
+uint32_t read_mem_4(uint8_t *program, uint32_t idx) {
   return ((uint32_t)program[idx % MEM_SIZE] << 24) |
          ((uint32_t)program[(idx + 1) % MEM_SIZE] << 16) |
          ((uint32_t)program[(idx + 2) % MEM_SIZE] << 8) |
@@ -39,7 +39,7 @@ uint32_t read_mem_long(uint8_t *program, uint32_t idx) {
 }
 
 // Read eight bytes from buffer PROGRAM at IDX, swapping endianness
-uint64_t read_mem_quad(uint8_t *program, uint32_t idx) {
+uint64_t read_mem_8(uint8_t *program, uint32_t idx) {
   return ((uint64_t)program[idx % MEM_SIZE] << 56 |
           (uint64_t)program[(idx + 1) % MEM_SIZE] << 48 |
           (uint64_t)program[(idx + 2) % MEM_SIZE] << 40 |

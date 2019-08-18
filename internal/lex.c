@@ -60,7 +60,7 @@ t_tok complex_token(char **s, char *str, t_tok tok) {
 		len = ft_strcspn(*s, "\t \n");
 		oplen = g_op_len_tab[ii];
 		if (ft_hashn(*s, MAX(len, oplen)) == g_op_hash_tab[ii]) {
-			tok = (t_tok){.type = instruction, .col = *s - str, .opcode = g_op_tab[ii].opcode};
+			tok = (t_tok){.type = instruction, .col = *s - str, .opcode = g_op_tab[ii+1].opcode};
 			*s += len;
 			break;
 		}

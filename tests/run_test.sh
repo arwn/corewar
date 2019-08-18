@@ -7,35 +7,35 @@ function print_help {
     echo "Example: run_test.sh -v and or xor"
     echo ""
     echo "Commands:"
-    echo -e "  all\t\t\tenable all tests"
+    echo -e "  all\t\t\trun all tests"
     echo -e "  help\t\t\tdisplay this help output"
     echo -e "  clean\t\t\tremove all output in the test output directory"
     echo ""
     echo "Instruction Tests:"
-    echo -e "  live\t\t\tenable live instruction tests"
-    echo -e "  ld\t\t\tenable ld instruction tests"
-    echo -e "  st\t\t\tenable st instruction tests"
-    echo -e "  add\t\t\tenable add instruction tests"
-    echo -e "  sub\t\t\tenable sub instruction tests"
-    echo -e "  and\t\t\tenable and instruction tests"
-    echo -e "  or\t\t\tenable or instruction tests"
-    echo -e "  xor\t\t\tenable xor instruction tests"
-    echo -e "  zjmp\t\t\tenable zjmp instruction tests"
-    echo -e "  ldi\t\t\tenable ldi instruction tests"
-    echo -e "  sti\t\t\tenable sti instruction tests"
-    echo -e "  fork\t\t\tenable fork instruction tests"
-    echo -e "  lld\t\t\tenable lld instruction tests"
-    echo -e "  lldi\t\t\tenable lldi instruction tests"
-    echo -e "  lfork\t\t\tenable lfork instruction tests"
-    echo -e "  aff\t\t\tenable aff instruction tests"
+    echo -e "  live\t\t\trun live instruction tests"
+    echo -e "  ld\t\t\trun ld instruction tests"
+    echo -e "  st\t\t\trun st instruction tests"
+    echo -e "  add\t\t\trun add instruction tests"
+    echo -e "  sub\t\t\trun sub instruction tests"
+    echo -e "  and\t\t\trun and instruction tests"
+    echo -e "  or\t\t\trun or instruction tests"
+    echo -e "  xor\t\t\trun xor instruction tests"
+    echo -e "  zjmp\t\t\trun zjmp instruction tests"
+    echo -e "  ldi\t\t\trun ldi instruction tests"
+    echo -e "  sti\t\t\trun sti instruction tests"
+    echo -e "  fork\t\t\trun fork instruction tests"
+    echo -e "  lld\t\t\trun lld instruction tests"
+    echo -e "  lldi\t\t\trun lldi instruction tests"
+    echo -e "  lfork\t\t\trun lfork instruction tests"
+    echo -e "  aff\t\t\trun aff instruction tests"
     echo ""
     echo "Miscellaneous Tests:"
-    echo -e "  zork\t\t\tenable testing zork.s for 1536 cycles"
-    echo -e "  fluttershy\t\tenable testing fluttershy.s for 1536 cycles"
-    echo -e "  helltrain\t\tenable testing helltrain.s for 1536 cycles"
-    echo -e "  Asombra\t\tenable testing Asombra.s for 1536 cycles"
-    echo -e "  overwatch\t\tenable testing overwatch.s for 1536 cycles"
-    echo -e "  Gagnant\t\tenable testing Gagnant.s for 1536 cycles"
+    echo -e "  zork\t\t\trun testing zork.s for 57955 cycles"
+    echo -e "  fluttershy\t\trun testing fluttershy.s for 27439 cycles"
+    echo -e "  helltrain\t\trun testing helltrain.s for 25093 cycles"
+    echo -e "  Asombra\t\trun testing Asombra.s for 27439 cycles"
+    echo -e "  overwatch\t\trun testing overwatch.s for 30361 cycles"
+    echo -e "  Gagnant\t\trun testing Gagnant.s for 26024 cycles"
     echo ""
     echo "Options:"
     echo -e "  -f, --file=FILE\tuse FILE as test assembly"
@@ -93,8 +93,8 @@ ins_time+=(['zork']=57954)           # 57955
 ins_time+=(['helltrain']=27438)      # 27439
 ins_time+=(['fluttershy']=25092)     # 25093
 ins_time+=(['overwatch']=27438)      # 27439
-ins_time+=(['Asombra']=30360)        # 30361
-ins_time+=(['Gagnant']=270)        # 26024
+ins_time+=(['Asombra']=30361)        # 30361
+ins_time+=(['Gagnant']=26024)        # 26024
 
 out=/tmp
 input_file=""
@@ -143,7 +143,7 @@ while (( $# > 0 )); do
         "-v")
             (( verbose++ ))
             ;;
-        "--experimental")
+        "-e"|"--experimental")
             experimental=1
             ;;
         *)
@@ -196,7 +196,7 @@ if [[ $input_file != "" ]]; then
     fi
     $invm -d "$tim" "$out/$bn.cor" > /tmp/in
     grep -E '^0x0[[:xdigit:]]{2}0 : ' /tmp/in | awk '{$1=$1};1'> "$out/$bn.in"
-    $outvm -r -d "$tim" "$out/$bn.cor" > /tmp/out
+    $outvm -d "$tim" "$out/$bn.cor" > /tmp/out
     grep -E '^0x0[[:xdigit:]]{2}0 : ' /tmp/out | awk '{$1=$1};1' > "$out/$bn.out"
     if ! diff -q "$out/$bn.in" "$out/$bn.out"; then
         diff "$out/$bn.in" "$out/$bn.out"
@@ -245,14 +245,13 @@ for ins in "${input_args[@]}"; do
             $invm -d "$tim" "$out/$ins$i.cor" | grep -E '^0x0[[:xdigit:]]{2}0 : ' | awk '{$1=$1};1' > "$out/$ins$i.in"
         fi
         if [[ $experimental -eq 1 ]]; then
-            $outvm -r -v 1 -d "$tim" "$out/$ins$i.cor" | awk '{$1=$1};1' > "$out/$ins$i.out"
+            $outvm -a -v 31 -d "$tim" "$out/$ins$i.cor" | awk '{$1=$1};1' > "$out/$ins$i.out"
         else
-            timeout 2 $outvm -r -d "$tim" "$out/$ins$i.cor" > "$out/out.tmp"
+            timeout 5 $outvm -d "$tim" "$out/$ins$i.cor" > "$out/out.tmp"
             status=$?
             if (( status!=124 )); then
                 grep -E '^0x0[[:xdigit:]]{2}0 : ' "$out/out.tmp" | awk '{$1=$1};1' > "$out/$ins$i.out"
             fi
-            # $outvm -r -d "$tim" -f "$out/$ins$i.cor" | grep -E '^0x0[[:xdigit:]]{2}0 : ' | awk '{$1=$1};1' > "$out/$ins$i.out"
         fi
         if (( status==124 )); then
             if [[ $verbose -gt 0 ]]; then

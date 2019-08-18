@@ -22,10 +22,10 @@ size_t	write_to_buf(char *buf, size_t size, size_t n) {
 
 size_t	printCmd(char *buf, size_t ii, size_t bufsize, t_cmd *cmd) {
 	buf[ii++] = cmd->opcode;
-	if (g_op_tab[cmd->opcode-1].param_encode)
+	if (g_op_tab[cmd->opcode].param_encode)
 		ii += write_to_buf(buf + ii, ENC_SIZE, cmd->encoding);
 
-	for (int jj = 0; ii < bufsize && jj < g_op_tab[cmd->opcode-1].numargs; ++jj) {
+	for (int jj = 0; ii < bufsize && jj < g_op_tab[cmd->opcode].numargs; ++jj) {
 		unsigned n = cmd->args[jj].num;
 		ii += write_to_buf(buf + ii, CMD_NUM_BYTES(cmd->argtypes[jj], cmd->opcode), n);
 	}

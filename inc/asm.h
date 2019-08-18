@@ -25,7 +25,7 @@
 # define TOK_ERR(_col, s) ((t_tok){.type=err, .col=(_col), .str=s})
 
 #define CMD_NUM_BYTES(type, opcode)									\
-	(((type) & ~T_LAB) == T_DIR && g_op_tab[(opcode)-1].direct_size	\
+	(((type) & ~T_LAB) == T_DIR && g_op_tab[(opcode)].direct_size	\
 	 ? SPECIAL_DIR_SIZE : g_cmd_sizes[(type) & ~T_LAB])
 
 # define DISASM_BUF_SIZE (2048)
