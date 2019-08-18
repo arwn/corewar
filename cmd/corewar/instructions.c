@@ -128,7 +128,8 @@ void next_cpu_op(struct s_cpu *cpu, struct s_process *proc) {
 /* Utility functions */
 
 // Write four bytes of VAL into core memory MEM at offset IDX
-static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx, uint32_t val) {
+static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx,
+                          uint32_t val) {
   const int idx1 = idx % MEM_SIZE;
   const int idx2 = (idx + 1) % MEM_SIZE;
   const int idx3 = (idx + 2) % MEM_SIZE;
@@ -137,7 +138,8 @@ static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx, ui
   if (f_verbose & OPT_INTLDBG)
     printf("DBG: idx(%d) WRITE_MEM_INS start\n", idx);
   if (f_color || f_gui) {
-    if (g_mem_colors[idx1].writes == 0 || g_mem_colors[idx1].player != proc->player)
+    if (g_mem_colors[idx1].writes == 0 ||
+        g_mem_colors[idx1].player != proc->player)
       g_mem_colors[idx1].writes = 49;
     if (!g_mem_colors[idx1].player || g_mem_colors[idx1].player != proc->player)
       g_mem_colors[idx1].player = proc->player;
@@ -145,7 +147,8 @@ static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx, ui
   mem[idx1] = (val >> 24) & 0xff;
 
   if (f_color || f_gui) {
-    if (g_mem_colors[idx2].writes == 0 || g_mem_colors[idx2].player != proc->player)
+    if (g_mem_colors[idx2].writes == 0 ||
+        g_mem_colors[idx2].player != proc->player)
       g_mem_colors[idx2].writes = 49;
     if (!g_mem_colors[idx2].player || g_mem_colors[idx2].player != proc->player)
       g_mem_colors[idx2].player = proc->player;
@@ -153,7 +156,8 @@ static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx, ui
   mem[idx2] = (val >> 16) & 0xff;
 
   if (f_color || f_gui) {
-    if (g_mem_colors[idx3].writes == 0 || g_mem_colors[idx3].player != proc->player)
+    if (g_mem_colors[idx3].writes == 0 ||
+        g_mem_colors[idx3].player != proc->player)
       g_mem_colors[idx3].writes = 49;
     if (!g_mem_colors[idx3].player || g_mem_colors[idx3].player != proc->player)
       g_mem_colors[idx3].player = proc->player;
@@ -161,7 +165,8 @@ static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx, ui
   mem[idx3] = (val >> 8) & 0xff;
 
   if (f_color || f_gui) {
-    if (g_mem_colors[idx4].writes == 0 || g_mem_colors[idx4].player != proc->player)
+    if (g_mem_colors[idx4].writes == 0 ||
+        g_mem_colors[idx4].player != proc->player)
       g_mem_colors[idx4].writes = 49;
     if (!g_mem_colors[idx4].player || g_mem_colors[idx4].player != proc->player)
       g_mem_colors[idx4].player = proc->player;
@@ -216,9 +221,9 @@ int instruction_live(struct s_cpu *cpu, struct s_process *proc) {
   // cpu->winner = player_id;
   local_34 = ~player_id;
   if (local_34 >= 0 && local_34 < MAX_PLAYERS) {
-      if ((f_verbose & OPT_LIVES))
-    printf("Player %d (%s) is said to be alive\n", local_34 + 1,
-           cpu->players[local_34].name);
+    if ((f_verbose & OPT_LIVES))
+      printf("Player %d (%s) is said to be alive\n", local_34 + 1,
+             cpu->players[local_34].name);
     cpu->players[local_34].last_live = cpu->clock;
   }
   if (f_verbose & OPT_PCMOVE)
@@ -235,11 +240,14 @@ int read_indirect(struct s_cpu *cpu, struct s_process *proc, short offset) {
   ofs = offset % IDX_MOD;
   idx = proc->pc + ofs;
   ret = (int)read_mem_4(cpu->program, idx);
+  if (f_verbose & OPT_INTLDBG)
+    printf("DBG: offset(%04hx) ofs(%08x) idx(%08x) ret(%08x) READ_IND end\n",
+           offset, ofs, idx, ret);
   return ret;
 }
 
 // check if a register number is valid: r1 - r16
-int validate_register(int reg) { return 0 < reg && reg < 0x11; }
+int validate_register(int reg) { return reg > 0 && reg <= NUM_OPS; }
 
 // ld takes 2 parameters, 2nd must be a register that isn't the
 // 'program counter'. It loads the value of the first parameter in the register,
@@ -267,8 +275,12 @@ int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
     size_type = size_from_pt(type, 2);
     if (type == T_DIR) {
       val = (int)read_mem_4(cpu->program, proc->pc + 2);
+      if (f_verbose & OPT_INTLDBG)
+        printf("DBG: val(%08x) T_DIR INS_LD\n", val);
     } else {
-      val = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc));
+      val = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
+      if (f_verbose & OPT_INTLDBG)
+        printf("DBG: val(%08x) T_IND INS_LD\n", val);
     }
     reg = read_mem_1(cpu->program, proc->pc + 2 + size_type);
     valid_reg = validate_register(reg);
@@ -443,7 +455,8 @@ int instruction_and(struct s_cpu *cpu, struct s_process *proc) {
       local_34 = uvar4;
     } else {
       if (type == T_IND) {
-        local_34 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
+        local_34 =
+            read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
       } else {
         local_34 = (int)read_mem_4(cpu->program, proc->pc + 2);
       }
@@ -465,7 +478,8 @@ int instruction_and(struct s_cpu *cpu, struct s_process *proc) {
       local_40 = uvar5;
     } else {
       if (type == T_IND) {
-        local_40 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2 + ivar2));
+        local_40 = read_indirect(
+            cpu, proc, read_mem_2(cpu->program, proc->pc + 2 + ivar2));
       } else {
         local_40 = (int)read_mem_4(cpu->program, proc->pc + 2 + ivar2);
       }
@@ -525,7 +539,8 @@ int instruction_or(struct s_cpu *cpu, struct s_process *proc) {
       local_34 = uvar4;
     } else {
       if (type == T_IND) {
-        local_34 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
+        local_34 =
+            read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
       } else {
         local_34 = (int)read_mem_4(cpu->program, proc->pc + 2);
       }
@@ -547,7 +562,8 @@ int instruction_or(struct s_cpu *cpu, struct s_process *proc) {
       local_40 = uvar5;
     } else {
       if (type == T_IND) {
-        local_40 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2 + ivar2));
+        local_40 = read_indirect(
+            cpu, proc, read_mem_2(cpu->program, proc->pc + 2 + ivar2));
       } else {
         local_40 = (int)read_mem_4(cpu->program, proc->pc + 2 + ivar2);
       }
@@ -607,7 +623,8 @@ int instruction_xor(struct s_cpu *cpu, struct s_process *proc) {
       local_34 = uvar4;
     } else {
       if (type == T_IND) {
-        local_34 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
+        local_34 =
+            read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
       } else {
         local_34 = (int)read_mem_4(cpu->program, proc->pc + 2);
       }
@@ -629,7 +646,8 @@ int instruction_xor(struct s_cpu *cpu, struct s_process *proc) {
       local_40 = uvar5;
     } else {
       if (type == T_IND) {
-        local_40 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2 + ivar2));
+        local_40 = read_indirect(
+            cpu, proc, read_mem_2(cpu->program, proc->pc + 2 + ivar2));
       } else {
         local_40 = (int)read_mem_4(cpu->program, proc->pc + 2 + ivar2);
       }
@@ -716,7 +734,8 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
       local_34 = read_reg(proc, uvar1);
     } else {
       if (type == T_IND) {
-        local_34 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
+        local_34 =
+            read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
       } else {
         local_34 = (short)read_mem_2(cpu->program, proc->pc + 2);
       }
@@ -811,7 +830,8 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
       local_3c = read_reg(proc, uvar1);
     } else {
       if (type == T_IND) {
-        local_3c = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 3));
+        local_3c =
+            read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 3));
       } else {
         local_3c = (short)read_mem_2(cpu->program, proc->pc + 3);
       }
@@ -933,7 +953,8 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
     if (uvar4 == T_DIR) {
       local_2c = (int)read_mem_4(cpu->program, proc->pc + 2);
     } else {
-      local_2c = (short)read_mem_2(cpu->program, proc->pc + read_mem_2(cpu->program, proc->pc + 2));
+      local_2c = (short)read_mem_2(
+          cpu->program, proc->pc + read_mem_2(cpu->program, proc->pc + 2));
     }
     uvar1 = read_mem_1(cpu->program, proc->pc + 2 + uvar5);
     ivar2 = validate_register(uvar1);
@@ -952,7 +973,6 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
   }
   return (proc->pc + 2 + uvar3);
 }
-
 
 // lldi is the same as 'ldi', but without the (% IDX_MOD). Modifies
 // carry. 'lldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3)), adding 4
@@ -994,7 +1014,8 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
       local_34 = read_reg(proc, uvar1);
     } else {
       if (type == T_IND) {
-        local_34 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
+        local_34 =
+            read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
       } else {
         local_34 = (short)read_mem_2(cpu->program, proc->pc + 2);
       }
@@ -1037,7 +1058,8 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
       printf("P% 5d | lldi %d %d r%d\n", proc->pid, local_34, local_40, uvar1);
     }
     if (f_verbose & OPT_INSTR) {
-      printf("       | -> load from %d + %d = %d (with pc %d)\n", local_34, local_40, local_34+local_40, proc->pc+local_34+local_40);
+      printf("       | -> load from %d + %d = %d (with pc %d)\n", local_34,
+             local_40, local_34 + local_40, proc->pc + local_34 + local_40);
     }
     mod_carry(proc, (uvar3 == 0));
     write_reg(proc, uvar1, uvar3);
@@ -1088,8 +1110,7 @@ int instruction_aff(struct s_cpu *cpu, struct s_process *proc) {
   if (uvar4 != 0) {
     uvar1 = read_mem_1(cpu->program, proc->pc + 2);
     ivar2 = validate_register(uvar1);
-    if ((ivar2 != 0) &&
-        ((uvar1 = read_reg(proc, uvar1)), f_enable_aff != 0)) {
+    if ((ivar2 != 0) && ((uvar1 = read_reg(proc, uvar1)), f_enable_aff != 0)) {
       printf("Aff: %c\n", uvar1);
     }
   }

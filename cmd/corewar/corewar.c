@@ -1017,6 +1017,8 @@ int main(int argc, char *argv[]) {
     }
     int winner_out = 0;
     for (ii = 0; ii < MAX_PLAYERS; ++ii) {
+      if (f_verbose & OPT_INTLDBG)
+        printf("DBG: players[%d].last_live(%d)\n", ii, cpu.players[ii].last_live);
       if (cpu.players[ii].last_live > cpu.players[winner_out].last_live)
         winner_out = ii;
     }
