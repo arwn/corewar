@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 // clang-format off
-// must be included after 'cpu.h'
+// must be included AFTER cpu.h
 #include "instructions.h"
 // clang-format on
 
@@ -92,7 +92,7 @@ int check_pcb(uint8_t pcb, int op) {
 }
 
 // prints the movement of the program counter for PROC
-void print_adv(struct s_cpu *cpu, struct s_process *proc, int new) {
+static void print_adv(struct s_cpu *cpu, struct s_process *proc, int new) {
   int ii;
   int len;
 
@@ -129,7 +129,7 @@ void next_cpu_op(struct s_cpu *cpu, struct s_process *proc) {
 /* Utility functions */
 
 // Write four bytes of VAL into core memory MEM at offset IDX
-void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx, uint32_t val) {
+static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx, uint32_t val) {
   const int idx1 = idx % MEM_SIZE;
   const int idx2 = (idx + 1) % MEM_SIZE;
   const int idx3 = (idx + 2) % MEM_SIZE;
@@ -171,7 +171,7 @@ void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx, uint32_t 
 }
 
 // Write VAL into register REG for the process PROC
-void write_reg(struct s_process *proc, uint32_t reg, uint32_t val) {
+static void write_reg(struct s_process *proc, uint32_t reg, uint32_t val) {
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: write_reg reg(%08x) val(%08x) lav(%08x)\n", reg, val,
            ntohl(val));
@@ -180,7 +180,7 @@ void write_reg(struct s_process *proc, uint32_t reg, uint32_t val) {
 }
 
 // Read register REG for the process PROC
-int read_reg(struct s_process *proc, uint32_t reg) {
+static int read_reg(struct s_process *proc, uint32_t reg) {
   if (reg > 0 && reg <= REG_NUMBER) {
     int ret = proc->registers[reg - 1];
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
@@ -190,6 +190,15 @@ int read_reg(struct s_process *proc, uint32_t reg) {
   return 0;
 }
 
+// Modify the carry flag for the current process based on VAL
+static void mod_carry(struct s_process *proc, int val) {
+  if (val) {
+    proc->carry = 1;
+  } else {
+    proc->carry = 0;
+  }
+}
+#if 0
 // Parse the argument size specified by ARG, read accordingly, and then return
 // VAL
 int read_val(struct s_cpu *cpu, struct s_process *proc, int arg) {
@@ -220,15 +229,6 @@ int read_val(struct s_cpu *cpu, struct s_process *proc, int arg) {
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
     printf("DBG: read_val end pc(%d)\n", proc->pc);
   return (val);
-}
-
-// Modify the carry flag for the current process based on VAL
-void mod_carry(struct s_process *proc, int val) {
-  if (val) {
-    proc->carry = 1;
-  } else {
-    proc->carry = 0;
-  }
 }
 
 // Read the specified ARG, adjusting size based on OP direct_size member in
@@ -312,6 +312,7 @@ int read_val_load(struct s_cpu *cpu, struct s_process *proc, int arg) {
     printf("DBG: read_val_load end pc(%d)\n", proc->pc);
   return val;
 }
+#endif
 
 /* Instructions */
 
@@ -362,11 +363,8 @@ int validate_register(int reg) { return 0 < reg && reg < 0x11; }
 // 'program counter'. It loads the value of the first parameter in the register,
 // and modifies the 'carry'. 'ld 34,r3' loads the REG_SIZE bytes from address
 // (PC + (34 % IDX_MOD)) in register r3.
-// TODO: validate pcb
-
-// LD DONE
 int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
-  // ACK
+  uint8_t pcb;
   int val;
   int reg;
   int type;
@@ -374,7 +372,6 @@ int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
   int valid_reg;
   int test;
   int size;
-  uint8_t pcb;
 
   if (f_verbose & OPT_INTLDBG)
     printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_LD start\n",
@@ -462,10 +459,14 @@ int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
 // r2,r3,r5' adds the values of 'r2' and 'r3' and stores the result in 'r5'.
 // TODO: validate pcb
 int instruction_add(struct s_cpu *cpu, struct s_process *proc) {
-  int val;
-  int reg1, reg2, reg3;
   uint8_t pcb;
-  int ivar2, uvar3, uvar4;
+  int val;
+  int reg1;
+  int reg2;
+  int reg3;
+  int ivar2;
+  int uvar3;
+  int uvar4;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
   uvar3 = check_pcb(pcb, 4);
@@ -841,7 +842,6 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
       uvar1 = read_mem_1(cpu->program, proc->pc + 2);
       type = validate_register(uvar1);
       if (type == 0) {
-        // printf("LDI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
         type = proc->pc;
         uvar3 = size_from_pcb(pcb, 10);
         if (f_verbose & OPT_PCMOVE)
@@ -863,11 +863,10 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
       uvar1 = read_mem_1(cpu->program, proc->pc + 2 + ivar2);
       type = validate_register(uvar1);
       if (type == 0) {
-        // printf("LDI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
         type = proc->pc;
         uvar3 = size_from_pcb(pcb, 10);
         if (f_verbose & OPT_PCMOVE)
-          print_adv(cpu, proc, type + 2 + uvar3); // left off at line 59 _op_ldi
+          print_adv(cpu, proc, type + 2 + uvar3);
         proc->opcode = 0;
         return type + 2 + uvar3;
       }
@@ -878,7 +877,6 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
     uvar1 = read_mem_1(cpu->program, proc->pc + 2 + ivar2 + uvar5);
     type = validate_register(uvar1);
     if (type == 0) {
-      // printf("LDI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
       type = proc->pc;
       uvar3 = size_from_pcb(pcb, 10);
       if (f_verbose & OPT_PCMOVE)
@@ -923,7 +921,6 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
     reg = read_mem_1(cpu->program, proc->pc + 2);
     type = validate_register(reg);
     if (type == 0) {
-      // printf("STI BAD REGISTER reg(%d) pid(%d) pc(%d) clock(%d)\n", reg, proc->pid, proc->pc, cpu->clock);
       type = proc->pc;
       reg = size_from_pcb(pcb, 0xb);
       if (f_verbose & OPT_PCMOVE) {
@@ -940,7 +937,6 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
       uvar1 = read_mem_1(cpu->program, proc->pc + 3);
       type = validate_register(uvar1);
       if (type == 0) {
-        // printf("STI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
         if (f_verbose & OPT_PCMOVE) {
           type = proc->pc;
           reg = size_from_pcb(pcb, 0xb);
@@ -964,7 +960,6 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
       uvar1 = read_mem_1(cpu->program, proc->pc + 3 + uvar2);
       type = validate_register(uvar1);
       if (type == 0) {
-        // printf("STI BAD REGISTER uvar1(%d) pid(%d) pc(%d) clock(%d)\n", uvar1, proc->pid, proc->pc, cpu->clock);
         if (f_verbose & OPT_PCMOVE) {
           type = proc->pc;
           reg = size_from_pcb(pcb, 0xb);

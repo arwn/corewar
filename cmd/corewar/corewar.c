@@ -46,8 +46,7 @@
 #define OPEN_RECT_WIDTH 300
 #define OPEN_RECT_HEIGHT GRAPH_RECT_HEIGHT
 
-#define EDIT_RECT_X                                                            \
-  OPEN_RECT_X // (DEBUG_RECT_WIDTH + DEBUG_RECT_X + RECT_BUFFER)
+#define EDIT_RECT_X OPEN_RECT_X
 #define EDIT_RECT_Y (0 + RECT_BUFFER)
 #define EDIT_RECT_WIDTH OPEN_RECT_WIDTH
 #define EDIT_RECT_HEIGHT DEBUG_RECT_HEIGHT
@@ -88,7 +87,7 @@ char winbuf[64] = "none";
 #define C_LIGHTGREEN nk_rgba(234, 255, 234, 255)
 #define C_CLEAR nk_rgba(0, 0, 0, 0)
 
-void ft_nop(void) {return;} // TODO: remove
+void ft_nop(void) { return; } // TODO: remove
 
 // set_color sets the colorscheme. it should only be called once.
 static void set_color(struct nk_context *ctx) {
@@ -273,7 +272,7 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     double trash;
     double time = modf(glfwGetTime(), &trash);
     time *= 100;
-    if (cpu->processes != 0 && running) {// && (int)time % (21 - slider) == 0) {
+    if (cpu->processes != 0 && running) {
       for (int ii = slider; ii; ii--) {
         cpu->step(cpu);
       }
@@ -281,18 +280,12 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     snprintf(winbuf, sizeof(winbuf), "Winner: %d", cpu->winner);
 
     // top stats
-    // nk_layout_row_static(ctx, 20, 120, 2);
-    // nk_label(ctx, "Winner:", NK_TEXT_LEFT);
     nk_label(ctx, winbuf, NK_TEXT_CENTERED);
-    // nk_layout_row_static(ctx, 20, 120, 2);
     snprintf(buf, sizeof(buf), "Active: %d", cpu->active);
-    // nk_label(ctx, "Processes:", NK_TEXT_LEFT);
     nk_label(ctx, buf, NK_TEXT_CENTERED);
     snprintf(buf, sizeof(buf), "CTD: %d", cpu->cycle_to_die);
-    // nk_label(ctx, "Cycle to die:", NK_TEXT_LEFT);
     nk_label(ctx, buf, NK_TEXT_CENTERED);
     snprintf(buf, sizeof(buf), "Cycle: %d", cpu->clock);
-    // nk_label(ctx, "cpu cycles:", NK_TEXT_LEFT);
     nk_label(ctx, buf, NK_TEXT_CENTERED);
 
     // print the registers IDEA: make separate windows for stats for each player
@@ -337,61 +330,36 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       }
       if (hd == 0) {
         if (g_mem_colors[ii].player) {
-          switch (g_mem_colors[ii].player) { // TODO: change colors for player occupied memory
+          switch (g_mem_colors[ii].player) {
           case -1:
             if (g_mem_colors[ii].writes)
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1w);
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1w);
             else
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1m);
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1m);
             break;
           case -2:
             if (g_mem_colors[ii].writes)
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2w);
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2w);
             else
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2m);
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2m);
             break;
           case -3:
             if (g_mem_colors[ii].writes)
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3w);
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3w);
             else
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3m);
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3m);
             break;
           case -4:
             if (g_mem_colors[ii].writes)
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4w);
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4w);
             else
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4m);
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4m);
             break;
           }
         } else {
           nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
         }
       }
-      // while (hd != NULL) {
-      //   if (hd->pc == ii)
-      //     break;
-      //   hd = hd->next;
-      // }
-      // if (hd != NULL && hd->pc == ii) {
-      //   switch (hd->player) {
-      //   case -1:
-      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);
-      //     break;
-      //   case -2:
-      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);
-      //     break;
-      //   case -3:
-      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);
-      //     break;
-      //   case -4:
-      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
-      //     break;
-      //   default:
-      //     nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
-      //     break;
-      //   }
-      // } else
-      //   nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
     }
   }
   nk_end(ctx);
@@ -427,8 +395,8 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
       printf("* Player %d, weighing %d bytes, \"%s\" (\"%s\") !\n", player,
              h.prog_size, h.prog_name, h.comment);
       if (f_color || f_gui) {
-        for (int jj = location, ll = (len - sizeof(header_t)); jj < ll + location;
-            ++jj) {
+        for (int jj = location, ll = (len - sizeof(header_t));
+             jj < ll + location; ++jj) {
           g_mem_colors[jj].player = -player;
         }
       }
@@ -518,7 +486,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
         nk_end(ctx);
         return;
       }
-	  size_t buflen = ft_strlen(edit_buf);
+      size_t buflen = ft_strlen(edit_buf);
       size_t size = write(file, edit_buf, buflen);
       if (size != buflen) {
         printf("Error writing to file: %zu bytes written\n", size);
@@ -671,9 +639,12 @@ static void error_callback(int e, const char *d) {
 }
 
 static void dump_process(struct s_process *proc) {
-  printf("pid(%4d) player(%d) pc(%4d) last_live(%5d) carry(%d) opcode(%02x) ins_time(%4d)", proc->pid, proc->player, proc->pc, proc->last_live, proc->carry, proc->opcode,proc->instruction_time);
+  printf("pid(%4d) player(%d) pc(%4d) last_live(%5d) carry(%d) opcode(%02x) "
+         "ins_time(%4d)",
+         proc->pid, proc->player, proc->pc, proc->last_live, proc->carry,
+         proc->opcode, proc->instruction_time);
   for (int i = 0; i < 16; i++) {
-    printf(" r%d(%08x)", i+1, proc->registers[i]);
+    printf(" r%d(%08x)", i + 1, proc->registers[i]);
   }
   printf("\n");
 }
@@ -757,14 +728,14 @@ static void vm_dump_core(struct s_cpu *cpu) {
            "cpu->clock(%d)\n",
            cpu->active, cpu->clock);
   for (ii = 0; ii < max; ii++) {
-    for (kk = 0; kk < DUMP_WIDTH(1); ++kk) { // 64
+    for (kk = 0; kk < DUMP_WIDTH(1); ++kk) {         // 64
       if (cpu->program[DUMP_WIDTH(ii) + kk] != 0x00) // ii << 6
         break;
     }
     if (!(f_verbose <= -1) || kk != DUMP_WIDTH(1)) { // 64
-      printf("0x%04x : ", DUMP_WIDTH(ii)); // ii << 6
-      for (jj = 0; jj < DUMP_WIDTH(1); jj++) { // 64
-        vm_dump_byte(cpu, DUMP_WIDTH(ii) + jj, jj); // ii << 6
+      printf("0x%04x : ", DUMP_WIDTH(ii));           // ii << 6
+      for (jj = 0; jj < DUMP_WIDTH(1); jj++) {       // 64
+        vm_dump_byte(cpu, DUMP_WIDTH(ii) + jj, jj);  // ii << 6
       }
       printf("\n");
     }
@@ -931,7 +902,8 @@ int main(int argc, char *argv[]) {
   FILE *f;
   static struct s_cpu cpu;
 
-  f_gui = f_enable_aff = f_color = f_dump = f_leaks = f_dump_processes = f_verbose = 0;
+  f_gui = f_enable_aff = f_color = f_dump = f_leaks = f_dump_processes =
+      f_verbose = 0;
   bin = *argv;
   while ((ch = getopt(argc, argv, "acd:hlnpv:")) != -1) {
     switch (ch) {
@@ -969,13 +941,16 @@ int main(int argc, char *argv[]) {
     case '?':
     default:
       if (f_verbose & OPT_INTLDBG)
-        printf("DBG: ch(%c) optarg(%s) optind(%d) opterr(%d) optopt(%d) DEFAULT\n", ch, optarg, optind, opterr, optopt);
+        printf(
+            "DBG: ch(%c) optarg(%s) optind(%d) opterr(%d) optopt(%d) DEFAULT\n",
+            ch, optarg, optind, opterr, optopt);
       usage(0, 0);
       break;
     }
   }
   if (f_verbose & OPT_INTLDBG)
-    printf("DBG: ch(%c) optarg(%s) optind(%d) opterr(%d) optopt(%d) END\n", ch, optarg, optind, opterr, optopt);
+    printf("DBG: ch(%c) optarg(%s) optind(%d) opterr(%d) optopt(%d) END\n", ch,
+           optarg, optind, opterr, optopt);
   if (f_color || f_gui) {
     g_mem_colors = calloc(4096, sizeof(*g_mem_colors));
     assert(g_mem_colors != NULL);
@@ -1047,7 +1022,7 @@ int main(int argc, char *argv[]) {
     else if (cpu.processes == NULL)
       printf("Stalemate.\n");
     cpu_cleanup(&cpu);
-    if (f_color)
+    if (f_color | f_gui)
       free(g_mem_colors);
   }
   if (f_leaks)

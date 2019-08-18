@@ -225,7 +225,6 @@ static void load(struct s_cpu *cpu, char *program, uint32_t length,
   for (uint32_t i = 0; i < length; i++) {
     cpu->program[i + address] = (uint8_t)program[i];
   }
-  cpu->program_length = MEM_SIZE; // length;
 }
 
 // new_cpu makes a new cpu.
@@ -236,14 +235,12 @@ struct s_cpu new_cpu(void) {
   done.clock = 0;
   memset(done.players, 0, sizeof(done.players));
   memset(done.program, 0, sizeof(done.program));
-  done.program_length = 0;
   done.winner = 0;
   done.pid_next = 0;
   done.cycle_to_die = CYCLE_TO_DIE;
   done.prev_check = 0;
   done.num_checks = 0;
   done.nbr_lives = 0;
-  memset(done.lastlive, 0, sizeof(int) * 4);
   done.spawn_process = spawn_process;
   done.kill_process = delete_process;
   done.step = step;
