@@ -511,12 +511,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
         // num lines * height_of(line) + height_of(ok_button)
         printf("%zu\n", max_strlen);
         err_rect.w = max_strlen * CHAR_WIDTH + WIDTH_BUF;
-        /* err_rect.h = (num_lines * (ROW_HEIGHT + ROW_BUF)) + BUTTON_HEIGHT + HEIGHT_BUF; */
-        /* err_rect.y = OFF_Y - err_rect.h; */
-        /* err_rect.x = OFF_X - err_rect.w; */
-
-        // err_rect.w = 500;
-        err_rect.h = 150;
+        err_rect.h = (num_lines * (ROW_HEIGHT + ROW_BUF)) + BUTTON_HEIGHT + HEIGHT_BUF;
         err_rect.y = OFF_Y - err_rect.h;
         err_rect.x = OFF_X - err_rect.w;
       }
