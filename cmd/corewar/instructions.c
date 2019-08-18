@@ -113,7 +113,6 @@ void next_cpu_op(struct s_cpu *cpu, struct s_process *proc) {
 
   op = (char)read_mem_1(cpu->program, proc->pc);
   if (op < 1 || NUM_OPS < op) {
-    proc->opcode = 0;
     newpc = proc->pc + 1;
     if (newpc >= MEM_SIZE)
       newpc %= MEM_SIZE;
@@ -198,121 +197,6 @@ static void mod_carry(struct s_process *proc, int val) {
     proc->carry = 0;
   }
 }
-#if 0
-// Parse the argument size specified by ARG, read accordingly, and then return
-// VAL
-int read_val(struct s_cpu *cpu, struct s_process *proc, int arg) {
-  int val = 0;
-  int idx;
-
-  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val arg(%d) pc(%d)\n", arg, proc->pc);
-  if (arg == REG_CODE) {
-    val = (char)read_mem_1(cpu->program, proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val reg val(%08x)\n", val);
-    proc->pc += 1;
-  } else if (arg == DIR_CODE) {
-    val = (int)read_mem_4(cpu->program, proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val dir val(%08x)\n", val);
-    proc->pc += 4;
-  } else if (arg == IND_CODE) {
-    idx = (short)read_mem_2(cpu->program, proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val ind idx(%04x)\n", idx);
-    val = (int)read_mem_4(cpu->program, idx + proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val ind val(%08x)\n", val);
-    proc->pc += 2;
-  }
-  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val end pc(%d)\n", proc->pc);
-  return (val);
-}
-
-// Read the specified ARG, adjusting size based on OP direct_size member in
-// G_OP_TAB. Used primarily in LDI, STI, & LLDI
-int read_val_idx(struct s_cpu *cpu, struct s_process *proc, int arg, int op) {
-  int reg;
-  int val = 0;
-  int idx;
-
-  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val_idx arg(%d) pc(%d)\n", arg, proc->pc);
-  if (arg == REG_CODE) {
-    reg = (char)read_mem_1(cpu->program, proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val_idx REG reg(%02x)\n", reg);
-    val = read_reg(proc, reg);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val_idx REG val(%08x)\n", val);
-    proc->pc += 1;
-  } else if (arg == DIR_CODE) {
-    if (g_op_tab[op].direct_size)
-      val = (short)read_mem_2(cpu->program, proc->pc);
-    else
-      val = (int)read_mem_4(cpu->program, proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG)) {
-      if (g_op_tab[op].direct_size)
-        printf("DBG: read_val_idx DIR val(%04x)\n", val);
-      else
-        printf("DBG: read_val_idx DIR val(%08x)\n", val);
-    }
-    proc->pc += (g_op_tab[op].direct_size ? 2 : 4);
-  } else if (arg == IND_CODE) {
-    idx = (short)read_mem_2(cpu->program, proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val_idx IND idx(0x%04x)(%d)\n", idx, idx);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      dump_nbytes(cpu, 6, idx + proc->pc, 1);
-    val = (int)read_mem_4(cpu->program, idx + proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val_idx IND val(0x%08x)(%d)\n", val, val);
-    proc->pc += 2;
-  }
-  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val_idx end pc(%d)\n", proc->pc);
-  return val;
-}
-
-// Read the specified ARG, reading the current value of a register if necessary
-int read_val_load(struct s_cpu *cpu, struct s_process *proc, int arg) {
-  int reg;
-  int val = 0;
-  int idx;
-
-  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val_load arg(%d) pc(%d)\n", arg, proc->pc);
-  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    dump_nbytes(cpu, 8, proc->pc, 1);
-  if (arg == REG_CODE) {
-    reg = (char)read_mem_1(cpu->program, proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val_load REG reg(%02x)\n", reg);
-    val = read_reg(proc, reg);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val_load REG val(%08x)\n", val);
-    proc->pc += 1;
-  } else if (arg == DIR_CODE) {
-    val = (int)read_mem_4(cpu->program, proc->pc);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val_load DIR val(%08x)\n", val);
-    proc->pc += 4;
-  } else if (arg == IND_CODE) {
-    idx = (short)read_mem_2(cpu->program, proc->pc) & (IDX_MOD - 1);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val_load IND idx(%08x)\n", idx);
-    val = (int)read_mem_4(cpu->program, proc->pc + idx - 2);
-    if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_val_load IND val(%08x)\n", val);
-    proc->pc += 2;
-  }
-  if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: read_val_load end pc(%d)\n", proc->pc);
-  return val;
-}
-#endif
 
 /* Instructions */
 
@@ -339,7 +223,6 @@ int instruction_live(struct s_cpu *cpu, struct s_process *proc) {
   }
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, proc->pc + 5);
-  proc->opcode = 0;
   return proc->pc + 5;
 }
 
@@ -352,7 +235,6 @@ int read_indirect(struct s_cpu *cpu, struct s_process *proc, short offset) {
   ofs = offset % IDX_MOD;
   idx = proc->pc + ofs;
   ret = (int)read_mem_4(cpu->program, idx);
-  proc->opcode = 0;
   return ret;
 }
 
@@ -400,7 +282,6 @@ int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
   size = size_from_pcb(pcb, 2);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, proc->pc + size + 2);
-  proc->opcode = 0;
   return proc->pc + size + 2;
 }
 
@@ -450,7 +331,6 @@ int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
   reg = size_from_pcb(pcb, 3);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, proc->pc + reg + 2);
-  proc->opcode = 0;
   return proc->pc + reg + 2;
 }
 
@@ -489,7 +369,6 @@ int instruction_add(struct s_cpu *cpu, struct s_process *proc) {
   val = size_from_pcb(pcb, 4);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, proc->pc + val + 2);
-  proc->opcode = 0;
   return proc->pc + val + 2;
 }
 
@@ -526,7 +405,6 @@ int instruction_sub(struct s_cpu *cpu, struct s_process *proc) {
   val = size_from_pcb(pcb, 5);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, proc->pc + val + 2);
-  proc->opcode = 0;
   return proc->pc + val + 2;
 }
 
@@ -559,7 +437,6 @@ int instruction_and(struct s_cpu *cpu, struct s_process *proc) {
         if (f_verbose & OPT_PCMOVE) {
           print_adv(cpu, proc, type + 2 + uvar3);
         }
-        proc->opcode = 0;
         return type + 2 + uvar3;
       }
       uvar4 = read_reg(proc, uvar1);
@@ -582,7 +459,6 @@ int instruction_and(struct s_cpu *cpu, struct s_process *proc) {
         if (f_verbose & OPT_PCMOVE) {
           print_adv(cpu, proc, type + 2 + uvar3);
         }
-        proc->opcode = 0;
         return type + 2 + uvar3;
       }
       uvar5 = read_reg(proc, uvar1);
@@ -602,7 +478,6 @@ int instruction_and(struct s_cpu *cpu, struct s_process *proc) {
       if (f_verbose & OPT_PCMOVE) {
         print_adv(cpu, proc, type + 2 + uvar3);
       }
-      proc->opcode = 0;
       return type + 2 + uvar3;
     }
     if (f_verbose & OPT_INSTR)
@@ -614,7 +489,6 @@ int instruction_and(struct s_cpu *cpu, struct s_process *proc) {
   uvar3 = size_from_pcb(pcb, 6);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, type + 2 + uvar3);
-  proc->opcode = 0;
   return type + 2 + uvar3;
 }
 
@@ -645,7 +519,6 @@ int instruction_or(struct s_cpu *cpu, struct s_process *proc) {
         if (f_verbose & OPT_PCMOVE) {
           print_adv(cpu, proc, type + 2 + uvar3);
         }
-        proc->opcode = 0;
         return type + 2 + uvar3;
       }
       uvar4 = read_reg(proc, uvar1);
@@ -668,7 +541,6 @@ int instruction_or(struct s_cpu *cpu, struct s_process *proc) {
         if (f_verbose & OPT_PCMOVE) {
           print_adv(cpu, proc, type + 2 + uvar3);
         }
-        proc->opcode = 0;
         return type + 2 + uvar3;
       }
       uvar5 = read_reg(proc, uvar1);
@@ -688,7 +560,6 @@ int instruction_or(struct s_cpu *cpu, struct s_process *proc) {
       if (f_verbose & OPT_PCMOVE) {
         print_adv(cpu, proc, type + 2 + uvar3);
       }
-      proc->opcode = 0;
       return type + 2 + uvar3;
     }
     if (f_verbose & OPT_INSTR)
@@ -700,7 +571,6 @@ int instruction_or(struct s_cpu *cpu, struct s_process *proc) {
   uvar3 = size_from_pcb(pcb, 6);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, type + 2 + uvar3);
-  proc->opcode = 0;
   return type + 2 + uvar3;
 }
 
@@ -731,7 +601,6 @@ int instruction_xor(struct s_cpu *cpu, struct s_process *proc) {
         if (f_verbose & OPT_PCMOVE) {
           print_adv(cpu, proc, type + 2 + uvar3);
         }
-        proc->opcode = 0;
         return type + 2 + uvar3;
       }
       uvar4 = read_reg(proc, uvar1);
@@ -754,7 +623,6 @@ int instruction_xor(struct s_cpu *cpu, struct s_process *proc) {
         if (f_verbose & OPT_PCMOVE) {
           print_adv(cpu, proc, type + 2 + uvar3);
         }
-        proc->opcode = 0;
         return type + 2 + uvar3;
       }
       uvar5 = read_reg(proc, uvar1);
@@ -774,7 +642,6 @@ int instruction_xor(struct s_cpu *cpu, struct s_process *proc) {
       if (f_verbose & OPT_PCMOVE) {
         print_adv(cpu, proc, type + 2 + uvar3);
       }
-      proc->opcode = 0;
       return type + 2 + uvar3;
     }
     if (f_verbose & OPT_INSTR)
@@ -786,7 +653,6 @@ int instruction_xor(struct s_cpu *cpu, struct s_process *proc) {
   uvar3 = size_from_pcb(pcb, 6);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, type + 2 + uvar3);
-  proc->opcode = 0;
   return type + 2 + uvar3;
 }
 
@@ -812,7 +678,6 @@ int instruction_zjmp(struct s_cpu *cpu, struct s_process *proc) {
       printf("P% 5d | zjmp %d OK\n", proc->pid, uvar2);
     local_c = proc->pc + uvar2 % IDX_MOD;
   }
-  proc->opcode = 0;
   return local_c;
 }
 
@@ -846,7 +711,6 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
         uvar3 = size_from_pcb(pcb, 10);
         if (f_verbose & OPT_PCMOVE)
           print_adv(cpu, proc, type + 2 + uvar3);
-        proc->opcode = 0;
         return type + 2 + uvar3;
       }
       local_34 = read_reg(proc, uvar1);
@@ -867,7 +731,6 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
         uvar3 = size_from_pcb(pcb, 10);
         if (f_verbose & OPT_PCMOVE)
           print_adv(cpu, proc, type + 2 + uvar3);
-        proc->opcode = 0;
         return type + 2 + uvar3;
       }
       local_40 = read_reg(proc, uvar1);
@@ -881,7 +744,6 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
       uvar3 = size_from_pcb(pcb, 10);
       if (f_verbose & OPT_PCMOVE)
         print_adv(cpu, proc, type + 2 + uvar3);
-      proc->opcode = 0;
       return type + 2 + uvar3;
     }
     int idx = proc->pc + (local_34 + local_40) % IDX_MOD;
@@ -897,7 +759,6 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
   uvar3 = size_from_pcb(pcb, 10);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, type + 2 + uvar3);
-  proc->opcode = 0;
   return type + 2 + uvar3;
 }
 
@@ -989,7 +850,6 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
   }
   local_c = proc->pc + 2 + reg;
 LAB_100007631:
-  proc->opcode = 0;
   return local_c;
 }
 
@@ -1049,7 +909,6 @@ int instruction_fork(struct s_cpu *cpu, struct s_process *proc) {
   fork_process(cpu, proc, proc->pc + idx);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, proc->pc + 3);
-  proc->opcode = 0;
   return proc->pc + 3;
 }
 
@@ -1091,7 +950,6 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
   if (f_verbose & OPT_PCMOVE) {
     print_adv(cpu, proc, proc->pc + 2 + uvar3);
   }
-  proc->opcode = 0;
   return (proc->pc + 2 + uvar3);
 }
 
@@ -1193,7 +1051,6 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   local_c = size_from_pcb(pcb, 0xe);
   local_c = type + 2 + local_c;
 LAB_100007f68:
-  proc->opcode = 0;
   return local_c;
 }
 
@@ -1213,7 +1070,6 @@ int instruction_lfork(struct s_cpu *cpu, struct s_process *proc) {
   if (f_verbose & OPT_PCMOVE) {
     print_adv(cpu, proc, proc->pc + 3);
   }
-  proc->opcode = 0;
   return (proc->pc + 3);
 }
 
@@ -1244,7 +1100,6 @@ int instruction_aff(struct s_cpu *cpu, struct s_process *proc) {
   }
   ivar2 = proc->pc;
   uvar3 = size_from_pcb(pcb, 0x10);
-  proc->opcode = 0;
   return (ivar2 + 2 + uvar3);
 }
 

@@ -1,41 +1,41 @@
-ASM:
-  Hardcode test everything
-
-COREWAR:
-  Test
-  Fix GUI un-compile error dimensions
-  Maybe change recently-written colors.  Make darker
-  GUI win condition display
-  Fix unreadable player PC colors.  More contrast, sometimes no colors appear, -c
-  Potentially incorrect winner
-    -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor` should result
+corewar:
+- test everything
+- GUI win condition display
+- Fix unreadable player PC colors.  More contrast, sometimes no colors appear, -c
+- Potentially incorrect winner:
+  - ./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor should result
     in player 3 winning
+  - ./corewar -n jumper.cor helltrain.cor helltrain.cor helltrain.cor
+    should result in jumper (p1) winning
 
-DONE:
+asm:
+- hardcode test everything
+
+done:
   ASM:
-    Fix Makefile
-    Fix names
-    Fix labels with names conflicting with types
-    Missing close quote comment/name
-    Separator char with nothing after it
-	leaks in dictInsert when conflict found
+  - Fix Makefile
+  - Fix names
+  - Fix labels with names conflicting with types
+  - Missing close quote comment/name
+  - Separator char with nothing after it
+  - leaks in dictInsert when conflict found
   COREWAR:
-    Fix live -- CYCLE_TO_DIE (tentatively fixed, need to verify more)
-    Fix incorrect behavior with Gagnant.cor, specifically not forking
-      -- `./corewar -r -v31 -d2810 Gagnant.cor`
-    Fix fork/lfork -- process calling fork and sometimes adjacent processes
-      incorrectly set instruction_time after forking
-    helltrain1 -- issues related to fork on cycle 2745
-    Fix zjmp -- negative offset
-    Fix unreadable player PC colors.  More contrast
-    Check invalid header
-    Load champions eqidistant from each other
-    Seg fault with 4 players in GUI
-      -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
-      breaks around cycle 1500
-      has no output after introducing players
-    No winner output with disabled gui
-      -- `./corewar -r Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
-    Unexpected Fatal Error in VM. Improve cli argument parsing
-    WONTFIX:
-      Error check too small champ
+  - graph only shows live calls
+  - Fix live -- CYCLE_TO_DIE (tentatively fixed, need to verify more)
+  - Fix incorrect behavior with Gagnant.cor, specifically not forking
+    -- `./corewar -r -v31 -d2810 Gagnant.cor`
+  - Fix fork/lfork -- process calling fork and sometimes adjacent processes incorrectly set instruction_time after forking
+  - helltrain1 -- issues related to fork on cycle 2745
+  - Fix zjmp -- negative offset
+  - Fix unreadable player PC colors.  More contrast
+  - Check invalid header
+  - Load champions eqidistant from each other
+  - Seg fault with 4 players in GUI
+    -- `./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
+  - breaks around cycle 1500
+  - has no output after introducing players
+  - No winner output with disabled gui
+    -- `./corewar -r Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
+  - Unexpected Fatal Error in VM. Improve cli argument parsing
+  WONTFIX:
+  - Error check too small champ
