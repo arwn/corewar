@@ -7,6 +7,7 @@ corewar:
     in player 3 winning
   - ./corewar -n jumper.cor helltrain.cor helltrain.cor helltrain.cor
     should result in jumper (p1) winning
+- graph only shows live calls
 
 asm:
 - hardcode test everything
