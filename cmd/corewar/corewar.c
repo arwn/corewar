@@ -67,7 +67,7 @@ char edit_buf[4096] = {"beans haha lol."};
 // display.
 
 // instruction_calls is the number of instruction calls in the current program.
-int instruction_calls[NUM_OPS] = {0};
+int instruction_calls[NUM_OPS + 1] = {0};
 
 // running keeps track of if the program should be stepped through
 // automatically.
@@ -131,18 +131,18 @@ static void win_graph(struct nk_context *ctx, struct s_cpu *cpu) {
                        GRAPH_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_TITLE)) {
-    static char *labels[] = {"live", "ld",   "st",    "add", "sub", "and",
-                             "or",   "xor",  "zjmp",  "ldi", "sti", "fork",
-                             "lld",  "lldi", "lfork", "aff"};
+    // static char *labels[] = {"live", "ld",   "st",    "add", "sub", "and",
+    //                          "or",   "xor",  "zjmp",  "ldi", "sti", "fork",
+    //                          "lld",  "lldi", "lfork", "aff"};
     nk_layout_row_dynamic(ctx, 150, 1);
-    nk_chart_begin(ctx, NK_CHART_COLUMN, NK_LEN(instruction_calls), 0, 128);
-    for (unsigned long i = 0; i < NK_LEN(instruction_calls); i++) {
+    nk_chart_begin(ctx, NK_CHART_COLUMN, NUM_OPS, 0, 128);
+    for (unsigned long i = 1; i <= NUM_OPS; i++) {
       nk_chart_push(ctx, instruction_calls[i] % 128);
     }
     nk_chart_end(ctx);
     nk_layout_row_dynamic(ctx, 20, NUM_OPS);
-    for (unsigned long i = 0; i < NK_LEN(labels); i++) {
-      nk_label(ctx, labels[i], NK_TEXT_CENTERED);
+    for (unsigned long i = 1; i <= NUM_OPS; i++) {
+      nk_label(ctx, g_op_tab[i].name, NK_TEXT_CENTERED);
     }
   }
   nk_end(ctx);
@@ -757,6 +757,13 @@ void vm_dump_state(struct s_cpu *cpu) {
     vm_dump_processes(cpu);
   if (f_dump)
     vm_dump_core(cpu);
+  if (f_verbose & OPT_INTLDBG) {
+    printf("DBG: instruction_calls[] {\n");
+    for (int ii = 0; ii < NUM_OPS + 1; ++ii) {
+      printf("\t%6s[%2d] = %d,\n", g_op_tab[ii].name, ii, instruction_calls[ii]);
+    }
+    printf("}\n");
+  }
 }
 
 char *bin;

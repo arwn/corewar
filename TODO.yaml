@@ -7,7 +7,6 @@ corewar:
     in player 3 winning
   - ./corewar -n jumper.cor helltrain.cor helltrain.cor helltrain.cor
     should result in jumper (p1) winning
-- graph only shows live calls
 
 asm:
 - hardcode test everything
@@ -21,6 +20,7 @@ done:
   - Separator char with nothing after it
   - leaks in dictInsert when conflict found
   COREWAR:
+  - graph only shows live calls
   - Fix live -- CYCLE_TO_DIE (tentatively fixed, need to verify more)
   - Fix incorrect behavior with Gagnant.cor, specifically not forking
     -- `./corewar -r -v31 -d2810 Gagnant.cor`

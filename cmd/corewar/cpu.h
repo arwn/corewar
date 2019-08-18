@@ -102,7 +102,7 @@ int				f_gui; /* graphical visualizer of vm */
 int				f_verbose; /* verbosity level */
 int				f_enable_aff; /* display AFF output */
 
-extern int		instruction_calls[NUM_OPS];
+extern int		instruction_calls[NUM_OPS + 1];
 
 extern void		next_cpu_op(struct s_cpu *cpu, struct s_process *proc);
 
