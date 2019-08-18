@@ -1,7 +1,6 @@
 corewar:
 - test everything
 - GUI win condition display
-- Fix unreadable player PC colors.  More contrast, sometimes no colors appear, -c
 - Potentially incorrect winner:
   - ./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor should result
     in player 3 winning
@@ -20,6 +19,7 @@ done:
   - Separator char with nothing after it
   - leaks in dictInsert when conflict found
   COREWAR:
+  - Fix unreadable player PC colors.  More contrast, sometimes no colors appear, -c
   - graph only shows live calls
   - Fix live -- CYCLE_TO_DIE (tentatively fixed, need to verify more)
   - Fix incorrect behavior with Gagnant.cor, specifically not forking
