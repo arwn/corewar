@@ -487,9 +487,14 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
       close(file);
     }
 
-#define ROW_HEIGHT 20
-#define CHAR_WIDTH 10
+#define ROW_HEIGHT 15
+#define CHAR_WIDTH 13
 #define BUTTON_HEIGHT 30
+#define ROW_BUF 30
+#define WIDTH_BUF 20
+#define HEIGHT_BUF 30
+#define OFF_Y 50
+#define OFF_X 50
 
     // display compilation error if one is thrown
     static char **strtab = NULL;
@@ -505,10 +510,15 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
         // line length * width_of(line)
         // num lines * height_of(line) + height_of(ok_button)
         printf("%zu\n", max_strlen);
-        err_rect.w = max_strlen * CHAR_WIDTH;
-        err_rect.h = (num_lines * (ROW_HEIGHT + 30)) + BUTTON_HEIGHT;
-        err_rect.y = 50 - err_rect.h;
-        err_rect.x = 50 - err_rect.w;
+        err_rect.w = max_strlen * CHAR_WIDTH + WIDTH_BUF;
+        /* err_rect.h = (num_lines * (ROW_HEIGHT + ROW_BUF)) + BUTTON_HEIGHT + HEIGHT_BUF; */
+        /* err_rect.y = OFF_Y - err_rect.h; */
+        /* err_rect.x = OFF_X - err_rect.w; */
+
+        // err_rect.w = 500;
+        err_rect.h = 150;
+        err_rect.y = OFF_Y - err_rect.h;
+        err_rect.x = OFF_X - err_rect.w;
       }
 
       if (nk_popup_begin(ctx, NK_POPUP_STATIC, "ERROR",
