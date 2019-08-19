@@ -88,8 +88,6 @@ char winbuf[64] = "none";
 #define C_LIGHTGREEN nk_rgba(234, 255, 234, 255)
 #define C_CLEAR nk_rgba(0, 0, 0, 0)
 
-void ft_nop(void) { return; } // TODO: remove
-
 // set_color sets the colorscheme. it should only be called once.
 static void set_color(struct nk_context *ctx) {
   struct nk_color table[NK_COLOR_COUNT];
@@ -233,9 +231,10 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
 
     // top buttons
     nk_layout_row_static(ctx, 30, 80, 10);
-    if (cpu->processes == 0 && cpu->winner != 0 && cpu->clock == 0 &&
-        (cpu->num_checks != 0 || cpu->nbr_lives != 0)) {
-      printf("winner is %d\n", cpu->winner);
+    if (cpu->processes == 0 && cpu->winner != -1 && cpu->clock != 0) { // &&
+      // (cpu->num_checks != 0 || cpu->nbr_lives != 0)) {
+      printf("Contestant %d, \"%s\", has won !\n", cpu->winner + 1,
+             cpu->players[cpu->winner].name);
     }
     if (nk_button_label(ctx, "step")) {
       if (cpu->processes != 0)
@@ -281,90 +280,89 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     snprintf(buf, sizeof(buf), "Cycle: %d", cpu->clock);
     nk_label(ctx, buf, NK_TEXT_CENTERED);
 
-    // if someone has won
-    if (cpu->winner && nk_popup_begin(ctx, NK_POPUP_STATIC, "Winner",
-                                      NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE |
-                                          NK_WINDOW_MOVABLE,
-                                      err_rect)) {
-		printf("REEEEEEEEE\n");
-    }
-  }
+    /* // if someone has won */
+    /* if (cpu->winner && nk_popup_begin(ctx, NK_POPUP_STATIC, "Winner", */
+    /*                                   NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE | */
+    /*                                       NK_WINDOW_MOVABLE, */
+    /*                                   (struct nk_rect){100,100,100,100})) { */
+    /*   printf("Winner\n"); */
+    /* } */
 
-  // print the registers IDEA: make separate windows for stats for each player
-  if (cpu->processes != NULL) {
-    for (int i = 0; i < REG_NUMBER; i++) {
-      if (i % 16 == 0)
-        nk_layout_row_dynamic(ctx, 15, 8);
-      snprintf(buf, sizeof(buf), "r%02d[%08x]", i + 1,
-               cpu->processes->registers[i]);
-      nk_label(ctx, buf, NK_TEXT_LEFT);
-    }
-  }
-
-  // print the program
-  for (int ii = 0; ii < MEM_SIZE; ii++) {
-    if (ii % 64 == 0)
-      nk_layout_row_static(ctx, 7, 13, 64);
-
-    buf[0] = g_bytes_upper[cpu->program[ii]][0];
-    buf[1] = g_bytes_upper[cpu->program[ii]][1];
-    buf[2] = 0;
-    struct s_process *hd = cpu->processes;
-    while (hd != NULL) {
-      if (hd->pc == ii) {
-        switch (hd->player) {
-        case -1:
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);
-          break;
-        case -2:
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);
-          break;
-        case -3:
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);
-          break;
-        case -4:
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
-          break;
-        }
-        break;
-      }
-      hd = hd->next;
-    }
-    if (hd == 0) {
-      if (g_mem_colors[ii].player) {
-        switch (g_mem_colors[ii].player) {
-        case -1:
-          if (g_mem_colors[ii].writes)
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1w);
-          else
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1m);
-          break;
-        case -2:
-          if (g_mem_colors[ii].writes)
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2w);
-          else
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2m);
-          break;
-        case -3:
-          if (g_mem_colors[ii].writes)
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3w);
-          else
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3m);
-          break;
-        case -4:
-          if (g_mem_colors[ii].writes)
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4w);
-          else
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4m);
-          break;
-        }
-      } else {
-        nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
+    // print the registers IDEA: make separate windows for stats for each player
+    if (cpu->processes != NULL) {
+      for (int i = 0; i < REG_NUMBER; i++) {
+        if (i % 16 == 0)
+          nk_layout_row_dynamic(ctx, 15, 8);
+        snprintf(buf, sizeof(buf), "r%02d[%08x]", i + 1,
+                 cpu->processes->registers[i]);
+        nk_label(ctx, buf, NK_TEXT_LEFT);
       }
     }
+
+    // print the program
+    for (int ii = 0; ii < MEM_SIZE; ii++) {
+      if (ii % 64 == 0)
+        nk_layout_row_static(ctx, 7, 13, 64);
+
+      buf[0] = g_bytes_upper[cpu->program[ii]][0];
+      buf[1] = g_bytes_upper[cpu->program[ii]][1];
+      buf[2] = 0;
+      struct s_process *hd = cpu->processes;
+      while (hd != NULL) {
+        if (hd->pc == ii) {
+          switch (hd->player) {
+          case -1:
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);
+            break;
+          case -2:
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);
+            break;
+          case -3:
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);
+            break;
+          case -4:
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
+            break;
+          }
+          break;
+        }
+        hd = hd->next;
+      }
+      if (hd == 0) {
+        if (g_mem_colors[ii].player) {
+          switch (g_mem_colors[ii].player) {
+          case -1:
+            if (g_mem_colors[ii].writes)
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1w);
+            else
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1m);
+            break;
+          case -2:
+            if (g_mem_colors[ii].writes)
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2w);
+            else
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2m);
+            break;
+          case -3:
+            if (g_mem_colors[ii].writes)
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3w);
+            else
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3m);
+            break;
+          case -4:
+            if (g_mem_colors[ii].writes)
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4w);
+            else
+              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4m);
+            break;
+          }
+        } else {
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
+        }
+      }
+    }
   }
-}
-nk_end(ctx);
+  nk_end(ctx);
 }
 
 void new_player(struct s_cpu *cpu, header_t *h, int num) {
@@ -663,8 +661,6 @@ static void vm_dump_byte(struct s_cpu *cpu, int idx, int space) {
   buf[0] = g_bytes_lower[cpu->program[idx]][0];
   buf[1] = g_bytes_lower[cpu->program[idx]][1];
   buf[2] = 0;
-  if (idx == 112)
-    ft_nop();
   if (space)
     printf(" ");
   if (f_color) {
@@ -1019,27 +1015,19 @@ int main(int argc, char *argv[]) {
   if (f_gui) {
     corewar_gui(&cpu);
   } else {
-    while (cpu.active != 0 && cpu.winner != 1) {
+    while (cpu.active != 0) {
       if (f_dump && cpu.clock == dump_cycles) {
         vm_dump_state(&cpu);
         break;
       }
       cpu.step(&cpu);
     }
-    int winner_out = 0;
-    for (ii = 0; ii < MAX_PLAYERS; ++ii) {
-      if (f_verbose & OPT_INTLDBG)
-        printf("DBG: players[%d].last_live(%d)\n", ii,
-               cpu.players[ii].last_live);
-      if (cpu.players[ii].last_live > cpu.players[winner_out].last_live)
-        winner_out = ii;
-    }
-    cpu.winner = winner_out + 1;
-    if (cpu.winner != 0 && cpu.processes == NULL)
-      printf("Contestant %d, \"%s\", has won !\n", cpu.winner,
-             cpu.players[cpu.winner - 1].name);
+    // Display the winner
+    if (cpu.winner != -1 && cpu.processes == NULL)
+      printf("Contestant %d, \"%s\", has won !\n", cpu.winner + 1,
+             cpu.players[cpu.winner].name);
     else if (cpu.processes == NULL)
-      printf("Stalemate.\n");
+      printf("Stalemate. (This shouldn't happen)\n");
     cpu_cleanup(&cpu);
     if (f_color | f_gui)
       free(g_mem_colors);

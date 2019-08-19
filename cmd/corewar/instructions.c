@@ -209,7 +209,7 @@ static void mod_carry(struct s_process *proc, int val) {
 // corresponds to an active player
 int instruction_live(struct s_cpu *cpu, struct s_process *proc) {
   int player_id;
-  int local_34;
+  int player_idx;
 
   player_id = (int)read_mem_4(cpu->program, proc->pc + 1);
   if (f_verbose & OPT_LIVES)
@@ -218,13 +218,13 @@ int instruction_live(struct s_cpu *cpu, struct s_process *proc) {
   if (f_verbose & OPT_INTLDBG)
     printf("DBG: proc->last_live(%d) INS_LIVE\n", proc->last_live);
   cpu->nbr_lives += 1;
-  // cpu->winner = player_id;
-  local_34 = ~player_id;
-  if (local_34 >= 0 && local_34 < MAX_PLAYERS) {
+  player_idx = ~player_id;
+  if (player_idx >= 0 && player_idx < MAX_PLAYERS) {
     if ((f_verbose & OPT_LIVES))
-      printf("Player %d (%s) is said to be alive\n", local_34 + 1,
-             cpu->players[local_34].name);
-    cpu->players[local_34].last_live = cpu->clock;
+      printf("Player %d (%s) is said to be alive\n", player_idx + 1,
+             cpu->players[player_idx].name);
+    cpu->players[player_idx].last_live = cpu->clock;
+    cpu->winner = player_idx;
   }
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, proc->pc + 5);
