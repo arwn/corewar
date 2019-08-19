@@ -214,6 +214,23 @@ char *g_bytes_lower[256] = {
     p##n##w = tmp_p##n##w;                                                     \
   }
 
+// teardown of allocated memory
+void cpu_cleanup(struct s_cpu *cpu) {
+  int ii;
+  struct s_process *lst, *tofree;
+
+  for (ii = 0; ii < MAX_PLAYERS; ++ii) {
+    free(cpu->players[ii].name);
+    free(cpu->players[ii].comment);
+  }
+  lst = cpu->processes;
+  while (lst != 0) {
+    tofree = lst;
+    lst = lst->next;
+    free(tofree);
+  }
+}
+
 // win_debug displays the program and buttons to step through.
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
   if (nk_begin(ctx, "debug",
@@ -262,6 +279,14 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     }
     static int slider = 1;
     nk_slider_int(ctx, 1, &slider, 20, 1);
+
+    // reset button
+    if (nk_button_label(ctx, "reset")) {
+		cpu_cleanup(cpu);
+		*cpu = new_cpu();
+		ft_bzero(g_mem_colors, MEM_SIZE * sizeof(*g_mem_colors));
+	  glfwSetTime(1);
+    }
 
     double trash;
     double time = modf(glfwGetTime(), &trash);
@@ -909,23 +934,6 @@ static void corewar_gui(struct s_cpu *cpu) {
   glfwTerminate();
 }
 
-// teardown of allocated memory
-void cpu_cleanup(struct s_cpu *cpu) {
-  int ii;
-  struct s_process *lst, *tofree;
-
-  for (ii = 0; ii < MAX_PLAYERS; ++ii) {
-    free(cpu->players[ii].name);
-    free(cpu->players[ii].comment);
-  }
-  lst = cpu->processes;
-  while (lst != 0) {
-    tofree = lst;
-    lst = lst->next;
-    free(tofree);
-  }
-}
-
 // A valid numeric argument consists of only ascii digits
 static int valid_number_arg(const char *str) {
   while (*str) {
@@ -993,7 +1001,7 @@ int main(int argc, char *argv[]) {
     printf("DBG: ch(%c) optarg(%s) optind(%d) opterr(%d) optopt(%d) END\n", ch,
            optarg, optind, opterr, optopt);
   if (f_color || f_gui) {
-    g_mem_colors = calloc(4096, sizeof(*g_mem_colors));
+    g_mem_colors = calloc(MEM_SIZE, sizeof(*g_mem_colors));
     assert(g_mem_colors != NULL);
   }
   argc -= optind;

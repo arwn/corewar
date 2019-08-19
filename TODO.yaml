@@ -1,5 +1,6 @@
 corewar:
 - test everything
+- fix leaks
 - Potentially incorrect winner:
   - ./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor should result
     in player 3 winning
