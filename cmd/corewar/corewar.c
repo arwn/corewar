@@ -322,13 +322,11 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
                                       CHAR_WIDTH,
                                   ft_strlen(win_str) * CHAR_WIDTH);
         }
-        // printf("Winner\n");
         nk_layout_row_dynamic(ctx, 75, 1);
         nk_label(ctx, win_str, NK_TEXT_CENTERED);
         nk_label(ctx, comment_str, NK_TEXT_CENTERED);
         nk_layout_row_static(ctx, 30, 30, 1);
         cpu->winner = -1;
-        // nk_layout_row_static(ctx, 30, 30, 1);
         if (nk_button_label(ctx, "ok")) {
           free(win_str);
           win_str = NULL;
@@ -336,7 +334,6 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
         }
         nk_popup_end(ctx);
       } else {
-
         free(win_str);
         win_str = NULL;
         comment_str = NULL;
