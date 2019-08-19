@@ -52,6 +52,8 @@
 #define EDIT_RECT_WIDTH OPEN_RECT_WIDTH
 #define EDIT_RECT_HEIGHT DEBUG_RECT_HEIGHT
 
+#define CHAR_WIDTH 13
+
 #define WINDOW_WIDTH (EDIT_RECT_WIDTH + EDIT_RECT_X + RECT_BUFFER)
 #define WINDOW_HEIGHT (GRAPH_RECT_HEIGHT + GRAPH_RECT_Y + RECT_BUFFER)
 
@@ -280,13 +282,41 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     snprintf(buf, sizeof(buf), "Cycle: %d", cpu->clock);
     nk_label(ctx, buf, NK_TEXT_CENTERED);
 
-    /* // if someone has won */
-    /* if (cpu->winner && nk_popup_begin(ctx, NK_POPUP_STATIC, "Winner", */
-    /*                                   NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE | */
-    /*                                       NK_WINDOW_MOVABLE, */
-    /*                                   (struct nk_rect){100,100,100,100})) { */
-    /*   printf("Winner\n"); */
-    /* } */
+    // if someone has won
+    static struct nk_rect win_rect = {100, 100, 500, 237};
+    static char *win_str = NULL;
+	static char *comment_str = NULL;
+    // static char winner_buf;
+    if (win_str || (cpu->winner != -1 && cpu->processes == NULL)) {
+      if (nk_popup_begin(ctx, NK_POPUP_STATIC, "Winner",
+                         NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, win_rect)) {
+        if (!win_str) {
+          win_str = ft_strjoin("WINNER: ", cpu->players[cpu->winner].name);
+		  comment_str = cpu->players[cpu->winner].comment;
+          win_rect.w = 40 + MAX__(ft_strlen(cpu->players[cpu->winner].comment) *
+                                      CHAR_WIDTH,
+                                  ft_strlen(win_str) * CHAR_WIDTH);
+        }
+        // printf("Winner\n");
+        nk_layout_row_dynamic(ctx, 75, 1);
+        nk_label(ctx, win_str, NK_TEXT_CENTERED);
+        nk_label(ctx, comment_str, NK_TEXT_CENTERED);
+        nk_layout_row_static(ctx, 30, 30, 1);
+		cpu->winner = -1;
+        // nk_layout_row_static(ctx, 30, 30, 1);
+        if (nk_button_label(ctx, "ok")) {
+          free(win_str);
+          win_str = NULL;
+		  comment_str = NULL;
+        }
+        nk_popup_end(ctx);
+      } else {
+
+        free(win_str);
+        win_str = NULL;
+		comment_str = NULL;
+      }
+    }
 
     // print the registers IDEA: make separate windows for stats for each player
     if (cpu->processes != NULL) {
@@ -495,7 +525,6 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     }
 
 #define ROW_HEIGHT 15
-#define CHAR_WIDTH 13
 #define BUTTON_HEIGHT 30
 #define ROW_BUF 30
 #define WIDTH_BUF 20

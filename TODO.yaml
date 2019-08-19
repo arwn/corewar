@@ -1,7 +1,5 @@
 corewar:
 - test everything
-- GUI win condition display
-- Remove unnecessary debug printf calls
 - Potentially incorrect winner:
   - ./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor should result
     in player 3 winning
@@ -38,5 +36,7 @@ done:
   - No winner output with disabled gui
     -- `./corewar -r Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor`
   - Unexpected Fatal Error in VM. Improve cli argument parsing
+  - GUI win condition display
+  - Remove unnecessary debug printf calls
   WONTFIX:
   - Error check too small champ
