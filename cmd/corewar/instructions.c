@@ -1139,7 +1139,7 @@ int instruction_kill(struct s_cpu *cpu, struct s_process *proc) {
     cpu->players[player].last_live = 0;
   }
   if (f_verbose & OPT_INSTR)
-    printf("P% 5d | kill %d\n", tokill);
+    printf("P% 5d | kill %d\n", proc->pid, tokill);
   if (f_verbose & OPT_PCMOVE)
     print_adv(cpu, proc, proc->pc + 5);
   return (proc->pc + 5);
