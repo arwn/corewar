@@ -105,10 +105,18 @@ int parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
 
   ft_bzero(&header, sizeof(header));
 
-  size_t headersize = read(fd, &header, sizeof(header));
+  if (fd < 0) {
+    asprintf(&g_errstr, "Fatal error.  Unable to read from file");
+    return (1);
+  }
+
+  ssize_t headersize = read(fd, &header, sizeof(header));
 
   if (headersize != sizeof(header)) {
-    asprintf(&g_errstr, ERR_BAD_HEADER);
+    if (headersize == -1)
+      asprintf(&g_errstr, "Fatal error.  Unable to read from file");
+    else
+      asprintf(&g_errstr, ERR_BAD_HEADER);
     return (1);
   }
 
@@ -132,7 +140,12 @@ int parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
     *size = 0;
     return (1);
   }
-  size_t progbuf_size = read(fd, progbuf, header.prog_size);
+  ssize_t progbuf_size = read(fd, progbuf, header.prog_size);
+
+  if (progbuf_size < 0) {
+    asprintf(&g_errstr, "Fatal error.  Unable to read from file");
+    return (1);
+  }
 
   size_t bufidx = ft_strlen(buf);
   int err = 0;
