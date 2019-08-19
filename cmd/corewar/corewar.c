@@ -57,8 +57,8 @@
 #define WINDOW_WIDTH (EDIT_RECT_WIDTH + EDIT_RECT_X + RECT_BUFFER)
 #define WINDOW_HEIGHT (GRAPH_RECT_HEIGHT + GRAPH_RECT_Y + RECT_BUFFER)
 
-#define MAX_VERTEX_BUFFER 512 * 1536  // 512 * 1024 increase to fix buggy ui
-#define MAX_ELEMENT_BUFFER 128 * 1536 // 128 * 1024
+#define MAX_VERTEX_BUFFER 512 * 2048  // 512 * 1024 increase to fix buggy ui
+#define MAX_ELEMENT_BUFFER 128 * 2048 // 128 * 1024
 
 // open_buf is the buffer for the pathname inside the open window.
 char open_buf[PATH_MAX] = {"./tests/aff1.s"};
@@ -76,7 +76,7 @@ int instruction_calls[NUM_OPS + 1] = {0};
 // automatically.
 bool running = 0;
 
-char winbuf[64] = "none";
+char plyrbuf[NAME_MAX + 4] = "none";
 
 #define C_BLACK nk_rgba(0, 0, 0, 255)
 #define C_WHITE nk_rgba(255, 255, 255, 255)
@@ -132,9 +132,6 @@ static void win_graph(struct nk_context *ctx, struct s_cpu *cpu) {
                        GRAPH_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
                    NK_WINDOW_TITLE)) {
-    // static char *labels[] = {"live", "ld",   "st",    "add", "sub", "and",
-    //                          "or",   "xor",  "zjmp",  "ldi", "sti", "fork",
-    //                          "lld",  "lldi", "lfork", "aff"};
     nk_layout_row_dynamic(ctx, 150, 1);
     nk_chart_begin(ctx, NK_CHART_COLUMN, NUM_OPS, 0, 128);
     for (unsigned long i = 1; i <= NUM_OPS; i++) {
@@ -298,8 +295,8 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     }
 
     // top stats
-    snprintf(winbuf, sizeof(winbuf), "Winner: %d", cpu->winner);
-    nk_label(ctx, winbuf, NK_TEXT_CENTERED);
+    // snprintf(winbuf, sizeof(winbuf), "Winner: %d", cpu->winner);
+    // nk_label(ctx, winbuf, NK_TEXT_CENTERED);
     snprintf(buf, sizeof(buf), "Active: %d", cpu->active);
     nk_label(ctx, buf, NK_TEXT_CENTERED);
     snprintf(buf, sizeof(buf), "CTD: %d", cpu->cycle_to_die);
@@ -341,14 +338,25 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     }
 
     // print the registers
-    if (cpu->processes != NULL) {
-      for (int i = 0; i < REG_NUMBER; i++) {
-        if (i % 16 == 0)
-          nk_layout_row_dynamic(ctx, 15, 8);
-        snprintf(buf, sizeof(buf), "r%d[%08x]", i + 1,
-                 cpu->processes->registers[i]);
-        nk_label(ctx, buf, NK_TEXT_LEFT);
-      }
+    // if (cpu->processes != NULL) {
+    //   for (int i = 0; i < REG_NUMBER; i++) {
+    //     if (i % 16 == 0)
+    //       nk_layout_row_dynamic(ctx, 15, 8);
+    //     snprintf(buf, sizeof(buf), "r%02d[%08x]", i + 1,
+    //              cpu->processes->registers[i]);
+    //     nk_label(ctx, buf, NK_TEXT_LEFT);
+    //   }
+    // }
+
+    // display active players
+    // nk_layout_row_static(ctx, 30, DEBUG_RECT_WIDTH/MAX_PLAYERS, MAX_PLAYERS);
+    nk_layout_row_dynamic(ctx, 30, MAX_PLAYERS);
+    for (int ii = 0; ii < MAX_PLAYERS; ii++) {
+      if (cpu->players[ii].name)
+        snprintf(plyrbuf, sizeof(plyrbuf), "P%d: \'%s\'", ii+1, cpu->players[ii].name);
+      else
+        snprintf(plyrbuf, sizeof(plyrbuf), "P0: NONE");
+      nk_label(ctx, plyrbuf, NK_TEXT_LEFT);
     }
 
     // print the program

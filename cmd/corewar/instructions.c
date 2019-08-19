@@ -128,6 +128,7 @@ void next_cpu_op(struct s_cpu *cpu, struct s_process *proc) {
 /* Utility functions */
 
 // Write four bytes of VAL into core memory MEM at offset IDX
+// TODO: cleanup
 static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx,
                           uint32_t val) {
   const int idx1 = idx % MEM_SIZE;
@@ -135,42 +136,35 @@ static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx,
   const int idx3 = (idx + 2) % MEM_SIZE;
   const int idx4 = (idx + 3) % MEM_SIZE;
 
-  if (f_verbose & OPT_INTLDBG)
-    printf("DBG: idx(%d) WRITE_MEM_INS start\n", idx);
   if (f_color || f_gui) {
     if (g_mem_colors[idx1].writes == 0 ||
         g_mem_colors[idx1].player != proc->player)
       g_mem_colors[idx1].writes = 49;
     if (!g_mem_colors[idx1].player || g_mem_colors[idx1].player != proc->player)
       g_mem_colors[idx1].player = proc->player;
-  }
-  mem[idx1] = (val >> 24) & 0xff;
 
-  if (f_color || f_gui) {
     if (g_mem_colors[idx2].writes == 0 ||
         g_mem_colors[idx2].player != proc->player)
       g_mem_colors[idx2].writes = 49;
     if (!g_mem_colors[idx2].player || g_mem_colors[idx2].player != proc->player)
       g_mem_colors[idx2].player = proc->player;
-  }
-  mem[idx2] = (val >> 16) & 0xff;
 
-  if (f_color || f_gui) {
     if (g_mem_colors[idx3].writes == 0 ||
         g_mem_colors[idx3].player != proc->player)
       g_mem_colors[idx3].writes = 49;
     if (!g_mem_colors[idx3].player || g_mem_colors[idx3].player != proc->player)
       g_mem_colors[idx3].player = proc->player;
-  }
-  mem[idx3] = (val >> 8) & 0xff;
 
-  if (f_color || f_gui) {
     if (g_mem_colors[idx4].writes == 0 ||
         g_mem_colors[idx4].player != proc->player)
       g_mem_colors[idx4].writes = 49;
     if (!g_mem_colors[idx4].player || g_mem_colors[idx4].player != proc->player)
       g_mem_colors[idx4].player = proc->player;
   }
+
+  mem[idx1] = (val >> 24) & 0xff;
+  mem[idx2] = (val >> 16) & 0xff;
+  mem[idx3] = (val >> 8) & 0xff;
   mem[idx4] = val & 0xff;
 }
 

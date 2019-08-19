@@ -12,8 +12,9 @@ LIBGLFW = $(GLFWBUILDDIR)src/libglfw3.a
 
 LFTDIR = $(LIBDIR)libft/
 LFT = $(LFTDIR)libft.a
+INCDIR = inc
 CWLINKERS = -L $(LFTDIR) -lft
-CWINCLUDES = -I $(LFTDIR)includes/ -I inc/
+CWINCLUDES = -I $(LFTDIR)includes/ -I $(INCDIR)
 
 ASM_SRCDIR = cmd/asm/
 ASM_NAME = asm
@@ -37,9 +38,12 @@ GUI_FRAMEWORKS = -framework Cocoa -framework OpenGL -framework IOKit -framework 
 GUI_INCLUDE = -I lib/glfw-3.3/build/include -I lib/glew-2.1.0/include
 
 INTERNAL_SRCDIR = internal/
-INTERNAL_CFILES = op.c hashtbl.c util.c lex.c parse.c resolve_labels.c print_args.c globals.c asm_main_funcs.c parse_binary.c
+INTERNAL_CFILES = \
+	op.c hashtbl.c util.c lex.c parse.c resolve_labels.c print_args.c \
+	globals.c asm_main_funcs.c parse_binary.c
 INTERNAL_SRCS = $(addprefix $(INTERNAL_SRCDIR), $(INTERNAL_CFILES))
 INTERNAL_OBJS = $(INTERNAL_SRCS:.c=.o)
+INTL_HEADERS = colors.h libasm.h op.h hashtbl.h util.h asm.h instructions.h
 
 COREWAR_HEADERS = $(addprefix ./inc/, colors.h libasm.h op.h hashtbl.h util.h asm.h instructions.h)
 
@@ -82,14 +86,17 @@ deps: $(LFT) $(LIBGLEW) $(LIBGLFW)
 $(LIBGLFW):
 	mkdir -p $(GLFWBUILDDIR)
 	cd $(GLFWBUILDDIR) && \
-	cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_EXECUTABLE_FORMAT=MACHO -DGLFW_BUILD_DOCS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_INSTALL=OFF -DGLFW_USE_OSMESA=OFF -DGLFW_VULKAN_STATIC=OFF
+	cmake .. -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=MinSizeRel \
+	-DCMAKE_EXECUTABLE_FORMAT=MACHO -DGLFW_BUILD_DOCS=OFF \
+	-DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF \
+	-DGLFW_INSTALL=OFF -DGLFW_USE_OSMESA=OFF -DGLFW_VULKAN_STATIC=OFF
 	$(MAKE) -C $(GLFWBUILDDIR)
 
 $(LIBGLEW):
-	$(MAKE) -C $(GLEWDIR) glew.lib.static
+	$(MAKE) SYSTEM=darwin -C $(GLEWDIR) glew.lib.static
 
 $(LFT):
-	$(MAKE) -C $(LFTDIR)
+	$(MAKE) -C $(LFTDIR) all
 
 .PHONY: clean
 clean:

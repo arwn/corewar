@@ -30,8 +30,8 @@ t_op g_op_tab[NUM_OPS + 1] = {
     {"lldi",  3, {T_REG|T_DIR|T_IND, T_DIR|T_REG, T_REG},       14,   50, "long load index", 1, 1},
     {"lfork", 1, {T_DIR},                                       15, 1000, "long fork",       0, 1},
     {"aff",   1, {T_REG},                                       16,    2, "print",           1, 0},
-	// new instructions
-    {"nop",   0, {},                                            17,    1, "it's a nop",             0, 0},
-    {"kill",   1, {T_DIR},                                       18,   10, "kill process",           0, 0},
+// new instructions
+    {"nop",   0, {},                                            17,    1, "no operation",    0, 0},
+    {"kill",  1, {T_DIR},                                       18,   10, "kill process",    0, 0},
 };
 // clang-format on

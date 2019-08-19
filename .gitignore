@@ -11,9 +11,14 @@ lib/glfw-3.3/docs/html
 lib/libft/.obj/
 lib/libft/libft.a
 *.o
+*.gcda
+*.gcno
+*.profdata
+*.profraw
 *.in
 /*.s
 *.cor
 .vscode
 TAGS
+tags
 *.dSYM
