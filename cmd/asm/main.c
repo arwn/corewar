@@ -17,7 +17,8 @@ struct s_option *g_asm_opts[] = {
     &(struct s_option){'h', "help", "Display help message", 1 << 1},
     &(struct s_option){'q', "quiet", "Run with no output", 1 << 2},
     &(struct s_option){'n', "nowrite", "Do not write to output file", 1 << 3},
-    &(struct s_option){'f', "force", "Force disassembly output if error", 1 << 4},
+    &(struct s_option){'f', "force", "Force disassembly output if error",
+                       1 << 4},
     NULL,
 };
 
@@ -45,7 +46,7 @@ int main(int argc, char **argv) {
     return (1);
   }
   if (opts & opt_getoptcode(g_asm_opts, 'f', NULL))
-	  g_force_disasm |= 1;
+    g_force_disasm |= 1;
   r = 0;
   while (ii < argc) {
     size = 0;

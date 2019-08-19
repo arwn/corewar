@@ -123,12 +123,13 @@ int parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
   header.magic = ntohl(header.magic);
   header.prog_size = ntohl(header.prog_size);
 
-  if (header.magic != COREWAR_EXEC_MAGIC && header.magic != COREWAR_EXTENDED_EXEC_MAGIC) {
+  if (header.magic != COREWAR_EXEC_MAGIC &&
+      header.magic != COREWAR_EXTENDED_EXEC_MAGIC) {
     asprintf(&g_errstr, ERR_BAD_HEADER);
     return (1);
   }
   if (header.magic == COREWAR_EXTENDED_EXEC_MAGIC)
-	  g_is_extended |= 1;
+    g_is_extended |= 1;
 
   ft_strcat(buf, NAME_CMD_STRING " \"");
   ft_strcat(buf, header.prog_name);

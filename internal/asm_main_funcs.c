@@ -17,7 +17,7 @@ static char g_bufarr[MAX(CHAMP_MAX_SIZE + sizeof(header_t), DISASM_BUF_SIZE)];
 char g_is_extended = 0;
 
 char *assemble(int fd, size_t *size) {
-	g_is_extended = 0;
+  g_is_extended = 0;
   if (g_errstr)
     free(g_errstr);
   g_errstr = NULL;
@@ -52,9 +52,9 @@ char *assemble(int fd, size_t *size) {
   }
 
   if (g_is_extended)
-	  header.magic = COREWAR_EXTENDED_EXEC_MAGIC;
+    header.magic = COREWAR_EXTENDED_EXEC_MAGIC;
   else
-	  header.magic = COREWAR_EXEC_MAGIC;
+    header.magic = COREWAR_EXEC_MAGIC;
   print_args(g_bufarr, sizeof(g_bufarr), cmds->next, size, &header);
 
   killDict(htbl);
@@ -64,7 +64,7 @@ char *assemble(int fd, size_t *size) {
 }
 
 char *disassemble(int fd, size_t *size) {
-	g_is_extended = 0;
+  g_is_extended = 0;
   if (g_errstr)
     free(g_errstr);
   g_errstr = NULL;

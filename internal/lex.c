@@ -65,8 +65,8 @@ t_tok complex_token(char **s, char *str, t_tok tok) {
       tok = (t_tok){.type = instruction,
                     .col = *s - str,
                     .opcode = g_op_tab[ii + 1].opcode};
-	  if (tok.opcode > NUM_BASE_OPS)
-		  g_is_extended |= 1;
+      if (tok.opcode > NUM_BASE_OPS)
+        g_is_extended |= 1;
       *s += len;
       break;
     }
