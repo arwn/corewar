@@ -1,5 +1,5 @@
 #ifndef COLORS_H
-# define COLORS_H
+#define COLORS_H
 
 struct s_hsv {
   float h;

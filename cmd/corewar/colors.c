@@ -1,5 +1,5 @@
-#include "cpu.h"
 #include "colors.h"
+#include "cpu.h"
 #include "nuklear.h"
 #include <math.h>
 

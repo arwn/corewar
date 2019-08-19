@@ -282,9 +282,11 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
 
     /* // if someone has won */
     /* if (cpu->winner && nk_popup_begin(ctx, NK_POPUP_STATIC, "Winner", */
-    /*                                   NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE | */
+    /*                                   NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE |
+     */
     /*                                       NK_WINDOW_MOVABLE, */
-    /*                                   (struct nk_rect){100,100,100,100})) { */
+    /*                                   (struct nk_rect){100,100,100,100})) {
+     */
     /*   printf("Winner\n"); */
     /* } */
 

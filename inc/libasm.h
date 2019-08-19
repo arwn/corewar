@@ -11,12 +11,12 @@
 /* ************************************************************************** */
 
 #ifndef INTERNAL_H
-# define INTERNAL_H
+#define INTERNAL_H
 
-# include "libft.h"
+#include "libft.h"
 
-char		*assemble(int fd, size_t *size);
-char		*disassemble(int fd, size_t *size);
-int			write_to_file(int opts, char *filename, char *buf, size_t bufsize);
+char *assemble(int fd, size_t *size);
+char *disassemble(int fd, size_t *size);
+int write_to_file(int opts, char *filename, char *buf, size_t bufsize);
 
 #endif

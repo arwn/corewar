@@ -41,6 +41,8 @@ INTERNAL_CFILES = op.c hashtbl.c util.c lex.c parse.c resolve_labels.c print_arg
 INTERNAL_SRCS = $(addprefix $(INTERNAL_SRCDIR), $(INTERNAL_CFILES))
 INTERNAL_OBJS = $(INTERNAL_SRCS:.c=.o)
 
+COREWAR_HEADERS = $(addprefix ./inc/, colors.h libasm.h op.h hashtbl.h util.h asm.h instructions.h)
+
 CFLAGS = $(CCFLAGS) $(INCLUDES)
 
 all: $(CHAMP_NAME) $(ASM_NAME) $(VM_NAME)
@@ -106,8 +108,13 @@ depclean:
 	-$(RM) -r $(LIBDIR)glfw-3.3/build
 	-$(MAKE) -C $(LIBDIR)libft fclean
 
+.PHONY: format
+format:
+	clang-format -i --style=LLVM $(COREWAR_HEADERS) $(INTERNAL_SRCS) $(VM_SRCS) $(ASM_SRCS)
+
 re: fclean all
 
+.PHONY: er
 er:
 	@printf "Make 'er?"
 	@sleep 2

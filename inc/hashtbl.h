@@ -11,27 +11,27 @@
 /* ************************************************************************** */
 
 #ifndef HASHTBL_H
-# define HASHTBL_H
+#define HASHTBL_H
 
-# include <stdlib.h>
-# include "../lib/libft/includes/libft.h"
+#include "../lib/libft/includes/libft.h"
+#include <stdlib.h>
 
 struct s_item {
-	char			*str;
-	size_t			value;
-	struct s_item	*next;
+  char *str;
+  size_t value;
+  struct s_item *next;
 };
 
 struct s_dict {
-	struct s_item	**items;
-	unsigned		capacity;
+  struct s_item **items;
+  unsigned capacity;
 };
 
-typedef struct s_dict	t_dict;
+typedef struct s_dict t_dict;
 
-struct s_dict	*dictInit(int capacity);
-int				dictInsert(struct s_dict *dict, char *str, size_t value);
-size_t			dictSearch(struct s_dict *dict, char *str);
-void			killDict(struct s_dict *dict);
+struct s_dict *dictInit(int capacity);
+int dictInsert(struct s_dict *dict, char *str, size_t value);
+size_t dictSearch(struct s_dict *dict, char *str);
+void killDict(struct s_dict *dict);
 
 #endif
