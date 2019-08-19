@@ -1118,16 +1118,31 @@ int instruction_aff(struct s_cpu *cpu, struct s_process *proc) {
   return (ivar2 + 2 + uvar3);
 }
 
+// explicit no operation
 int instruction_nop(struct s_cpu *cpu, struct s_process *proc) {
-	(void)cpu;
-	return (proc->pc + 1);
+  int ret = proc->pc + 1;
+  if (f_verbose & OPT_INSTR)
+    printf("P% 5d | nop\n", proc->pid);
+  if (f_verbose & OPT_PCMOVE)
+    print_adv(cpu, proc, ret);
+  return (ret);
 }
 
-// TODO: implement
+// inverse of live
 int instruction_kill(struct s_cpu *cpu, struct s_process *proc) {
-	(void)cpu;
-	(void)proc;
-	return (proc->pc + 5);
+  int tokill;
+
+  tokill = read_mem_4(cpu->program, proc->pc + 1);
+  proc->last_live = 0;
+  int player = ~tokill;
+  if (player >= 0 && player < MAX_PLAYERS) {
+    cpu->players[player].last_live = 0;
+  }
+  if (f_verbose & OPT_INSTR)
+    printf("P% 5d | kill %d\n", tokill);
+  if (f_verbose & OPT_PCMOVE)
+    print_adv(cpu, proc, proc->pc + 5);
+  return (proc->pc + 5);
 }
 
 t_inst inst_tab[NUM_OPS + 1] = {
@@ -1148,6 +1163,6 @@ t_inst inst_tab[NUM_OPS + 1] = {
     [e_lldi] = instruction_lldi,
     [e_lfork] = instruction_lfork,
     [e_aff] = instruction_aff,
-	[e_nop] = instruction_nop,
-	[e_kill] = instruction_kill,
+    [e_nop] = instruction_nop,
+    [e_kill] = instruction_kill,
 };
