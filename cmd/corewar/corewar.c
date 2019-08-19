@@ -296,9 +296,9 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
         cpu->step(cpu);
       }
     }
-    snprintf(winbuf, sizeof(winbuf), "Winner: %d", cpu->winner);
 
     // top stats
+    snprintf(winbuf, sizeof(winbuf), "Winner: %d", cpu->winner);
     nk_label(ctx, winbuf, NK_TEXT_CENTERED);
     snprintf(buf, sizeof(buf), "Active: %d", cpu->active);
     nk_label(ctx, buf, NK_TEXT_CENTERED);
@@ -343,12 +343,12 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       }
     }
 
-    // print the registers IDEA: make separate windows for stats for each player
+    // print the registers
     if (cpu->processes != NULL) {
       for (int i = 0; i < REG_NUMBER; i++) {
         if (i % 16 == 0)
           nk_layout_row_dynamic(ctx, 15, 8);
-        snprintf(buf, sizeof(buf), "r%02d[%08x]", i + 1,
+        snprintf(buf, sizeof(buf), "r%d[%08x]", i + 1,
                  cpu->processes->registers[i]);
         nk_label(ctx, buf, NK_TEXT_LEFT);
       }
@@ -425,7 +425,11 @@ void new_player(struct s_cpu *cpu, header_t *h, int num) {
   cpu->players[num - 1].active_processes = 1;
   cpu->players[num - 1].last_live = 0;
   cpu->players[num - 1].prog_size = h->prog_size;
+  if (cpu->players[num - 1].name)
+    free(cpu->players[num - 1].name);
   cpu->players[num - 1].name = strndup(h->prog_name, NAME_MAX);
+  if (cpu->players[num - 1].comment)
+    free(cpu->players[num - 1].comment);
   cpu->players[num - 1].comment = strndup(h->comment, COMMENT_LENGTH);
 }
 
@@ -441,12 +445,12 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
   h = *(header_t *)readbuf;
   h.magic = ntohl(h.magic);
   h.prog_size = ntohl(h.prog_size);
-  new_player(cpu, &h, player);
   if (len > 0) {
     if (valid_header_p(h)) {
       cpu->load(cpu, readbuf + sizeof(header_t), len - sizeof(header_t),
                 location);
       cpu->spawn_process(cpu, location, -player);
+      new_player(cpu, &h, player);
       printf("* Player %d, weighing %d bytes, \"%s\" (\"%s\") !\n", player,
              h.prog_size, h.prog_name, h.comment);
       if (f_color || f_gui) {
@@ -501,7 +505,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     nk_layout_row_dynamic(ctx, 30, 2);
     // this button opens a file, reads it into a buffer and copies it to the
     // edit buffer or the debug window depending if it's a compiled corewar bin.
-    if (nk_button_label(ctx, "open file") && open_buf[0]) {
+    if (nk_button_label(ctx, "Open file") && open_buf[0]) {
       FILE *f = fopen(open_buf, "r");
       if (f == NULL) {
         puts("Can't open");
@@ -643,7 +647,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     }
 
     // button for disassembling file
-    if (nk_button_label(ctx, "Un-Compile")) {
+    if (nk_button_label(ctx, "Decompile")) {
       int file = open(open_buf, O_RDONLY);
       if (file < 0) {
         printf("Error opening %s\n", open_buf);
@@ -1065,10 +1069,10 @@ int main(int argc, char *argv[]) {
              cpu.players[cpu.winner].name);
     else if (cpu.processes == NULL)
       printf("Stalemate. (This shouldn't happen)\n");
-    cpu_cleanup(&cpu);
-    if (f_color | f_gui)
-      free(g_mem_colors);
   }
+  cpu_cleanup(&cpu);
+  if (f_color | f_gui)
+    free(g_mem_colors);
   if (f_leaks)
     pause();
   return 0;

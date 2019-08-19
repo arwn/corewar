@@ -74,6 +74,7 @@ $(CHAMP_NAME): $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME))
 $(addprefix $(CHAMP_SRCDIR), %.cor): $(addprefix $(CHAMP_SRCDIR), %.s) $(ASM_NAME)
 	./$(ASM_NAME) $<
 
+.PHONY: deps
 deps: $(LFT) $(LIBGLEW) $(LIBGLFW)
 
 $(LIBGLFW):
