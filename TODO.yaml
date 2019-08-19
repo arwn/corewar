@@ -9,7 +9,7 @@ corewar:
     should result in jumper (p1) winning
 
 asm:
-- hardcode test everything
+- hardcore test everything
 
 done:
   ASM:

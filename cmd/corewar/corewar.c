@@ -281,81 +281,90 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     snprintf(buf, sizeof(buf), "Cycle: %d", cpu->clock);
     nk_label(ctx, buf, NK_TEXT_CENTERED);
 
-    // print the registers IDEA: make separate windows for stats for each player
-    if (cpu->processes != NULL) {
-      for (int i = 0; i < REG_NUMBER; i++) {
-        if (i % 16 == 0)
-          nk_layout_row_dynamic(ctx, 15, 8);
-        snprintf(buf, sizeof(buf), "r%02d[%08x]", i + 1,
-                 cpu->processes->registers[i]);
-        nk_label(ctx, buf, NK_TEXT_LEFT);
-      }
+    // if someone has won
+    if (cpu->winner && nk_popup_begin(ctx, NK_POPUP_STATIC, "Winner",
+                                      NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE |
+                                          NK_WINDOW_MOVABLE,
+                                      err_rect)) {
+		printf("REEEEEEEEE\n");
     }
+  }
 
-    // print the program
-    for (int ii = 0; ii < MEM_SIZE; ii++) {
-      if (ii % 64 == 0)
-        nk_layout_row_static(ctx, 7, 13, 64);
+  // print the registers IDEA: make separate windows for stats for each player
+  if (cpu->processes != NULL) {
+    for (int i = 0; i < REG_NUMBER; i++) {
+      if (i % 16 == 0)
+        nk_layout_row_dynamic(ctx, 15, 8);
+      snprintf(buf, sizeof(buf), "r%02d[%08x]", i + 1,
+               cpu->processes->registers[i]);
+      nk_label(ctx, buf, NK_TEXT_LEFT);
+    }
+  }
 
-      buf[0] = g_bytes_upper[cpu->program[ii]][0];
-      buf[1] = g_bytes_upper[cpu->program[ii]][1];
-      buf[2] = 0;
-      struct s_process *hd = cpu->processes;
-      while (hd != NULL) {
-        if (hd->pc == ii) {
-          switch (hd->player) {
-          case -1:
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);
-            break;
-          case -2:
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);
-            break;
-          case -3:
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);
-            break;
-          case -4:
-            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
-            break;
-          }
+  // print the program
+  for (int ii = 0; ii < MEM_SIZE; ii++) {
+    if (ii % 64 == 0)
+      nk_layout_row_static(ctx, 7, 13, 64);
+
+    buf[0] = g_bytes_upper[cpu->program[ii]][0];
+    buf[1] = g_bytes_upper[cpu->program[ii]][1];
+    buf[2] = 0;
+    struct s_process *hd = cpu->processes;
+    while (hd != NULL) {
+      if (hd->pc == ii) {
+        switch (hd->player) {
+        case -1:
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1c);
+          break;
+        case -2:
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2c);
+          break;
+        case -3:
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3c);
+          break;
+        case -4:
+          nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4c);
           break;
         }
-        hd = hd->next;
+        break;
       }
-      if (hd == 0) {
-        if (g_mem_colors[ii].player) {
-          switch (g_mem_colors[ii].player) {
-          case -1:
-            if (g_mem_colors[ii].writes)
-              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1w);
-            else
-              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1m);
-            break;
-          case -2:
-            if (g_mem_colors[ii].writes)
-              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2w);
-            else
-              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2m);
-            break;
-          case -3:
-            if (g_mem_colors[ii].writes)
-              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3w);
-            else
-              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3m);
-            break;
-          case -4:
-            if (g_mem_colors[ii].writes)
-              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4w);
-            else
-              nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4m);
-            break;
-          }
-        } else {
-          nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
+      hd = hd->next;
+    }
+    if (hd == 0) {
+      if (g_mem_colors[ii].player) {
+        switch (g_mem_colors[ii].player) {
+        case -1:
+          if (g_mem_colors[ii].writes)
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1w);
+          else
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p1m);
+          break;
+        case -2:
+          if (g_mem_colors[ii].writes)
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2w);
+          else
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p2m);
+          break;
+        case -3:
+          if (g_mem_colors[ii].writes)
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3w);
+          else
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p3m);
+          break;
+        case -4:
+          if (g_mem_colors[ii].writes)
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4w);
+          else
+            nk_label_colored(ctx, buf, NK_TEXT_LEFT, p4m);
+          break;
         }
+      } else {
+        nk_label_colored(ctx, buf, NK_TEXT_LEFT, defaultc);
       }
     }
   }
-  nk_end(ctx);
+}
+nk_end(ctx);
 }
 
 void new_player(struct s_cpu *cpu, header_t *h, int num) {
@@ -509,9 +518,10 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
           max_strlen = MAX__(ft_strlen(strtab[num_lines]), max_strlen);
         // line length * width_of(line)
         // num lines * height_of(line) + height_of(ok_button)
-        printf("%zu\n", max_strlen);
+        // printf("%zu\n", max_strlen);
         err_rect.w = max_strlen * CHAR_WIDTH + WIDTH_BUF;
-        err_rect.h = (num_lines * (ROW_HEIGHT + ROW_BUF)) + BUTTON_HEIGHT + HEIGHT_BUF;
+        err_rect.h =
+            (num_lines * (ROW_HEIGHT + ROW_BUF)) + BUTTON_HEIGHT + HEIGHT_BUF;
         err_rect.y = OFF_Y - err_rect.h;
         err_rect.x = OFF_X - err_rect.w;
       }
@@ -758,7 +768,8 @@ void vm_dump_state(struct s_cpu *cpu) {
   if (f_verbose & OPT_INTLDBG) {
     printf("DBG: instruction_calls[] {\n");
     for (int ii = 0; ii < NUM_OPS + 1; ++ii) {
-      printf("\t%6s[%2d] = %d,\n", g_op_tab[ii].name, ii, instruction_calls[ii]);
+      printf("\t%6s[%2d] = %d,\n", g_op_tab[ii].name, ii,
+             instruction_calls[ii]);
     }
     printf("}\n");
   }
@@ -1018,7 +1029,8 @@ int main(int argc, char *argv[]) {
     int winner_out = 0;
     for (ii = 0; ii < MAX_PLAYERS; ++ii) {
       if (f_verbose & OPT_INTLDBG)
-        printf("DBG: players[%d].last_live(%d)\n", ii, cpu.players[ii].last_live);
+        printf("DBG: players[%d].last_live(%d)\n", ii,
+               cpu.players[ii].last_live);
       if (cpu.players[ii].last_live > cpu.players[winner_out].last_live)
         winner_out = ii;
     }

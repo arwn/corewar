@@ -55,7 +55,6 @@ unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx, uint8_t
 
 		int num_bytes = CMD_NUM_BYTES(argtypes[jj], opcode);
 
-		printf("%zu\n", *bufidx); // TODO: remove
 		uint64_t nn = argtypes[jj];	// T_INT || T_DIR || T_REG
 		if (!nn || nn > T_IND || !g_cmd_encoding[nn]) {
 			*err = 1;
