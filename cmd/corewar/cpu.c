@@ -88,8 +88,6 @@ static void check_alive(struct s_cpu *cpu) {
       }
     }
   }
-  if (cpu->active == 0)
-    cpu->winner = 1;
   cpu->prev_check = cpu->clock;
   cpu->num_checks += 1;
   if (f_verbose & OPT_INTLDBG)
@@ -109,7 +107,6 @@ static int step(struct s_cpu *cpu) {
     fprintf(stderr, "Fatal Error: cpu is NULL in step()\n");
     exit(-2);
   }
-
   cpu->clock += 1;
   if (f_verbose & OPT_CYCLES)
     printf("It is now cycle %d\n", cpu->clock);
@@ -117,7 +114,7 @@ static int step(struct s_cpu *cpu) {
 
   if (cpu->cycle_to_die <= cpu->clock - cpu->prev_check)
     check_alive(cpu);
-  if (f_color) {
+  if (f_color || f_gui) {
     for (int ii = 0; ii < MEM_SIZE; ++ii) {
       if (g_mem_colors[ii].writes != 0)
         g_mem_colors[ii].writes -= 1;
@@ -153,8 +150,8 @@ static void spawn_process(struct s_cpu *cpu, int pc, int player) {
   done->opcode = 0;
   done->instruction_time = 0;
   done->last_live = 0;
-  for (int i = 0; i < REG_NUMBER; i++) {
-    done->registers[i] = 0;
+  for (int ii = 0; ii < REG_NUMBER; ii++) {
+    done->registers[ii] = 0;
   }
   *done->registers = player;
   if (cpu->processes == 0) {
@@ -172,23 +169,7 @@ static void spawn_process(struct s_cpu *cpu, int pc, int player) {
            cpu->processes->instruction_time, cpu->processes->prev_time,
            cpu->processes->player);
 }
-void dump_process_list(struct s_cpu *cpu) {
-  int print_space = 0;
-  struct s_process *proc = cpu->processes;
 
-  while (proc != 0) {
-    // printf("[%p{%d} <- %p{%d} -> %p{%d}]\n");
-    if (print_space == 0)
-      print_space = 1;
-    else
-      printf(" ");
-    printf("[%p{%2d} <- ", proc->prev, proc->prev != 0 ? proc->prev->pid : 0);
-    printf("%p{%d} -> ", proc, proc != 0 ? proc->pid : 0);
-    printf("%p{%d}]", proc->next, proc->next != 0 ? proc->next->pid : 0);
-    proc = proc->next;
-  }
-  printf("\n");
-}
 // delete_process deletes the current process and sets the current process to
 // the previous process.
 static void delete_process(struct s_cpu *cpu, struct s_process **proc) {
@@ -235,7 +216,7 @@ struct s_cpu new_cpu(void) {
   done.clock = 0;
   memset(done.players, 0, sizeof(done.players));
   memset(done.program, 0, sizeof(done.program));
-  done.winner = 0;
+  done.winner = -1;
   done.pid_next = 0;
   done.cycle_to_die = CYCLE_TO_DIE;
   done.prev_check = 0;

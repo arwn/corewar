@@ -88,8 +88,6 @@ char winbuf[64] = "none";
 #define C_LIGHTGREEN nk_rgba(234, 255, 234, 255)
 #define C_CLEAR nk_rgba(0, 0, 0, 0)
 
-void ft_nop(void) { return; } // TODO: remove
-
 // set_color sets the colorscheme. it should only be called once.
 static void set_color(struct nk_context *ctx) {
   struct nk_color table[NK_COLOR_COUNT];
@@ -233,9 +231,10 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
 
     // top buttons
     nk_layout_row_static(ctx, 30, 80, 10);
-    if (cpu->processes == 0 && cpu->winner != 0 && cpu->clock == 0 &&
-        (cpu->num_checks != 0 || cpu->nbr_lives != 0)) {
-      printf("winner is %d\n", cpu->winner);
+    if (cpu->processes == 0 && cpu->winner != -1 && cpu->clock != 0) {// &&
+        // (cpu->num_checks != 0 || cpu->nbr_lives != 0)) {
+      printf("Contestant %d, \"%s\", has won !\n", cpu->winner+1,
+             cpu->players[cpu->winner].name);
     }
     if (nk_button_label(ctx, "step")) {
       if (cpu->processes != 0)
@@ -653,8 +652,6 @@ static void vm_dump_byte(struct s_cpu *cpu, int idx, int space) {
   buf[0] = g_bytes_lower[cpu->program[idx]][0];
   buf[1] = g_bytes_lower[cpu->program[idx]][1];
   buf[2] = 0;
-  if (idx == 112)
-    ft_nop();
   if (space)
     printf(" ");
   if (f_color) {
@@ -1008,26 +1005,20 @@ int main(int argc, char *argv[]) {
   if (f_gui) {
     corewar_gui(&cpu);
   } else {
-    while (cpu.active != 0 && cpu.winner != 1) {
+    while (cpu.active != 0) {
       if (f_dump && cpu.clock == dump_cycles) {
         vm_dump_state(&cpu);
         break;
       }
       cpu.step(&cpu);
     }
-    int winner_out = 0;
-    for (ii = 0; ii < MAX_PLAYERS; ++ii) {
-      if (f_verbose & OPT_INTLDBG)
-        printf("DBG: players[%d].last_live(%d)\n", ii, cpu.players[ii].last_live);
-      if (cpu.players[ii].last_live > cpu.players[winner_out].last_live)
-        winner_out = ii;
-    }
-    cpu.winner = winner_out + 1;
-    if (cpu.winner != 0 && cpu.processes == NULL)
-      printf("Contestant %d, \"%s\", has won !\n", cpu.winner,
-             cpu.players[cpu.winner - 1].name);
+
+    // Display the winner
+    if (cpu.winner != -1 && cpu.processes == NULL)
+      printf("Contestant %d, \"%s\", has won !\n", cpu.winner+1,
+             cpu.players[cpu.winner].name);
     else if (cpu.processes == NULL)
-      printf("Stalemate.\n");
+      printf("Stalemate. (This shouldn't happen)\n");
     cpu_cleanup(&cpu);
     if (f_color | f_gui)
       free(g_mem_colors);

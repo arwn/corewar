@@ -80,7 +80,7 @@ struct	s_cpu
 	int					clock; // current cycle
 	int					cycle_to_die; // cycles until processes are removed
 	int					prev_check; // previous cycle_to_die
-	int					num_checks; // maximum number of checks
+	int					num_checks; // maximum number of live_checks
 	int					nbr_lives; // maximum number of lives per cycle_to_die
 	int					winner; // winning player
 	struct s_player		players[MAX_PLAYERS];
