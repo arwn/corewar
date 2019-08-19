@@ -175,8 +175,10 @@ t_list *lex_file(int fd) {
   }
   linenum = 1;
   while ((get_next_line(fd, &str))) {
-    if (!(str))
+    if (!(str)) {
+      asprintf(&g_errstr, "Fatal error.  Unable to read from file");
       return (NULL);
+    }
     sptr = str;
     while (*str) {
       token = getnexttoken(&sptr, str);
