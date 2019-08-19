@@ -6,7 +6,7 @@
 /*   By: zaz <marvin@42.fr>                         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2013/10/04 11:43:01 by zaz               #+#    #+#             */
-/*   Updated: 2019/08/19 14:39:17 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/19 15:14:11 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,6 @@ t_op g_op_tab[NUM_OPS + 1] = {
     {"aff",   1, {T_REG},                                       16,    2, "print",           1, 0},
 	// new instructions
     {"nop",   0, {},                                            17,    1, "it's a nop",             0, 0},
-    {"die",   1, {T_DIR},                                       18,   10, "kill process",           0, 0},
+    {"kill",   1, {T_DIR},                                       18,   10, "kill process",           0, 0},
 };
 // clang-format on

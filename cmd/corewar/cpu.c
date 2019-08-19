@@ -23,7 +23,8 @@ static void prepend_process(struct s_process *done, struct s_cpu *cpu) {
 
 // valid_header_p validates a header
 bool valid_header_p(header_t $header) {
-  if ($header.magic != COREWAR_EXEC_MAGIC)
+  if ($header.magic != COREWAR_EXEC_MAGIC &&
+      $header.magic != COREWAR_EXTENDED_EXEC_MAGIC)
     return false;
   if ($header.prog_size > CHAMP_MAX_SIZE)
     return false;

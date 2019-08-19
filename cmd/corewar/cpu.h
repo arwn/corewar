@@ -24,7 +24,9 @@ enum instructions {
   e_lld = 0x0d,
   e_lldi = 0x0e,
   e_lfork = 0x0f,
-  e_aff = 0x10
+  e_aff = 0x10,
+  e_nop = 0x11,
+  e_kill = 0x12,
 };
 
 #define OPT_SILENT 0x00000000

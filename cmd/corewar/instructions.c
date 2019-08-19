@@ -1124,6 +1124,18 @@ int instruction_aff(struct s_cpu *cpu, struct s_process *proc) {
   return (ivar2 + 2 + uvar3);
 }
 
+int instruction_nop(struct s_cpu *cpu, struct s_process *proc) {
+	(void)cpu;
+	return (proc->pc + 1);
+}
+
+// TODO: implement
+int instruction_kill(struct s_cpu *cpu, struct s_process *proc) {
+	(void)cpu;
+	(void)proc;
+	return (proc->pc + 5);
+}
+
 t_inst inst_tab[NUM_OPS + 1] = {
     (t_inst)0,
     [e_live] = instruction_live,
@@ -1142,4 +1154,6 @@ t_inst inst_tab[NUM_OPS + 1] = {
     [e_lldi] = instruction_lldi,
     [e_lfork] = instruction_lfork,
     [e_aff] = instruction_aff,
+	[e_nop] = instruction_nop,
+	[e_kill] = instruction_kill,
 };
