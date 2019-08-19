@@ -6,7 +6,7 @@
 /*   By: zaz <marvin@42.fr>                         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2013/10/04 11:33:27 by zaz               #+#    #+#             */
-/*   Updated: 2019/08/16 13:32:27 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/19 14:12:36 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,9 @@
 #define IDX_MOD (MEM_SIZE / 8)
 #define CHAMP_MAX_SIZE (MEM_SIZE / 6)
 
-#define NUM_OPS (16)
+#define NUM_BASE_OPS (16)
+#define NUM_EXT_OPS (2)
+#define NUM_OPS (NUM_BASE_OPS + NUM_EXT_OPS)
 
 #define COMMENT_CHAR ';'
 #define COMMENT_CHAR_ALT '#'
@@ -73,6 +75,7 @@ typedef char t_arg_type;
 #define PROG_NAME_LENGTH (128)
 #define COMMENT_LENGTH (2048)
 #define COREWAR_EXEC_MAGIC 0x00ea83f3
+#define COREWAR_EXTENDED_EXEC_MAGIC (COREWAR_EXEC_MAGIC + 0x411c102d)
 
 #define OFFSET_1P_P1 0
 #define OFFSET_2P_P1 OFFSET_1P_P1

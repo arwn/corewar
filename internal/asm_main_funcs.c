@@ -6,7 +6,7 @@
 /*   By: acarlson <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/24 15:34:16 by acarlson          #+#    #+#             */
-/*   Updated: 2019/08/08 13:37:58 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/19 14:31:27 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,10 @@
 
 // max of size needed for assembler, size needed for disassembler
 static char g_bufarr[MAX(CHAMP_MAX_SIZE + sizeof(header_t), DISASM_BUF_SIZE)];
+char g_is_extended = 0;
 
 char *assemble(int fd, size_t *size) {
+	g_is_extended = 0;
   if (g_errstr)
     free(g_errstr);
   g_errstr = NULL;
@@ -49,6 +51,10 @@ char *assemble(int fd, size_t *size) {
     return (NULL);
   }
 
+  if (g_is_extended)
+	  header.magic = COREWAR_EXTENDED_EXEC_MAGIC;
+  else
+	  header.magic = COREWAR_EXEC_MAGIC;
   print_args(g_bufarr, sizeof(g_bufarr), cmds->next, size, &header);
 
   killDict(htbl);
@@ -58,12 +64,13 @@ char *assemble(int fd, size_t *size) {
 }
 
 char *disassemble(int fd, size_t *size) {
+	g_is_extended = 0;
   if (g_errstr)
     free(g_errstr);
   g_errstr = NULL;
 
   ft_bzero(g_bufarr, sizeof(g_bufarr));
-  if (parse_bin(g_bufarr, sizeof(g_bufarr), fd, size))
+  if (parse_bin(g_bufarr, sizeof(g_bufarr), fd, size) && !g_force_disasm)
     return (NULL);
   return (g_bufarr);
 }

@@ -28,7 +28,7 @@ unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx,
   unsigned ii = 0;
   unsigned char opcode = progbuf[ii++];
 
-  if (opcode < 1 || opcode > sizeof(g_op_tab) / sizeof(*g_op_tab)) {
+  if (opcode < 1 || opcode > (g_is_extended ? NUM_OPS : NUM_BASE_OPS)) {
     *err = 1;
     asprintf(&g_errstr, ERR_UNKNOWN_OPCODE, progbuf[ii - 1]);
     return (ii);
@@ -123,10 +123,12 @@ int parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
   header.magic = ntohl(header.magic);
   header.prog_size = ntohl(header.prog_size);
 
-  if (header.magic != COREWAR_EXEC_MAGIC) {
+  if (header.magic != COREWAR_EXEC_MAGIC && header.magic != COREWAR_EXTENDED_EXEC_MAGIC) {
     asprintf(&g_errstr, ERR_BAD_HEADER);
     return (1);
   }
+  if (header.magic == COREWAR_EXTENDED_EXEC_MAGIC)
+	  g_is_extended |= 1;
 
   ft_strcat(buf, NAME_CMD_STRING " \"");
   ft_strcat(buf, header.prog_name);
@@ -156,7 +158,7 @@ int parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
     if (err) {
       free(progbuf);
       progbuf = NULL;
-      *size = 0;
+      *size = bufidx;
       return (1);
     }
   }

@@ -6,7 +6,7 @@
 /*   By: acarlson <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/11 12:08:39 by acarlson          #+#    #+#             */
-/*   Updated: 2019/08/15 10:01:59 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/19 14:19:28 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,11 @@ struct s_option *g_asm_opts[] = {
     &(struct s_option){'h', "help", "Display help message", 1 << 1},
     &(struct s_option){'q', "quiet", "Run with no output", 1 << 2},
     &(struct s_option){'n', "nowrite", "Do not write to output file", 1 << 3},
+    &(struct s_option){'f', "force", "Force disassembly output if error", 1 << 4},
     NULL,
 };
+
+char g_force_disasm = 0;
 
 int main(int argc, char **argv) {
   int opts;
@@ -41,6 +44,8 @@ int main(int argc, char **argv) {
     opt_printusage(g_asm_opts, argv);
     return (1);
   }
+  if (opts & opt_getoptcode(g_asm_opts, 'f', NULL))
+	  g_force_disasm |= 1;
   r = 0;
   while (ii < argc) {
     size = 0;

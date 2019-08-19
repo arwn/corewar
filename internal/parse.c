@@ -295,7 +295,6 @@ t_list *parse(t_list *tokens, size_t bufsize, header_t *header, t_dict *dict) {
 
   t_cmd cmd;
 
-  header->magic = COREWAR_EXEC_MAGIC;
   while (tok && T(tok)->type != eof) {
     cmd = (t_cmd){-1,
                   0,

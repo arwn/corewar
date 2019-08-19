@@ -6,7 +6,7 @@
 /*   By: acarlson <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/11 14:08:29 by acarlson          #+#    #+#             */
-/*   Updated: 2019/08/11 17:07:41 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/19 14:19:18 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,7 +159,7 @@ char *assemble(int fd, size_t *size);
 
 char g_errarr[100];
 
-struct s_option *g_asm_opts[5];
+struct s_option *g_asm_opts[6];
 char g_tok_to_str_safe[16][17];
 char g_tok_to_str[16][17];
 char g_cmd_sizes[9];
@@ -176,6 +176,8 @@ size_t g_op_len_tab[NUM_OPS];
 size_t g_op_hash_tab[NUM_OPS];
 
 char *g_errstr;
+char g_is_extended;
+char g_force_disasm;
 
 void write_mem(uint8_t *buf, uint32_t idx, uint64_t val, uint32_t size);
 int parse_bin(char *buf, size_t bufsize, int fd, size_t *size);

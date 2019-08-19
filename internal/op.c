@@ -6,7 +6,7 @@
 /*   By: zaz <marvin@42.fr>                         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2013/10/04 11:43:01 by zaz               #+#    #+#             */
-/*   Updated: 2019/07/25 13:32:23 by acarlson         ###   ########.fr       */
+/*   Updated: 2019/08/19 14:39:17 by acarlson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,5 +30,8 @@ t_op g_op_tab[NUM_OPS + 1] = {
     {"lldi",  3, {T_REG|T_DIR|T_IND, T_DIR|T_REG, T_REG},       14,   50, "long load index", 1, 1},
     {"lfork", 1, {T_DIR},                                       15, 1000, "long fork",       0, 1},
     {"aff",   1, {T_REG},                                       16,    2, "print",           1, 0},
+	// new instructions
+    {"nop",   0, {},                                            17,    1, "it's a nop",             0, 0},
+    {"die",   1, {T_DIR},                                       18,   10, "kill process",           0, 0},
 };
 // clang-format on
