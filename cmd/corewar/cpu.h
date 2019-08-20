@@ -98,6 +98,7 @@ int f_dump_processes; /* dump processes */
 int f_gui;            /* graphical visualizer of vm */
 int f_verbose;        /* verbosity level */
 int f_enable_aff;     /* display AFF output */
+int f_background;     /* fork and kill parent */
 
 extern int instruction_calls[NUM_OPS + 1];
 

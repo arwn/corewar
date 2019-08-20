@@ -977,13 +977,17 @@ int main(int argc, char *argv[]) {
   FILE *f;
   static struct s_cpu cpu;
 
-  f_gui = f_enable_aff = f_color = f_dump = f_leaks = f_dump_processes =
+  f_background = f_enable_aff = f_color = f_dump = f_leaks = f_dump_processes =
       f_verbose = 0;
+  f_gui = 1;
   bin = *argv;
-  while ((ch = getopt(argc, argv, "acd:hlnpv:")) != -1) {
+  while ((ch = getopt(argc, argv, "abcd:hlnpv:")) != -1) {
     switch (ch) {
     case 'a':
       f_enable_aff = 1;
+      break;
+    case 'b':
+      f_background = 1;
       break;
     case 'c':
       f_color = 1;
@@ -1002,7 +1006,7 @@ int main(int argc, char *argv[]) {
       f_leaks = 1;
       break;
     case 'n':
-      f_gui = 1;
+      f_gui = 0;
       break;
     case 'p':
       f_dump_processes = 1;
@@ -1076,6 +1080,17 @@ int main(int argc, char *argv[]) {
 
   // GUI stuff
   if (f_gui) {
+    /* if (!f_background || (fork() == 0 && (fclose((fclose(stderr), stdout)),
+     * 1))) */
+    /* 	  corewar_gui(&cpu); */
+    /* else */
+    /* 	  exit(0); */
+    if (f_background) {
+      if (fork() != 0)
+        exit(0);
+      fclose(stderr);
+      fclose(stdout);
+    }
     corewar_gui(&cpu);
   } else {
     while (cpu.active != 0) {
