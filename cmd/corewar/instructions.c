@@ -19,46 +19,33 @@ void dump_nbytes(struct s_cpu *cpu, int n, int pc, int opt) {
 
 // Get the type of the N'th argument from the pcb
 int type_from_pcb(uint8_t pcb, int arg) {
-  uint8_t param;
-  int ret;
-
-  param = (pcb >> (('\x03' - (char)arg) * '\x02' & 0x1fU)) & 3;
-  if (param == DIR_CODE) {
-    ret = T_DIR;
-  } else {
-    if (param == IND_CODE) {
-      ret = T_IND;
-    } else {
-      if (param == REG_CODE) {
-        ret = T_REG;
-      } else {
-        ret = 0;
-      }
-    }
+  switch ((pcb >> (('\x03' - (char)arg) * '\x02' & 0x1fU)) & 3) {
+  case DIR_CODE:
+    return T_DIR;
+  case IND_CODE:
+    return T_IND;
+  case REG_CODE:
+    return T_REG;
   }
-  return ret;
+
+  return 0;
 }
 
+// returns REG_SIZE, IND_SIZE, DIR_SIZE, or SPECIAL_DIR_SIZE
 int size_from_pt(int type, int opcode) {
-  int ret;
-
-  if (type == T_REG) {
-    ret = REG_SIZE;
-  } else {
-    if (type == T_IND) {
-      ret = IND_SIZE;
-    } else {
-      if (type == T_DIR) {
-        if (g_op_tab[opcode].direct_size == 0)
-          ret = DIR_SIZE;
-        else
-          ret = SPECIAL_DIR_SIZE;
-      } else {
-        ret = 0;
-      }
-    }
+  switch (type) {
+  case T_REG:
+    return REG_SIZE;
+  case T_IND:
+    return IND_SIZE;
+  case T_DIR:
+    if (g_op_tab[opcode].direct_size == 0)
+      return DIR_SIZE;
+    else
+      return SPECIAL_DIR_SIZE;
   }
-  return ret;
+
+  return 0;
 }
 
 int size_from_pcb(uint8_t pcb, int opcode) {
