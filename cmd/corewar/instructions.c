@@ -239,43 +239,22 @@ int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
   int val;
   int reg;
   int type;
-  int size_type;
-  int valid_reg;
-  int test;
-  int size;
 
-  if (f_verbose & OPT_INTLDBG)
-    printf("DBG: pid(%d) carry(%d) last_live(%d) pc(%d) INS_LD start\n",
-           proc->pid, proc->carry, proc->last_live, proc->pc);
   pcb = read_mem_1(cpu->program, proc->pc + 1);
-  test = check_pcb(pcb, 2);
-  if (f_verbose & OPT_INTLDBG)
-    printf("DBG: pcb(%d) test(%d) INS_LD\n", pcb, test);
-  if (test != 0) {
+  if (check_pcb(pcb, 2) != 0) {
     type = type_from_pcb(pcb, 0);
-    size_type = size_from_pt(type, 2);
-    if (type == T_DIR) {
+    if (type == T_DIR)
       val = (int)read_mem_4(cpu->program, proc->pc + 2);
-      if (f_verbose & OPT_INTLDBG)
-        printf("DBG: val(%08x) T_DIR INS_LD\n", val);
-    } else {
+    else
       val = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
-      if (f_verbose & OPT_INTLDBG)
-        printf("DBG: val(%08x) T_IND INS_LD\n", val);
-    }
-    reg = read_mem_1(cpu->program, proc->pc + 2 + size_type);
-    valid_reg = validate_register(reg);
-    if (valid_reg != 0) {
-      if (f_verbose & OPT_INSTR)
-        printf("P% 5d | ld %d r%d\n", proc->pid, val, reg);
+    reg = read_mem_1(cpu->program, proc->pc + 2 + size_from_pt(type, 2));
+    if (validate_register(reg) != 0) {
       mod_carry(proc, (val == 0));
       write_reg(proc, reg, val);
     }
   }
-  size = size_from_pcb(pcb, 2);
-  if (f_verbose & OPT_PCMOVE)
-    print_adv(cpu, proc, proc->pc + size + 2);
-  return proc->pc + size + 2;
+
+  return proc->pc + size_from_pcb(pcb, 2) + 2;
 }
 
 // st takes 2 parameters, storing (REG_SIZE bytes) of the value of
