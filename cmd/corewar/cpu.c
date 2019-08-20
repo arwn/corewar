@@ -102,7 +102,7 @@ static void check_alive(struct s_cpu *cpu) {
   }
   cpu->nbr_lives = 0;
 }
-
+void ft_nop(void){return;}
 static int step(struct s_cpu *cpu) {
   if (cpu == NULL) {
     fprintf(stderr, "Fatal Error: cpu is NULL in step()\n");
@@ -112,6 +112,7 @@ static int step(struct s_cpu *cpu) {
   if (f_verbose & OPT_CYCLES)
     printf("It is now cycle %d\n", cpu->clock);
   int ret = run_processes(cpu);
+  if (cpu->clock == 812 + 800)ft_nop();
 
   if (cpu->cycle_to_die <= cpu->clock - cpu->prev_check)
     check_alive(cpu);

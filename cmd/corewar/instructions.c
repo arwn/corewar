@@ -974,15 +974,15 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
 // 'r1'. TODO: fix broken
 int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
-  uint8_t uvar1;
-  int ivar2;
+  uint8_t reg;
+  int size1;
   int type;
   int uvar3;
   int uvar4;
-  int uvar5;
-  int local_40;
-  int local_34;
-  int local_c;
+  int type2;
+  int val1;
+  int val2;
+  int ret;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
   uvar4 = check_pcb(pcb, 0xe);
@@ -990,10 +990,10 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
     uvar4 = type_from_pcb(pcb, 0);
     type = uvar4;
     uvar4 = size_from_pt(type, 0xe);
-    ivar2 = uvar4;
+    size1 = uvar4;
     if (type == T_REG) {
-      uvar1 = read_mem_1(cpu->program, proc->pc + 2);
-      type = validate_register(uvar1);
+      reg = read_mem_1(cpu->program, proc->pc + 2);
+      type = validate_register(reg);
       if (type == 0) {
         if (f_verbose & OPT_PCMOVE) {
           type = proc->pc;
@@ -1001,24 +1001,24 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
           print_adv(cpu, proc, type + 2 + uvar3);
         }
         type = proc->pc;
-        local_c = size_from_pcb(pcb, 0xe);
-        local_c = type + 2 + local_c;
-        goto LAB_100007f68;
+        ret = size_from_pcb(pcb, 0xe);
+        ret = type + 2 + ret;
+        return ret;
       }
-      local_34 = read_reg(proc, uvar1);
+      val1 = read_reg(proc, reg);
     } else {
       if (type == T_IND) {
-        local_34 =
+        val1 =
             read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
       } else {
-        local_34 = (short)read_mem_2(cpu->program, proc->pc + 2);
+        val1 = (short)read_mem_2(cpu->program, proc->pc + 2);
       }
     }
     uvar4 = type_from_pcb(pcb, 1);
-    uvar5 = size_from_pt(uvar4, 0xe);
+    type2 = size_from_pt(uvar4, 0xe);
     if (uvar4 == T_REG) {
-      uvar1 = read_mem_1(cpu->program, proc->pc + 2 + ivar2);
-      type = validate_register(uvar1);
+      reg = read_mem_1(cpu->program, proc->pc + 2 + size1);
+      type = validate_register(reg);
       if (type == 0) {
         if (f_verbose & OPT_PCMOVE) {
           type = proc->pc;
@@ -1026,16 +1026,16 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
           print_adv(cpu, proc, type + 2 + uvar3);
         }
         type = proc->pc;
-        local_c = size_from_pcb(pcb, 0xe);
-        local_c = type + 2 + local_c;
-        goto LAB_100007f68;
+        ret = size_from_pcb(pcb, 0xe);
+        ret = type + 2 + ret;
+        return ret;
       }
-      local_40 = read_reg(proc, uvar1);
+      val2 = read_reg(proc, reg);
     } else {
-      local_40 = (short)read_mem_2(cpu->program, proc->pc + 2 + ivar2);
+      val2 = (short)read_mem_2(cpu->program, proc->pc + 2 + size1);
     }
-    uvar1 = read_mem_1(cpu->program, proc->pc + 2 + ivar2 + uvar5);
-    type = validate_register(uvar1);
+    reg = read_mem_1(cpu->program, proc->pc + 2 + size1 + type2);
+    type = validate_register(reg);
     if (type == 0) {
       if (f_verbose & OPT_PCMOVE) {
         type = proc->pc;
@@ -1043,20 +1043,20 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
         print_adv(cpu, proc, type + 2 + uvar3);
       }
       type = proc->pc;
-      local_c = size_from_pcb(pcb, 0xe);
-      local_c = type + 2 + local_c;
-      goto LAB_100007f68;
+      ret = size_from_pcb(pcb, 0xe);
+      ret = type + 2 + ret;
+      return ret;
     }
-    uvar3 = read_mem_4(cpu->program, proc->pc + local_34 + local_40);
+    uvar3 = read_mem_4(cpu->program, proc->pc + val1 + val2);
     if (f_verbose & OPT_INSTR) {
-      printf("P% 5d | lldi %d %d r%d\n", proc->pid, local_34, local_40, uvar1);
+      printf("P% 5d | lldi %d %d r%d\n", proc->pid, val1, val2, reg);
     }
     if (f_verbose & OPT_INSTR) {
-      printf("       | -> load from %d + %d = %d (with pc %d)\n", local_34,
-             local_40, local_34 + local_40, proc->pc + local_34 + local_40);
+      printf("       | -> load from %d + %d = %d (with pc %d)\n", val1,
+             val2, val1 + val2, proc->pc + val1 + val2);
     }
     mod_carry(proc, (uvar3 == 0));
-    write_reg(proc, uvar1, uvar3);
+    write_reg(proc, reg, uvar3);
   }
   if (f_verbose & OPT_PCMOVE) {
     type = proc->pc;
@@ -1064,10 +1064,9 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
     print_adv(cpu, proc, type + 2 + uvar3);
   }
   type = proc->pc;
-  local_c = size_from_pcb(pcb, 0xe);
-  local_c = type + 2 + local_c;
-LAB_100007f68:
-  return local_c;
+  ret = size_from_pcb(pcb, 0xe);
+  ret = type + 2 + ret;
+  return ret;
 }
 
 // lfork is the same as 'fork', but without the (% IDX_MOD).
