@@ -2,7 +2,7 @@
 
 ![image](./corewar.png "vm")
 
-Corewar game that consists of making small assembly programs fight in a virtual machine. Each program has a small (and confusing!) instruction set. Every number of cycles each thread must call live or it will be culled. The last player to call live wins, I think.
+Corewar is a game that consists of making small assembly programs fight in a virtual machine. Each program has a small (and confusing!) instruction set. Every number of cycles each thread must call live or it will be culled. The last player to call live wins.
 
 ## Resources
 - Subject pdfs in resources
@@ -23,13 +23,14 @@ Then run `make` to compile and link both corewar and the assembler.
 ## Virtual Machine
 ### Usage
 ```sh
-./corewar -acd:hlnpv: [files.{cor,s,...}]
+./corewar -abcd:hlnpv: [files.{cor,s,...}]
   -a    enable the `aff' instruction
+  -b	run GUI in background
   -c    enable color
   -d[n] dump the vm's core memory after `n' cycles
   -h    show help
   -l    pause at the end of execution to allow for leak checking
-  -n    run in gui mode
+  -n    disable gui mode
   -p    dump the processes
   -v[n] enable verbose output
 ```
@@ -38,7 +39,7 @@ Then run `make` to compile and link both corewar and the assembler.
 - **Step**: Steps forward one cycle.
 - **Walk**: Steps until a process executes an instruction.
 - **Run**: Runs the program until there is a winner.
-- **slider**: Change execution speed.
+- **Slider**: Change execution speed.
 - **Reset**: Reset the state of the vm and unload every program.
 
 ### Open
