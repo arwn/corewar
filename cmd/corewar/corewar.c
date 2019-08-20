@@ -491,7 +491,7 @@ static int load_file(struct s_cpu *cpu, FILE *f, int location, int player) {
 
 // win_open is the window used for opening .cor and .s files.
 static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
-  static int cantopen = nk_false;
+  static char *cantopen = NULL;
 
   if (nk_begin(
           ctx, "Open",
@@ -525,30 +525,32 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
       FILE *f = fopen(open_buf, "r");
       if (f == NULL) {
         puts("Can't open");
-        cantopen = nk_true;
+        cantopen = open_buf;
       } else {
         // Was 'select' instead of 'select + 1' changed because it would not
         // load players properly
-        cantopen = !load_file(cpu, f, offset, select + 1);
+        if (!load_file(cpu, f, offset, select + 1))
+          cantopen = open_buf;
+        // cantopen = !load_file(cpu, f, offset, select + 1);
         fclose(f);
       }
     }
 
     // error popup
-    if (cantopen != nk_false) {
+    if (cantopen != NULL) {
       static struct nk_rect s = {-75, -75, 200, 150};
       if (nk_popup_begin(ctx, NK_POPUP_STATIC, "ERROR",
                          NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, s)) {
         nk_layout_row_dynamic(ctx, 20, 1);
         nk_label(ctx, "can't open file:", NK_TEXT_LEFT);
-        nk_label(ctx, open_buf, NK_TEXT_LEFT);
+        nk_label(ctx, cantopen, NK_TEXT_LEFT);
         nk_layout_row_static(ctx, 30, 30, 1);
         if (nk_button_label(ctx, "ok")) {
-          cantopen = nk_false;
+          cantopen = NULL;
         }
         nk_popup_end(ctx);
       } else {
-        cantopen = nk_false;
+        cantopen = NULL;
       }
     }
 
@@ -558,15 +560,15 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
       if (file < 0) {
         printf("Error opening %s\n", open_buf);
-        nk_end(ctx);
-        return;
+        cantopen = open_buf;
+      } else {
+        size_t buflen = ft_strlen(edit_buf);
+        size_t size = write(file, edit_buf, buflen);
+        if (size != buflen) {
+          printf("Error writing to file: %zu bytes written\n", size);
+        }
+        close(file);
       }
-      size_t buflen = ft_strlen(edit_buf);
-      size_t size = write(file, edit_buf, buflen);
-      if (size != buflen) {
-        printf("Error writing to file: %zu bytes written\n", size);
-      }
-      close(file);
     }
 
 #define ROW_HEIGHT 15
@@ -627,71 +629,75 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
       num_lines = 0;
     }
 
+#define COR_FILENAME "/tmp/corewar.cor"
+#define ASM_FILENAME "/tmp/corewar.s"
+
+    // compile button
     if (nk_button_label(ctx, "Compile")) {
-      int file = open("/tmp/corewar.cor", O_RDWR | O_CREAT | O_TRUNC,
+      int file = open(COR_FILENAME, O_RDWR | O_CREAT | O_TRUNC,
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
       if (file < 0) {
-        puts("Error opening /tmp/corewar.cor");
-        nk_end(ctx);
-        return;
-      }
-      size_t size = write(file, edit_buf, sizeof(edit_buf));
-      if (size < NK_LEN(edit_buf)) {
-        printf("Error writing to file: %zu bytes written\n", size);
-      }
+        puts("Error opening " COR_FILENAME);
+        cantopen = COR_FILENAME;
+      } else {
+        size_t size = write(file, edit_buf, sizeof(edit_buf));
+        if (size < NK_LEN(edit_buf)) {
+          printf("Error writing to file: %zu bytes written\n", size);
+        }
 
-      size_t filesize;
-      lseek(file, 0, SEEK_SET);
-      char *s = assemble(file, &filesize);
-      close(file);
+        size_t filesize;
+        lseek(file, 0, SEEK_SET);
+        char *s = assemble(file, &filesize);
+        close(file);
 
-      file = open("/tmp/corewar.cor", O_RDWR | O_CREAT | O_TRUNC,
-                  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-      if (file < 0) {
-        puts("Error opening /tmp/corewar.cor");
-        nk_end(ctx);
-        return;
-      }
-      size = write(file, s, filesize);
+        file = open(COR_FILENAME, O_RDWR | O_CREAT | O_TRUNC,
+                    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        if (file < 0) {
+          puts("Error opening " COR_FILENAME);
+          cantopen = COR_FILENAME;
+        } else {
+          size = write(file, s, filesize);
 
-      if (size < filesize) {
-        printf("Error: wrote %d bytes instead of %zu\n", err, filesize);
+          if (size < filesize) {
+            printf("Error: wrote %d bytes instead of %zu\n", err, filesize);
+          }
+          close(file);
+          if (!g_errstr)
+            strncpy(open_buf, COR_FILENAME, 17);
+        }
       }
-      close(file);
-      if (!g_errstr)
-        strncpy(open_buf, "/tmp/corewar.cor", 17);
     }
 
-    // button for disassembling file
+    // un-compile button for disassembling file
     if (nk_button_label(ctx, "Un-compile")) {
       int file = open(open_buf, O_RDONLY);
       if (file < 0) {
         printf("Error opening %s\n", open_buf);
-        nk_end(ctx);
-        return;
-      }
-      size_t filesize = 0;
-      size_t size;
-      // lseek(file, 0, SEEK_SET);
-      char *s = disassemble(file, &filesize);
-      close(file);
-      char *filename = "/tmp/corewar.s";
+        cantopen = open_buf;
+      } else {
+        size_t filesize = 0;
+        size_t size;
+        // lseek(file, 0, SEEK_SET);
+        char *s = disassemble(file, &filesize);
+        close(file);
+        char *filename = ASM_FILENAME;
 
-      file = open(filename, O_RDWR | O_CREAT | O_TRUNC,
-                  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-      if (file < 0) {
-        printf("Error opening %s\n", filename);
-        nk_end(ctx);
-        return;
-      }
-      size = write(file, s, filesize);
+        file = open(filename, O_RDWR | O_CREAT | O_TRUNC,
+                    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        if (file < 0) {
+          printf("Error opening %s\n", filename);
+          cantopen = filename;
+        } else {
+          size = write(file, s, filesize);
 
-      if (size < filesize) {
-        printf("Error: wrote %d bytes instead of %zu\n", err, filesize);
+          if (size < filesize) {
+            printf("Error: wrote %d bytes instead of %zu\n", err, filesize);
+          }
+          close(file);
+          if (!g_errstr)
+            strncpy(open_buf, filename, 17);
+        }
       }
-      close(file);
-      if (!g_errstr)
-        strncpy(open_buf, filename, 17);
     }
   }
 
