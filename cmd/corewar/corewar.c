@@ -868,6 +868,7 @@ static void usage_help(void) {
                   "Example: corewar -v 0 champ.cor zork.cor\n\n"
                   "Options:\n"
                   "  -a\tenable output from AFF instruction\n"
+                  "  -b\trun GUI in background\n"
                   "  -c\tenable color in core dump\n"
                   "  -d\tdump core memory after NUM cycles\n"
                   "  -h\tdisplay this help output\n"
