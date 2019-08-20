@@ -26,6 +26,8 @@ make
 
 ## Virtual Machine
 
+[vm in action]: corewar.png
+
 ### Usage
 
 ```sh
