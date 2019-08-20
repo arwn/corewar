@@ -26,7 +26,7 @@ make
 
 ## Virtual Machine
 
-[vm in action]: corewar.png
+![image](./corewar.png "vm")
 
 ### Usage
 
