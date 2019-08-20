@@ -127,7 +127,7 @@ static void set_color(struct nk_context *ctx) {
 // win_graph displays a graph of the frequency of each instruction call.
 static void win_graph(struct nk_context *ctx, struct s_cpu *cpu) {
   (void)cpu;
-  if (nk_begin(ctx, "graph",
+  if (nk_begin(ctx, "Graph",
                nk_rect(GRAPH_RECT_X, GRAPH_RECT_Y, GRAPH_RECT_WIDTH,
                        GRAPH_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
@@ -230,7 +230,7 @@ void cpu_cleanup(struct s_cpu *cpu) {
 
 // win_debug displays the program and buttons to step through.
 static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
-  if (nk_begin(ctx, "debug",
+  if (nk_begin(ctx, "Debug",
                nk_rect(DEBUG_RECT_X, DEBUG_RECT_Y, DEBUG_RECT_WIDTH,
                        DEBUG_RECT_HEIGHT),
                NK_WINDOW_BORDER | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
@@ -304,7 +304,7 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     snprintf(buf, sizeof(buf), "Cycle: %d", cpu->clock);
     nk_label(ctx, buf, NK_TEXT_CENTERED);
 
-    // if someone has won
+    // if someone has won display winner
     static struct nk_rect win_rect = {100, 100, 500, 237};
     static char *win_str = NULL;
     static char *comment_str = NULL;
@@ -313,7 +313,12 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       if (nk_popup_begin(ctx, NK_POPUP_STATIC, "Winner",
                          NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, win_rect)) {
         if (!win_str) {
-          win_str = ft_strjoin("WINNER: ", cpu->players[cpu->winner].name);
+          char *s = ft_itoa(cpu->winner);
+          char *s2 = ft_strjoin(" ", cpu->players[cpu->winner].name);
+          win_str = ft_strjoin(s, s2);
+          free(s);
+          free(s2);
+          win_str = ft_strjoin("WINNER: P", win_str);
           comment_str = cpu->players[cpu->winner].comment;
           win_rect.w = 40 + MAX__(ft_strlen(cpu->players[cpu->winner].comment) *
                                       CHAR_WIDTH,
@@ -353,7 +358,8 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     nk_layout_row_dynamic(ctx, 30, MAX_PLAYERS);
     for (int ii = 0; ii < MAX_PLAYERS; ii++) {
       if (cpu->players[ii].name)
-        snprintf(plyrbuf, sizeof(plyrbuf), "P%d: \'%s\'", ii+1, cpu->players[ii].name);
+        snprintf(plyrbuf, sizeof(plyrbuf), "P%d: \'%s\'", ii + 1,
+                 cpu->players[ii].name);
       else
         snprintf(plyrbuf, sizeof(plyrbuf), "P0: NONE");
       nk_label(ctx, plyrbuf, NK_TEXT_LEFT);
@@ -483,7 +489,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
   static int cantopen = nk_false;
 
   if (nk_begin(
-          ctx, "open",
+          ctx, "Open",
           nk_rect(OPEN_RECT_X, OPEN_RECT_Y, OPEN_RECT_WIDTH, OPEN_RECT_HEIGHT),
           NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
               NK_WINDOW_TITLE)) {
@@ -652,7 +658,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     }
 
     // button for disassembling file
-    if (nk_button_label(ctx, "un-compile")) {
+    if (nk_button_label(ctx, "Un-compile")) {
       int file = open(open_buf, O_RDONLY);
       if (file < 0) {
         printf("Error opening %s\n", open_buf);
@@ -692,7 +698,7 @@ static void win_edit(struct nk_context *ctx, struct s_cpu *cpu) {
   (void)cpu;
 
   if (nk_begin(
-          ctx, "edit",
+          ctx, "Edit",
           nk_rect(EDIT_RECT_X, EDIT_RECT_Y, EDIT_RECT_WIDTH, EDIT_RECT_HEIGHT),
           NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
               NK_WINDOW_TITLE)) {
