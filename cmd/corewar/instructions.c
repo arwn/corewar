@@ -1008,8 +1008,7 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
       val1 = read_reg(proc, reg);
     } else {
       if (type == T_IND) {
-        val1 =
-            read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
+        val1 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
       } else {
         val1 = (short)read_mem_2(cpu->program, proc->pc + 2);
       }
@@ -1052,8 +1051,8 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
       printf("P% 5d | lldi %d %d r%d\n", proc->pid, val1, val2, reg);
     }
     if (f_verbose & OPT_INSTR) {
-      printf("       | -> load from %d + %d = %d (with pc %d)\n", val1,
-             val2, val1 + val2, proc->pc + val1 + val2);
+      printf("       | -> load from %d + %d = %d (with pc %d)\n", val1, val2,
+             val1 + val2, proc->pc + val1 + val2);
     }
     mod_carry(proc, (uvar3 == 0));
     write_reg(proc, reg, uvar3);
