@@ -346,36 +346,27 @@ int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
 // TODO: validate pcb
 int instruction_add(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
-  int val;
+  int done;
   int reg1;
   int reg2;
   int reg3;
-  int ivar2;
-  int uvar3;
-  int uvar4;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
-  uvar3 = check_pcb(pcb, 4);
-  if (uvar3 != 0) {
+  if (check_pcb(pcb, 4) != 0) {
     reg1 = read_mem_1(cpu->program, proc->pc + 2);
     reg2 = read_mem_1(cpu->program, proc->pc + 3);
     reg3 = read_mem_1(cpu->program, proc->pc + 4);
-    ivar2 = validate_register(reg1);
-    if (((ivar2 != 0) && (ivar2 = validate_register(reg2)) != 0) &&
-        (ivar2 = validate_register(reg3)) != 0) {
-      if (f_verbose & OPT_INSTR)
-        printf("P% 5d | add r%d r%d r%d\n", proc->pid, reg1, reg2, reg3);
-      uvar3 = read_reg(proc, reg1);
-      uvar4 = read_reg(proc, reg2);
-      val = uvar3 + uvar4;
-      mod_carry(proc, (val == 0));
-      write_reg(proc, reg3, val);
+    if (validate_register(reg1) && validate_register(reg2) &&
+        validate_register(reg3)) {
+      done = read_reg(proc, reg1) + read_reg(proc, reg2);
+      mod_carry(proc, (done == 0));
+      write_reg(proc, reg3, done);
     }
   }
-  val = size_from_pcb(pcb, 4);
+  done = size_from_pcb(pcb, 4);
   if (f_verbose & OPT_PCMOVE)
-    print_adv(cpu, proc, proc->pc + val + 2);
-  return proc->pc + val + 2;
+    print_adv(cpu, proc, proc->pc + done + 2);
+  return proc->pc + done + 2;
 }
 
 // sub is the same as instruction_add, except performs subtraction.
