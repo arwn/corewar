@@ -283,6 +283,8 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       *cpu = new_cpu();
       ft_bzero(g_mem_colors, MEM_SIZE * sizeof(*g_mem_colors));
       glfwSetTime(1);
+      running = 0;
+      bzero(instruction_calls, sizeof(instruction_calls));
     }
 
     double trash;
@@ -313,12 +315,14 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       if (nk_popup_begin(ctx, NK_POPUP_STATIC, "Winner",
                          NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE, win_rect)) {
         if (!win_str) {
-          char *s = ft_itoa(cpu->winner);
+          char *s = ft_itoa(cpu->winner + 1);
           char *s2 = ft_strjoin(" ", cpu->players[cpu->winner].name);
           win_str = ft_strjoin(s, s2);
           free(s);
           free(s2);
-          win_str = ft_strjoin("WINNER: P", win_str);
+          s = ft_strjoin("WINNER: P", win_str);
+          free(win_str);
+          win_str = s;
           comment_str = cpu->players[cpu->winner].comment;
           win_rect.w = 40 + MAX__(ft_strlen(cpu->players[cpu->winner].comment) *
                                       CHAR_WIDTH,
@@ -329,6 +333,7 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
         nk_label(ctx, comment_str, NK_TEXT_CENTERED);
         nk_layout_row_static(ctx, 30, 30, 1);
         cpu->winner = -1;
+        running = 0;
         if (nk_button_label(ctx, "ok")) {
           free(win_str);
           win_str = NULL;
