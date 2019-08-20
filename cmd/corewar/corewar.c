@@ -259,7 +259,7 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
     if (nk_button_label(ctx, "walk")) {
       if (cpu->processes != 0) {
         int cont = 0;
-        while (cont == 0) {
+        while (cont == 0 && cpu->processes) {
           cont = cpu->step(cpu);
         }
       }
@@ -652,7 +652,7 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
     }
 
     // button for disassembling file
-    if (nk_button_label(ctx, "Decompile")) {
+    if (nk_button_label(ctx, "un-compile")) {
       int file = open(open_buf, O_RDONLY);
       if (file < 0) {
         printf("Error opening %s\n", open_buf);
