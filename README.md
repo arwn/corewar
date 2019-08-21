@@ -23,7 +23,7 @@ Then run `make` to compile and link both corewar and the assembler.
 ## Virtual Machine
 ### Usage
 ```sh
-./corewar -abcd:hlnpv: [files.{cor,s,...}]
+./corewar -abcd:hlnpv: [files.cor, ...]
   -a    enable the `aff' instruction
   -b	run GUI in background
   -c    enable color
