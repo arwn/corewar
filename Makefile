@@ -34,7 +34,7 @@ CHAMP_CFILES = champ.s
 CHAMP_SRCS = $(addprefix $(CHAMP_SRCDIR), $(CHAMP_CFILES))
 
 GUI_LDFLAGS = $(LIBGLEW) -L $(dir $(LIBGLFW)) -lglfw3
-GUI_FRAMEWORKS = -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
+GUI_FRAMEWORKS = -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo -Wl,-w
 GUI_INCLUDE = -I lib/glfw-3.3/build/include -I lib/glew-2.1.0/include
 
 INTERNAL_SRCDIR = internal/
