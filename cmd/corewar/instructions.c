@@ -249,10 +249,14 @@ int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
       val = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
     reg = read_mem_1(cpu->program, proc->pc + 2 + size_from_pt(type, 2));
     if (validate_register(reg) != 0) {
+      if (f_verbose & OPT_INSTR)
+        printf("P% 5d | ld %d r%d\n", proc->pid, val, reg);
       mod_carry(proc, (val == 0));
       write_reg(proc, reg, val);
     }
   }
+  if (f_verbose & OPT_PCMOVE)
+    print_adv(cpu, proc, proc->pc + size_from_pcb(pcb, 2) + 2);
 
   return proc->pc + size_from_pcb(pcb, 2) + 2;
 }
@@ -324,6 +328,8 @@ int instruction_add(struct s_cpu *cpu, struct s_process *proc) {
     reg3 = read_mem_1(cpu->program, proc->pc + 4);
     if (validate_register(reg1) && validate_register(reg2) &&
         validate_register(reg3)) {
+      if (f_verbose & OPT_INSTR)
+        printf("P% 5d | add r%d r%d r%d\n", proc->pid, reg1, reg2, reg3);
       done = read_reg(proc, reg1) + read_reg(proc, reg2);
       mod_carry(proc, (done == 0));
       write_reg(proc, reg3, done);
