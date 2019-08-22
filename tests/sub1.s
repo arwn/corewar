@@ -2,7 +2,7 @@
 .comment "Verify the functionality of the SUB instruction"
 
 	st r01,r02
-	ld %16909060,r03
+	ld %286331153,r03
 	sub r02,r03,r04
 	st r04,6
 ;	sub r1,r2,r3

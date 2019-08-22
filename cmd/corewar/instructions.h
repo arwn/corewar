@@ -13,8 +13,6 @@
 #ifndef INSTRUCTIONS_H
 #define INSTRUCTIONS_H
 
-#ifdef CPU_H
-
 /*
 ** Must be included after cpu.h
 */
@@ -40,5 +38,4 @@ typedef int (*t_inst)(struct s_cpu *, struct s_process *);
 
 extern t_inst inst_tab[NUM_OPS + 1];
 
-#endif
 #endif
