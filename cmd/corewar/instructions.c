@@ -549,7 +549,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
       type = proc->pc;
       local_c = size_from_pcb(pcb, 0xb);
       local_c = type + 2 + local_c;
-      goto LAB_100007631;
+      return local_c;
     }
     type = type_from_pcb(pcb, 1);
     uvar2 = size_from_pt(type, 0xb);
@@ -565,7 +565,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
         type = proc->pc;
         local_c = size_from_pcb(pcb, 0xb);
         local_c = type + 2 + local_c;
-        goto LAB_100007631;
+        return local_c;
       }
       local_3c = read_reg(proc, uvar1);
     } else {
@@ -589,7 +589,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
         type = proc->pc;
         local_c = size_from_pcb(pcb, 0xb);
         local_c = type + 2 + local_c;
-        goto LAB_100007631;
+        return local_c;
       }
       local_44 = read_reg(proc, uvar1);
     } else {
@@ -609,7 +609,6 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
     print_adv(cpu, proc, proc->pc + 2 + reg);
   }
   local_c = proc->pc + 2 + reg;
-LAB_100007631:
   return local_c;
 }
 
