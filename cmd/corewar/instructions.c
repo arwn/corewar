@@ -94,6 +94,7 @@ static void print_adv(struct s_cpu *cpu, struct s_process *proc, int new) {
 }
 
 // next_instruction updates the execution time for PROC.
+// TODO: detect extended magic number
 void next_cpu_op(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t op;
   int newpc;
@@ -115,7 +116,7 @@ void next_cpu_op(struct s_cpu *cpu, struct s_process *proc) {
 /* Utility functions */
 
 // Write four bytes of VAL into core memory MEM at offset IDX
-// TODO: cleanup
+// TODO: cleanup 35 lines
 static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx,
                           uint32_t val) {
   const int idx1 = idx % MEM_SIZE;
@@ -265,7 +266,7 @@ int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
 // the first argument (always a register) in the second. 'st r4,34' stores the
 // value of 'r4' at the address (PC + (34 % IDX_MOD)) 'st r3,r8' copies the
 // contents of 'r3' to 'r8'
-// TODO: cleanup
+// TODO: cleanup 27 lines
 int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   int type;
@@ -443,7 +444,7 @@ int instruction_zjmp(struct s_cpu *cpu, struct s_process *proc) {
 // register. 'ldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3 %
 // IDX_MOD)), adding 4 to this sum S. Read REG_SIZE bytes at address (PC + (S %
 // IDX_MOD)), which are copied to 'r1'.
-// TODO: cleanup
+// TODO: cleanup 74 lines
 int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t uvar1;
@@ -523,7 +524,7 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
 
 // sti stores at an index offset. 'sti r2,%4,%5' copies REG_SIZE bytes
 // of 'r2' at address (4 + 5) Parameters 2 and 3 are treated as indexes.
-// TODO: cleanup
+// TODO: cleanup 85 lines
 int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t uvar1;
@@ -612,6 +613,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
   return local_c;
 }
 
+// TODO: cleanup 37 lines
 static void fork_process(struct s_cpu *cpu, struct s_process *proc, int idx) {
   struct s_process *new;
   int idxmod;
@@ -672,48 +674,39 @@ int instruction_fork(struct s_cpu *cpu, struct s_process *proc) {
 // lld is the same as 'ld', but without the (% IDX_MOD). Modifies
 // carry. 'lld 34,r3' loads the REG_SIZE bytes from address (PC + (34)) in
 // register r3.
-// TODO: cleanup
 int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
-  uint8_t uvar1;
-  int ivar2;
-  int uvar3;
-  int uvar4;
-  int uvar5;
-  int local_2c;
+  uint8_t arg2;
+  int type;
+  int arg1;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
-  uvar4 = check_pcb(pcb, e_lld);
-  if (uvar4 != 0) {
-    uvar4 = type_from_pcb(pcb, 0);
-    uvar5 = size_from_pt(uvar4, e_lld);
-    if (uvar4 == T_DIR) {
-      local_2c = (int)read_mem_4(cpu->program, proc->pc + 2);
-    } else {
-      local_2c = (short)read_mem_2(cpu->program, proc->pc + read_mem_2(cpu->program, proc->pc + 2));
-    }
-    uvar1 = read_mem_1(cpu->program, proc->pc + 2 + uvar5);
-    ivar2 = validate_register(uvar1);
-    if (ivar2 != 0) {
+  if (check_pcb(pcb, e_lld) != 0) {
+    type = type_from_pcb(pcb, 0);
+    if (type == T_DIR)
+      arg1 = (int)read_mem_4(cpu->program, proc->pc + 2);
+    else
+      arg1 = (short)read_mem_2(
+          cpu->program, proc->pc + read_mem_2(cpu->program, proc->pc + 2));
+    arg2 = read_mem_1(cpu->program, proc->pc + 2 + size_from_pt(type, e_lld));
+    if (validate_register(arg2) != 0) {
       if (f_verbose & OPT_INSTR) {
-        printf("P% 5d | lld %d r%d\n", proc->pid, local_2c, uvar1);
+        printf("P% 5d | lld %d r%d\n", proc->pid, arg1, arg2);
       }
-      mod_carry(proc, (local_2c == 0));
-      write_reg(proc, uvar1, local_2c);
+      mod_carry(proc, (arg1 == 0));
+      write_reg(proc, arg2, arg1);
     }
   }
-  ivar2 = proc->pc;
-  uvar3 = size_from_pcb(pcb, e_lld);
   if (f_verbose & OPT_PCMOVE)
-    print_adv(cpu, proc, proc->pc + 2 + uvar3);
-  return (proc->pc + 2 + uvar3);
+    print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_lld));
+  return (proc->pc + 2 + size_from_pcb(pcb, e_lld));
 }
 
 // lldi is the same as 'ldi', but without the (% IDX_MOD). Modifies
 // carry. 'lldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3)), adding 4
 // to this sum S. Read REG_SIZE bytes at address (PC + (S)), which are copied to
 // 'r1'.
-// TODO: cleanup
+// TODO: cleanup 91 lines
 int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t reg;
@@ -854,7 +847,7 @@ int instruction_aff(struct s_cpu *cpu, struct s_process *proc) {
   return (ivar2 + 2 + uvar3);
 }
 
-// explicit no operation
+// nop is a single cycle explicit no operation
 int instruction_nop(struct s_cpu *cpu, struct s_process *proc) {
   int ret = proc->pc + 1;
   if (f_verbose & OPT_INSTR)
