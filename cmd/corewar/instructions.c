@@ -609,7 +609,7 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
 // carry. 'lldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3)), adding 4
 // to this sum S. Read REG_SIZE bytes at address (PC + (S)), which are copied to
 // 'r1'.
-// TODO: cleanup 91 lines
+// TODO: cleanup 47 lines
 int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t reg;

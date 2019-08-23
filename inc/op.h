@@ -1,23 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   op.h                                               :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: zaz <marvin@42.fr>                         +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2013/10/04 11:33:27 by zaz               #+#    #+#             */
-/*   Updated: 2019/08/19 14:12:36 by acarlson         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-/*
-** Toutes les tailles sont en octets.
-** On part du principe qu'un int fait 32 bits. Est-ce vrai chez vous ?
-*/
-
 #ifndef OP_H
 #define OP_H
-#include <stdint.h>
 
 #define IND_SIZE 2
 #define REG_SIZE 1
@@ -57,20 +39,12 @@
 #define NBR_LIVE 21
 #define MAX_CHECKS 10
 
-/*
-**
-*/
-
 typedef char t_arg_type;
 
 #define T_REG 1 // Registry
 #define T_DIR 2 // Direct
 #define T_IND 4 // Indirect
 #define T_LAB 8 // Label
-
-/*
-**
-*/
 
 #define PROG_NAME_LENGTH (128)
 #define COMMENT_LENGTH (2048)
@@ -103,8 +77,8 @@ typedef struct s_op {
   int cycles_to_exec;
   char *desc;
   int param_encode;
-  int direct_size; // 1 - DIR_SIZE = 4 bits
-                   // 0 - DIR_SIZE *= 2
+  int direct_size; // 0 - DIR_SIZE = 4 bytes
+                   // 1 - DIR_SIZE = 2 bytes
 } t_op;
 
 extern t_op g_op_tab[NUM_OPS + 1];
