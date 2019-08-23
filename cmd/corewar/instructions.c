@@ -8,17 +8,8 @@
 #include "instructions.h"
 // clang-format on
 
-// Write N bytes of CPU->PROGRAM at offset PC
-void dump_nbytes(struct s_cpu *cpu, int n, int pc, int opt) {
-  if (opt)
-    printf("%04x  ", pc);
-  for (int i = 0; i < n; i++) {
-    printf("%02hhx%c", cpu->program[pc + i], (i % n == n - 1) ? '\n' : ' ');
-  }
-}
-
 // Get the type of the N'th argument from the pcb
-int type_from_pcb(uint8_t pcb, int arg) {
+static int type_from_pcb(uint8_t pcb, int arg) {
   switch ((pcb >> (('\x03' - (char)arg) * '\x02' & 0x1fU)) & 3) {
   case DIR_CODE:
     return T_DIR;
@@ -27,12 +18,11 @@ int type_from_pcb(uint8_t pcb, int arg) {
   case REG_CODE:
     return T_REG;
   }
-
   return 0;
 }
 
 // returns REG_SIZE, IND_SIZE, DIR_SIZE, or SPECIAL_DIR_SIZE
-int size_from_pt(int type, int opcode) {
+static int size_from_pt(int type, int opcode) {
   switch (type) {
   case T_REG:
     return REG_SIZE;
@@ -44,11 +34,10 @@ int size_from_pt(int type, int opcode) {
     else
       return SPECIAL_DIR_SIZE;
   }
-
   return 0;
 }
 
-int size_from_pcb(uint8_t pcb, int opcode) {
+static int size_from_pcb(uint8_t pcb, int opcode) {
   int ret, tmp;
   int ii;
 
@@ -57,22 +46,21 @@ int size_from_pcb(uint8_t pcb, int opcode) {
   while (ii < g_op_tab[opcode].numargs) {
     tmp = type_from_pcb(pcb, ii);
     tmp = size_from_pt(tmp, opcode);
-    ret = tmp + ret;
-    ii = ii + 1;
+    ret += tmp;
+    ii += 1;
   }
   return ret;
 }
 
-int check_pcb(uint8_t pcb, int op) {
+static int check_pcb(uint8_t pcb, int op) {
   int ii;
   int type;
 
   ii = 0;
   while (ii < g_op_tab[op].numargs) {
     type = type_from_pcb(pcb, ii);
-    if (((type & g_op_tab[op].argtypes[ii]) != type) || type == 0) {
+    if (((type & g_op_tab[op].argtypes[ii]) != type) || type == 0)
       return 0;
-    }
     ii += 1;
   }
   return 1;
@@ -88,7 +76,7 @@ static void print_adv(struct s_cpu *cpu, struct s_process *proc, int new) {
   printf("ADV %d (0x%04x -> 0x%04x) ", len, proc->pc, new);
   while (ii < len) {
     printf((!ii ? "%02x" : " %02x"), read_mem_1(cpu->program, proc->pc + ii));
-    ++ii;
+    ii += 1;
   }
   printf("\n");
 }
@@ -114,9 +102,15 @@ void next_cpu_op(struct s_cpu *cpu, struct s_process *proc) {
 }
 
 /* Utility functions */
+#define MEM_COLOR(IDX, PL)                                                     \
+  do {                                                                         \
+    if (g_mem_colors[(IDX)].writes == 0 || g_mem_colors[(IDX)].player != (PL)) \
+      g_mem_colors[(IDX)].writes = 49;                                         \
+    if (g_mem_colors[(IDX)].player == 0 || g_mem_colors[(IDX)].player != (PL)) \
+      g_mem_colors[(IDX)].player = (PL);                                       \
+  } while (0)
 
 // Write four bytes of VAL into core memory MEM at offset IDX
-// TODO: cleanup 35 lines
 static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx,
                           uint32_t val) {
   const int idx1 = idx % MEM_SIZE;
@@ -125,29 +119,10 @@ static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx,
   const int idx4 = (idx + 3) % MEM_SIZE;
 
   if (f_color || f_gui) {
-    if (g_mem_colors[idx1].writes == 0 ||
-        g_mem_colors[idx1].player != proc->player)
-      g_mem_colors[idx1].writes = 49;
-    if (!g_mem_colors[idx1].player || g_mem_colors[idx1].player != proc->player)
-      g_mem_colors[idx1].player = proc->player;
-
-    if (g_mem_colors[idx2].writes == 0 ||
-        g_mem_colors[idx2].player != proc->player)
-      g_mem_colors[idx2].writes = 49;
-    if (!g_mem_colors[idx2].player || g_mem_colors[idx2].player != proc->player)
-      g_mem_colors[idx2].player = proc->player;
-
-    if (g_mem_colors[idx3].writes == 0 ||
-        g_mem_colors[idx3].player != proc->player)
-      g_mem_colors[idx3].writes = 49;
-    if (!g_mem_colors[idx3].player || g_mem_colors[idx3].player != proc->player)
-      g_mem_colors[idx3].player = proc->player;
-
-    if (g_mem_colors[idx4].writes == 0 ||
-        g_mem_colors[idx4].player != proc->player)
-      g_mem_colors[idx4].writes = 49;
-    if (!g_mem_colors[idx4].player || g_mem_colors[idx4].player != proc->player)
-      g_mem_colors[idx4].player = proc->player;
+    MEM_COLOR(idx1, proc->player);
+    MEM_COLOR(idx2, proc->player);
+    MEM_COLOR(idx3, proc->player);
+    MEM_COLOR(idx4, proc->player);
   }
 
   mem[idx1] = (val >> 24) & 0xff;
@@ -159,8 +134,7 @@ static void write_mem_ins(struct s_process *proc, uint8_t *mem, uint32_t idx,
 // Write VAL into register REG for the process PROC
 static void write_reg(struct s_process *proc, uint32_t reg, uint32_t val) {
   if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-    printf("DBG: write_reg reg(%08x) val(%08x) lav(%08x)\n", reg, val,
-           ntohl(val));
+    printf("DBG: write_reg reg(%08x) val(%08x)\n", reg, val);
   if (reg > 0 && reg <= REG_NUMBER)
     proc->registers[reg - 1] = val;
 }
@@ -170,7 +144,7 @@ static int read_reg(struct s_process *proc, uint32_t reg) {
   if (reg > 0 && reg <= REG_NUMBER) {
     int ret = proc->registers[reg - 1];
     if ((f_verbose & OPT_INTLDBG) && (f_verbose & OPT_INTLDBG))
-      printf("DBG: read_reg reg(%08x) ger(%08x)\n", ret, ntohl(ret));
+      printf("DBG: read_reg reg(%08x)\n", ret);
     return (ret);
   }
   return 0;
@@ -407,9 +381,9 @@ int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type,
     return proc->pc + 2 + size_from_pcb(pcb, e_##name);                        \
   }
 
-// perform a bitwise AND on the first two parameters, storing theresult into the
-// third which is always a register. Modifies carry.'and r2,%0,r3' stores 'r2 &
-// 0' into 'r3'.
+// perform a bitwise and on the first two parameters, storing the result into
+// the third which is always a register. Modifies carry.'and r2,%0,r3' stores
+// 'r2 & 0' into 'r3'.
 INSTRUCTION_BITWISE(and, &);
 
 // same as and, except uses bitwise or
@@ -447,7 +421,7 @@ int instruction_zjmp(struct s_cpu *cpu, struct s_process *proc) {
 // register. 'ldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3 %
 // IDX_MOD)), adding 4 to this sum S. Read REG_SIZE bytes at address (PC + (S %
 // IDX_MOD)), which are copied to 'r1'.
-// TODO: cleanup 74 lines
+// TODO: cleanup 45 lines
 int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t arg3;
@@ -457,7 +431,7 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
   int arg2;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
-  while (check_pcb(pcb, 10) != 0) {
+  while (check_pcb(pcb, e_ldi) != 0) {
     offset = proc->pc + 2;
     type = type_from_pcb(pcb, 0);
     if (type == T_REG) {
@@ -469,7 +443,7 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
       arg1 = read_indirect(cpu, proc, read_mem_2(cpu->program, offset));
     else
       arg1 = (short)read_mem_2(cpu->program, offset);
-    offset += size_from_pt(type, 10);
+    offset += size_from_pt(type, e_ldi);
     type = type_from_pcb(pcb, 1);
     if (type == T_REG) {
       arg2 = read_mem_1(cpu->program, offset);
@@ -478,7 +452,7 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
       arg2 = read_reg(proc, arg2);
     } else
       arg2 = (short)read_mem_2(cpu->program, offset);
-    offset += size_from_pt(type, 10);
+    offset += size_from_pt(type, e_ldi);
     arg3 = read_mem_1(cpu->program, offset);
     if (validate_register(arg3) == 0)
       break;
@@ -492,13 +466,13 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
     break;
   }
   if (f_verbose & OPT_PCMOVE)
-    print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, 10));
-  return (proc->pc + 2 + size_from_pcb(pcb, 10));
+    print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_ldi));
+  return (proc->pc + 2 + size_from_pcb(pcb, e_ldi));
 }
 
 // sti stores at an index offset. 'sti r2,%4,%5' copies REG_SIZE bytes
 // of 'r2' at address (4 + 5) Parameters 2 and 3 are treated as indexes.
-// TODO: cleanup 44 lines
+// TODO: cleanup 41 lines
 int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   int type;
@@ -507,7 +481,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
   int arg3;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
-  while (check_pcb(pcb, 11) != 0) {
+  while (check_pcb(pcb, e_sti) != 0) {
     reg = read_mem_1(cpu->program, proc->pc + 2);
     if (validate_register(reg) == 0)
       break;
@@ -522,13 +496,13 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
     else
       arg2 = (short)read_mem_2(cpu->program, proc->pc + 3);
     if (type_from_pcb(pcb, 2) == T_REG) {
-      arg3 = read_mem_1(cpu->program, proc->pc + 3 + size_from_pt(type, 11));
+      arg3 = read_mem_1(cpu->program, proc->pc + 3 + size_from_pt(type, e_sti));
       if (validate_register(arg3) == 0)
         break;
       arg3 = read_reg(proc, arg3);
     } else
       arg3 = (short)read_mem_2(cpu->program,
-                               proc->pc + 3 + size_from_pt(type, 11));
+                               proc->pc + 3 + size_from_pt(type, e_sti));
     if (f_verbose & OPT_INSTR) {
       printf("P% 5d | sti r%d %d %d\n", proc->pid, reg, arg2, arg3);
       printf("       | -> store to %d + %d = %d (with pc and mod %d)\n", arg2,
@@ -539,8 +513,8 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
     break;
   }
   if (f_verbose & OPT_PCMOVE)
-    print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, 11));
-  return (proc->pc + 2 + size_from_pcb(pcb, 11));
+    print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_sti));
+  return (proc->pc + 2 + size_from_pcb(pcb, e_sti));
 }
 
 // TODO: cleanup 37 lines
@@ -639,95 +613,51 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
 int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t reg;
-  int size1;
+  int offset;
   int type;
-  int uvar3;
-  int uvar4;
-  int type2;
-  int val1;
-  int val2;
-  int ret;
+  int arg1;
+  int arg2;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
-  uvar4 = check_pcb(pcb, e_lldi);
-  if (uvar4 != 0) {
-    uvar4 = type_from_pcb(pcb, 0);
-    type = uvar4;
-    uvar4 = size_from_pt(type, e_lldi);
-    size1 = uvar4;
+  while (check_pcb(pcb, e_lldi) != 0) {
+    offset = proc->pc + 2;
+    type = type_from_pcb(pcb, 0);
     if (type == T_REG) {
-      reg = read_mem_1(cpu->program, proc->pc + 2);
-      type = validate_register(reg);
-      if (type == 0) {
-        if (f_verbose & OPT_PCMOVE) {
-          type = proc->pc;
-          uvar3 = size_from_pcb(pcb, e_lldi);
-          print_adv(cpu, proc, type + 2 + uvar3);
-        }
-        type = proc->pc;
-        ret = size_from_pcb(pcb, e_lldi);
-        ret = type + 2 + ret;
-        return ret;
-      }
-      val1 = read_reg(proc, reg);
+      reg = read_mem_1(cpu->program, offset);
+      if (validate_register(reg) == 0)
+        break;
+      arg1 = read_reg(proc, reg);
+    } else if (type == T_IND) {
+      arg1 = read_indirect(cpu, proc, read_mem_2(cpu->program, offset));
     } else {
-      if (type == T_IND) {
-        val1 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
-      } else {
-        val1 = (short)read_mem_2(cpu->program, proc->pc + 2);
-      }
+      arg1 = (short)read_mem_2(cpu->program, offset);
     }
-    uvar4 = type_from_pcb(pcb, 1);
-    type2 = size_from_pt(uvar4, e_lldi);
-    if (uvar4 == T_REG) {
-      reg = read_mem_1(cpu->program, proc->pc + 2 + size1);
-      type = validate_register(reg);
-      if (type == 0) {
-        if (f_verbose & OPT_PCMOVE) {
-          type = proc->pc;
-          uvar3 = size_from_pcb(pcb, e_lldi);
-          print_adv(cpu, proc, type + 2 + uvar3);
-        }
-        type = proc->pc;
-        ret = size_from_pcb(pcb, e_lldi);
-        ret = type + 2 + ret;
-        return ret;
-      }
-      val2 = read_reg(proc, reg);
+    offset += size_from_pt(type, e_lldi);
+    type = type_from_pcb(pcb, 1);
+    if (type == T_REG) {
+      reg = read_mem_1(cpu->program, offset);
+      if (validate_register(reg) == 0)
+        break;
+      arg2 = read_reg(proc, reg);
     } else {
-      val2 = (short)read_mem_2(cpu->program, proc->pc + 2 + size1);
+      arg2 = (short)read_mem_2(cpu->program, offset);
     }
-    reg = read_mem_1(cpu->program, proc->pc + 2 + size1 + type2);
-    type = validate_register(reg);
-    if (type == 0) {
-      if (f_verbose & OPT_PCMOVE) {
-        type = proc->pc;
-        uvar3 = size_from_pcb(pcb, e_lldi);
-        print_adv(cpu, proc, type + 2 + uvar3);
-      }
-      type = proc->pc;
-      ret = size_from_pcb(pcb, e_lldi);
-      ret = type + 2 + ret;
-      return ret;
-    }
-    uvar3 = read_mem_4(cpu->program, proc->pc + val1 + val2);
+    offset += size_from_pt(type, e_lldi);
+    reg = read_mem_1(cpu->program, offset);
+    if (validate_register(reg) == 0)
+      break;
     if (f_verbose & OPT_INSTR) {
-      printf("P% 5d | lldi %d %d r%d\n", proc->pid, val1, val2, reg);
-      printf("       | -> load from %d + %d = %d (with pc %d)\n", val1, val2,
-             val1 + val2, proc->pc + val1 + val2);
+      printf("P% 5d | lldi %d %d r%d\n", proc->pid, arg1, arg2, reg);
+      printf("       | -> load from %d + %d = %d (with pc %d)\n", arg1, arg2,
+             arg1 + arg2, proc->pc + arg1 + arg2);
     }
-    mod_carry(proc, (uvar3 == 0));
-    write_reg(proc, reg, uvar3);
+    mod_carry(proc, (read_mem_4(cpu->program, proc->pc + arg1 + arg2) == 0));
+    write_reg(proc, reg, read_mem_4(cpu->program, proc->pc + arg1 + arg2));
+    break;
   }
-  if (f_verbose & OPT_PCMOVE) {
-    type = proc->pc;
-    uvar3 = size_from_pcb(pcb, e_lldi);
-    print_adv(cpu, proc, type + 2 + uvar3);
-  }
-  type = proc->pc;
-  ret = size_from_pcb(pcb, e_lldi);
-  ret = type + 2 + ret;
-  return (ret);
+  if (f_verbose & OPT_PCMOVE)
+    print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_lldi));
+  return (proc->pc + 2 + size_from_pcb(pcb, e_lldi));
 }
 
 // lfork is the same as 'fork', but without the (% IDX_MOD).
@@ -750,27 +680,20 @@ int instruction_lfork(struct s_cpu *cpu, struct s_process *proc) {
 // TODO: cleanup
 int instruction_aff(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
-  uint8_t uvar1;
-  int ivar2;
-  int uvar3;
-  int uvar4;
+  uint8_t arg1;
 
   pcb = read_mem_1(cpu->program, proc->pc + 1);
-  uvar4 = check_pcb(pcb, 0x10);
-  if (uvar4 != 0) {
-    uvar1 = read_mem_1(cpu->program, proc->pc + 2);
-    ivar2 = validate_register(uvar1);
-    if ((ivar2 != 0) && ((uvar1 = read_reg(proc, uvar1)), f_enable_aff != 0))
-      printf("Aff: %c\n", uvar1);
+  if (check_pcb(pcb, e_aff) != 0) {
+    arg1 = read_mem_1(cpu->program, proc->pc + 2);
+    if (validate_register(arg1) != 0) {
+      arg1 = read_reg(proc, arg1);
+      if (f_enable_aff != 0)
+        printf("Aff: %c\n", arg1);
+    }
   }
-  if (f_verbose & OPT_PCMOVE) {
-    ivar2 = proc->pc;
-    uvar3 = size_from_pcb(pcb, 0x10);
-    print_adv(cpu, proc, ivar2 + 2 + uvar3);
-  }
-  ivar2 = proc->pc;
-  uvar3 = size_from_pcb(pcb, 0x10);
-  return (ivar2 + 2 + uvar3);
+  if (f_verbose & OPT_PCMOVE)
+    print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_aff));
+  return (proc->pc + 2 + size_from_pcb(pcb, e_aff));
 }
 
 // nop is a single cycle explicit no operation

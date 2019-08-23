@@ -88,7 +88,7 @@ ins_time+=(['fork']=870)
 ins_time+=(['lld']=45)
 ins_time+=(['lldi']=100)
 ins_time+=(['lfork']=1050)
-ins_time+=(['aff']=2)
+ins_time+=(['aff']=7)
 ins_time+=(['zork']=57954)           # 57955
 ins_time+=(['helltrain']=27438)      # 27439
 ins_time+=(['fluttershy']=25092)     # 25093
