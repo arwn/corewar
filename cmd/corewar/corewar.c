@@ -978,8 +978,8 @@ int main(int argc, char *argv[]) {
   FILE *f;
   static struct s_cpu cpu;
 
-  f_gui = f_background = f_enable_aff = f_color = f_dump = f_leaks = f_dump_processes =
-      f_verbose = 0;
+  f_gui = f_background = f_enable_aff = f_color = f_dump = f_leaks =
+      f_dump_processes = f_verbose = 0;
   bin = *argv;
   while ((ch = getopt(argc, argv, "abcd:hlnpv:")) != -1) {
     switch (ch) {
