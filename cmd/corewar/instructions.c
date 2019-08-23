@@ -174,7 +174,8 @@ int instruction_live(struct s_cpu *cpu, struct s_process *proc) {
     printf("DBG: proc->last_live(%d) INS_LIVE\n", proc->last_live);
   cpu->nbr_lives += 1;
   player_idx = ~player_id;
-  if (player_idx >= 0 && player_idx < MAX_PLAYERS) {
+  if (player_idx >= 0 && player_idx < MAX_PLAYERS &&
+      cpu->players[player_idx].name) {
     if ((f_verbose & OPT_LIVES))
       printf("Player %d (%s) is said to be alive\n", player_idx + 1,
              cpu->players[player_idx].name);

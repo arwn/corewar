@@ -16,7 +16,6 @@ lib/libft/libft.a
 *.gcno
 *.profdata
 *.profraw
-*.in
 /*.s
 *.cor
 .vscode
