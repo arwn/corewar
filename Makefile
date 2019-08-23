@@ -1,5 +1,5 @@
 RM = rm -f
-CCFLAGS = -Wall -Wextra -Werror -g
+CCFLAGS = -Wall -Wextra -Werror -DNDEBUG
 
 LIBDIR = lib/
 

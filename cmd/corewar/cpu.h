@@ -4,7 +4,7 @@
 #include "asm.h"
 #include "libft.h"
 #include "op.h"
-#include <assert.h> // TODO: remove
+#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 

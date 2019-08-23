@@ -174,8 +174,8 @@ static void spawn_process(struct s_cpu *cpu, int pc, int player) {
 // delete_process deletes the current process and sets the current process to
 // the previous process.
 static void delete_process(struct s_cpu *cpu, struct s_process **proc) {
-  assert(proc != NULL);  // TODO: remove
-  assert(*proc != NULL); // TODO: remove
+  assert(proc != NULL);
+  assert(*proc != NULL);
   struct s_process *expired = *proc;
 
   if (f_verbose & OPT_DEATHS)

@@ -82,7 +82,6 @@ static void print_adv(struct s_cpu *cpu, struct s_process *proc, int new) {
 }
 
 // next_instruction updates the execution time for PROC.
-// TODO: detect extended magic number
 void next_cpu_op(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t op;
   int newpc;
@@ -203,9 +202,9 @@ int read_indirect(struct s_cpu *cpu, struct s_process *proc, short offset) {
 }
 
 // check if a register number is valid: r1 - r16
-int validate_register(int reg) { return reg > 0 && reg <= NUM_OPS; }
+#define VALID_REGISTER(X) ((X) > 0 && (X) <= REG_NUMBER)
 
-// ld takes 2 parameters, 2nd must be a register that isn't the
+// 'ld' takes 2 parameters, 2nd must be a register that isn't the
 // 'program counter'. It loads the value of the first parameter in the register,
 // and modifies the 'carry'. 'ld 34,r3' loads the REG_SIZE bytes from address
 // (PC + (34 % IDX_MOD)) in register r3.
@@ -223,7 +222,7 @@ int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
     else
       val = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 2));
     reg = read_mem_1(cpu->program, proc->pc + 2 + size_from_pt(type, e_ld));
-    if (validate_register(reg) != 0) {
+    if (VALID_REGISTER(reg) != 0) {
       if (f_verbose & OPT_INSTR)
         printf("P% 5d | ld %d r%d\n", proc->pid, val, reg);
       mod_carry(proc, (val == 0));
@@ -236,11 +235,10 @@ int instruction_ld(struct s_cpu *cpu, struct s_process *proc) {
   return proc->pc + size_from_pcb(pcb, e_ld) + 2;
 }
 
-// st takes 2 parameters, storing (REG_SIZE bytes) of the value of
+// 'st' takes 2 parameters, storing (REG_SIZE bytes) of the value of
 // the first argument (always a register) in the second. 'st r4,34' stores the
 // value of 'r4' at the address (PC + (34 % IDX_MOD)) 'st r3,r8' copies the
 // contents of 'r3' to 'r8'
-// TODO: cleanup 27 lines
 int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   int type;
@@ -255,10 +253,10 @@ int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
       val = (short)read_mem_2(cpu->program, proc->pc + 3);
     else
       val = read_mem_1(cpu->program, proc->pc + 3);
-    if (validate_register(reg) != 0) {
+    if (VALID_REGISTER(reg) != 0) {
       if (f_verbose & OPT_INSTR)
         printf("P% 5d | st r%d %d\n", proc->pid, reg, val);
-      if ((type == T_REG) && validate_register(val) != 0)
+      if ((type == T_REG) && VALID_REGISTER(val) != 0)
         write_reg(proc, val, read_reg(proc, reg));
       else if (type == T_IND)
         write_mem_ins(proc, cpu->program, (proc->pc + val % IDX_MOD),
@@ -271,7 +269,7 @@ int instruction_st(struct s_cpu *cpu, struct s_process *proc) {
   return proc->pc + reg + 2;
 }
 
-// add takes 3 registers as parameters, adding the contents of the
+// 'add' takes 3 registers as parameters, adding the contents of the
 // first and second, storing the result into the third. Modifies carry. 'add
 // r2,r3,r5' adds the values of 'r2' and 'r3' and stores the result in 'r5'.
 int instruction_add(struct s_cpu *cpu, struct s_process *proc) {
@@ -286,8 +284,7 @@ int instruction_add(struct s_cpu *cpu, struct s_process *proc) {
     reg1 = read_mem_1(cpu->program, proc->pc + 2);
     reg2 = read_mem_1(cpu->program, proc->pc + 3);
     reg3 = read_mem_1(cpu->program, proc->pc + 4);
-    if (validate_register(reg1) && validate_register(reg2) &&
-        validate_register(reg3)) {
+    if (VALID_REGISTER(reg1) && VALID_REGISTER(reg2) && VALID_REGISTER(reg3)) {
       if (f_verbose & OPT_INSTR)
         printf("P% 5d | add r%d r%d r%d\n", proc->pid, reg1, reg2, reg3);
       done = read_reg(proc, reg1) + read_reg(proc, reg2);
@@ -301,7 +298,7 @@ int instruction_add(struct s_cpu *cpu, struct s_process *proc) {
   return proc->pc + done + 2;
 }
 
-// sub is the same as instruction_add, except performs subtraction.
+// 'sub' is the same as instruction_add, except performs subtraction.
 int instruction_sub(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   int done;
@@ -314,8 +311,7 @@ int instruction_sub(struct s_cpu *cpu, struct s_process *proc) {
     reg1 = read_mem_1(cpu->program, proc->pc + 2);
     reg2 = read_mem_1(cpu->program, proc->pc + 3);
     reg3 = read_mem_1(cpu->program, proc->pc + 4);
-    if (validate_register(reg1) && validate_register(reg2) &&
-        validate_register(reg3)) {
+    if (VALID_REGISTER(reg1) && VALID_REGISTER(reg2) && VALID_REGISTER(reg3)) {
       if (f_verbose & OPT_INSTR)
         printf("P% 5d | sub r%d r%d r%d\n", proc->pid, reg1, reg2, reg3);
       done = read_reg(proc, reg1) - read_reg(proc, reg2);
@@ -329,6 +325,7 @@ int instruction_sub(struct s_cpu *cpu, struct s_process *proc) {
   return proc->pc + done + 2;
 }
 
+// readaroni that typearoni
 int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type,
                    int offset) {
   int ret;
@@ -336,20 +333,17 @@ int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type,
   ret = 0;
   if (type == T_REG) {
     ret = read_mem_1(cpu->program, offset);
-    if (validate_register(ret) != 0)
+    if (VALID_REGISTER(ret) != 0)
       ret = read_reg(proc, ret);
   } else if (type == T_DIR) {
-    if (g_op_tab[proc->opcode].direct_size == 1)
-      ret = read_mem_2(cpu->program, offset);
-    else
-      ret = read_mem_4(cpu->program, offset);
+    ret = read_mem_4(cpu->program, offset);
   } else if (type == T_IND) {
     ret = read_indirect(cpu, proc, read_mem_2(cpu->program, offset));
   }
   return ret;
 }
 
-// INSTRUCTION_BITWISE generates an instruction function
+// INSTRUCTION_BITWISE generates an instruction function withe name and operator
 #define INSTRUCTION_BITWISE(name, operator)                                    \
   int instruction_##name(struct s_cpu *cpu, struct s_process *proc) {          \
     uint8_t pcb;                                                               \
@@ -368,7 +362,7 @@ int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type,
       arg2 = read_typearoni(cpu, proc, type, offset);                          \
       offset += size_from_pt(type, e_##name);                                  \
       arg3 = read_mem_1(cpu->program, offset);                                 \
-      if (validate_register(arg3) != 0) {                                      \
+      if (VALID_REGISTER(arg3) != 0) {                                         \
         if (f_verbose & OPT_INSTR)                                             \
           printf("P% 5d | %s %d %d r%d\n", proc->pid, #name, arg1, arg2,       \
                  arg3);                                                        \
@@ -386,13 +380,13 @@ int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type,
 // 'r2 & 0' into 'r3'.
 INSTRUCTION_BITWISE(and, &);
 
-// same as and, except uses bitwise or
+// 'or' is the same as and, except uses bitwise or
 INSTRUCTION_BITWISE(or, |);
 
-// same as and, except uses bitwise xor
+// 'xor' is the same as and, except uses bitwise xor
 INSTRUCTION_BITWISE(xor, ^);
 
-// zjmp always takes an index (IND_SIZE) and makes a jump at this
+// 'zjmp' always takes an index (IND_SIZE) and makes a jump at this
 // index if carry is true, otherwise consuming cycles. 'zjmp %23' stores (PC +
 // (23 % IDX_MOD)) into PC.
 int instruction_zjmp(struct s_cpu *cpu, struct s_process *proc) {
@@ -421,7 +415,6 @@ int instruction_zjmp(struct s_cpu *cpu, struct s_process *proc) {
 // register. 'ldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3 %
 // IDX_MOD)), adding 4 to this sum S. Read REG_SIZE bytes at address (PC + (S %
 // IDX_MOD)), which are copied to 'r1'.
-// TODO: cleanup 45 lines
 int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t arg3;
@@ -436,7 +429,7 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
     type = type_from_pcb(pcb, 0);
     if (type == T_REG) {
       arg1 = read_mem_1(cpu->program, offset);
-      if (validate_register(arg1) == 0)
+      if (VALID_REGISTER(arg1) == 0)
         break;
       arg1 = read_reg(proc, arg1);
     } else if (type == T_IND)
@@ -447,14 +440,14 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
     type = type_from_pcb(pcb, 1);
     if (type == T_REG) {
       arg2 = read_mem_1(cpu->program, offset);
-      if (validate_register(arg2) == 0)
+      if (VALID_REGISTER(arg2) == 0)
         break;
       arg2 = read_reg(proc, arg2);
     } else
       arg2 = (short)read_mem_2(cpu->program, offset);
     offset += size_from_pt(type, e_ldi);
     arg3 = read_mem_1(cpu->program, offset);
-    if (validate_register(arg3) == 0)
+    if (VALID_REGISTER(arg3) == 0)
       break;
     if (f_verbose & OPT_INSTR) {
       printf("P% 5d | ldi %d %d r%d\n", proc->pid, arg1, arg2, arg3);
@@ -470,9 +463,8 @@ int instruction_ldi(struct s_cpu *cpu, struct s_process *proc) {
   return (proc->pc + 2 + size_from_pcb(pcb, e_ldi));
 }
 
-// sti stores at an index offset. 'sti r2,%4,%5' copies REG_SIZE bytes
+// 'sti' stores at an index offset. 'sti r2,%4,%5' copies REG_SIZE bytes
 // of 'r2' at address (4 + 5) Parameters 2 and 3 are treated as indexes.
-// TODO: cleanup 41 lines
 int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   int type;
@@ -483,12 +475,12 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
   pcb = read_mem_1(cpu->program, proc->pc + 1);
   while (check_pcb(pcb, e_sti) != 0) {
     reg = read_mem_1(cpu->program, proc->pc + 2);
-    if (validate_register(reg) == 0)
+    if (VALID_REGISTER(reg) == 0)
       break;
     type = type_from_pcb(pcb, 1);
     if (type == T_REG) {
       arg2 = read_mem_1(cpu->program, proc->pc + 3);
-      if (validate_register(arg2) == 0)
+      if (VALID_REGISTER(arg2) == 0)
         break;
       arg2 = read_reg(proc, arg2);
     } else if (type == T_IND)
@@ -497,7 +489,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
       arg2 = (short)read_mem_2(cpu->program, proc->pc + 3);
     if (type_from_pcb(pcb, 2) == T_REG) {
       arg3 = read_mem_1(cpu->program, proc->pc + 3 + size_from_pt(type, e_sti));
-      if (validate_register(arg3) == 0)
+      if (VALID_REGISTER(arg3) == 0)
         break;
       arg3 = read_reg(proc, arg3);
     } else
@@ -517,7 +509,7 @@ int instruction_sti(struct s_cpu *cpu, struct s_process *proc) {
   return (proc->pc + 2 + size_from_pcb(pcb, e_sti));
 }
 
-// TODO: cleanup 37 lines
+// Allocate and initialize the new process with the state of the parent process
 static void fork_process(struct s_cpu *cpu, struct s_process *proc, int idx) {
   struct s_process *new;
   int idxmod;
@@ -558,7 +550,7 @@ static void fork_process(struct s_cpu *cpu, struct s_process *proc, int idx) {
   cpu->pid_next += 1;
 }
 
-// fork always takes an index and creates a new program which is
+// 'fork' always takes an index and creates a new program which is
 // executed from address (PC + ('idx' % IDX_MOD)). 'fork %34' spawns a new
 // process at (PC + (34 % IDX_MOD)).
 int instruction_fork(struct s_cpu *cpu, struct s_process *proc) {
@@ -575,7 +567,7 @@ int instruction_fork(struct s_cpu *cpu, struct s_process *proc) {
   return (proc->pc + 3);
 }
 
-// lld is the same as 'ld', but without the (% IDX_MOD). Modifies
+// 'lld' is the same as 'ld', but without the (% IDX_MOD). Modifies
 // carry. 'lld 34,r3' loads the REG_SIZE bytes from address (PC + (34)) in
 // register r3.
 int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
@@ -593,7 +585,7 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
       arg1 = (short)read_mem_2(
           cpu->program, proc->pc + read_mem_2(cpu->program, proc->pc + 2));
     arg2 = read_mem_1(cpu->program, proc->pc + 2 + size_from_pt(type, e_lld));
-    if (validate_register(arg2) != 0) {
+    if (VALID_REGISTER(arg2) != 0) {
       if (f_verbose & OPT_INSTR)
         printf("P% 5d | lld %d r%d\n", proc->pid, arg1, arg2);
       mod_carry(proc, (arg1 == 0));
@@ -605,11 +597,10 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc) {
   return (proc->pc + 2 + size_from_pcb(pcb, e_lld));
 }
 
-// lldi is the same as 'ldi', but without the (% IDX_MOD). Modifies
+// 'lldi' is the same as 'ldi', but without the (% IDX_MOD). Modifies
 // carry. 'lldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3)), adding 4
 // to this sum S. Read REG_SIZE bytes at address (PC + (S)), which are copied to
 // 'r1'.
-// TODO: cleanup 47 lines
 int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t reg;
@@ -624,7 +615,7 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
     type = type_from_pcb(pcb, 0);
     if (type == T_REG) {
       reg = read_mem_1(cpu->program, offset);
-      if (validate_register(reg) == 0)
+      if (VALID_REGISTER(reg) == 0)
         break;
       arg1 = read_reg(proc, reg);
     } else if (type == T_IND) {
@@ -636,7 +627,7 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
     type = type_from_pcb(pcb, 1);
     if (type == T_REG) {
       reg = read_mem_1(cpu->program, offset);
-      if (validate_register(reg) == 0)
+      if (VALID_REGISTER(reg) == 0)
         break;
       arg2 = read_reg(proc, reg);
     } else {
@@ -644,7 +635,7 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
     }
     offset += size_from_pt(type, e_lldi);
     reg = read_mem_1(cpu->program, offset);
-    if (validate_register(reg) == 0)
+    if (VALID_REGISTER(reg) == 0)
       break;
     if (f_verbose & OPT_INSTR) {
       printf("P% 5d | lldi %d %d r%d\n", proc->pid, arg1, arg2, reg);
@@ -660,7 +651,7 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc) {
   return (proc->pc + 2 + size_from_pcb(pcb, e_lldi));
 }
 
-// lfork is the same as 'fork', but without the (% IDX_MOD).
+// 'lfork' is the same as 'fork', but without the (% IDX_MOD).
 // Modifies carry.
 int instruction_lfork(struct s_cpu *cpu, struct s_process *proc) {
   short new_offset;
@@ -675,9 +666,8 @@ int instruction_lfork(struct s_cpu *cpu, struct s_process *proc) {
   return (proc->pc + 3);
 }
 
-// aff takes a register and writes the stored value modulo 256 to
+// 'aff' takes a register and writes the stored value modulo 256 to
 // stdout. 'ld %52,r3  aff r3' displays '*' on stdout.
-// TODO: cleanup
 int instruction_aff(struct s_cpu *cpu, struct s_process *proc) {
   uint8_t pcb;
   uint8_t arg1;
@@ -685,7 +675,7 @@ int instruction_aff(struct s_cpu *cpu, struct s_process *proc) {
   pcb = read_mem_1(cpu->program, proc->pc + 1);
   if (check_pcb(pcb, e_aff) != 0) {
     arg1 = read_mem_1(cpu->program, proc->pc + 2);
-    if (validate_register(arg1) != 0) {
+    if (VALID_REGISTER(arg1) != 0) {
       arg1 = read_reg(proc, arg1);
       if (f_enable_aff != 0)
         printf("Aff: %c\n", arg1);
@@ -696,7 +686,7 @@ int instruction_aff(struct s_cpu *cpu, struct s_process *proc) {
   return (proc->pc + 2 + size_from_pcb(pcb, e_aff));
 }
 
-// nop is a single cycle explicit no operation
+// 'nop' is a single cycle explicit no operation
 int instruction_nop(struct s_cpu *cpu, struct s_process *proc) {
   int ret = proc->pc + 1;
   if (f_verbose & OPT_INSTR)
@@ -706,13 +696,14 @@ int instruction_nop(struct s_cpu *cpu, struct s_process *proc) {
   return (ret);
 }
 
-// inverse of live
+// 'kill' sets the calling process' last_live to 0, reads DIR_SIZE bytes
 int instruction_kill(struct s_cpu *cpu, struct s_process *proc) {
   int tokill;
+  int player;
 
-  tokill = read_mem_4(cpu->program, proc->pc + 1);
   proc->last_live = 0;
-  int player = ~tokill;
+  tokill = read_mem_4(cpu->program, proc->pc + 1);
+  player = ~tokill;
   if (player >= 0 && player < MAX_PLAYERS) {
     cpu->players[player].last_live = 0;
   }
