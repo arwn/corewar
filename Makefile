@@ -1,5 +1,5 @@
 RM = rm -f
-CCFLAGS = -Wall -Werror -DNDEBUG -O2
+CCFLAGS = -Wall -Werror -DNDEBUG -Ofast
 DBGFLAGS = -Wall -Wextra	-g -O0 -fexceptions -fasynchronous-unwind-tables \
 	-fpie -fstack-protector-all -fsanitize=address,undefined
 

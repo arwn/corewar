@@ -211,7 +211,7 @@ char *g_bytes_lower[256] = {
     p##n##w = tmp_p##n##w;                                                     \
   }
 
-// teardown of allocated memory
+// teardown of allocated memory frees everything allocated in the cpu
 void cpu_cleanup(struct s_cpu *cpu) {
   int ii;
   struct s_process *lst, *tofree;
@@ -851,7 +851,6 @@ void vm_dump_state(struct s_cpu *cpu) {
   }
 }
 
-char *bin;
 static void usage(const char *msg, const char *ext) {
   if (msg && ext)
     fprintf(stderr, "%s%s\n", msg, ext);
@@ -980,7 +979,6 @@ int main(int argc, char *argv[]) {
 
   f_gui = f_background = f_enable_aff = f_color = f_dump = f_leaks =
       f_dump_processes = f_verbose = 0;
-  bin = *argv;
   while ((ch = getopt(argc, argv, "abcd:hlnpv:")) != -1) {
     switch (ch) {
     case 'a':
