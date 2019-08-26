@@ -1,5 +1,6 @@
 RM = rm -f
 CCFLAGS = -Wall -Wextra -Werror -DNDEBUG
+DBGFLAGS = -Wall -Wextra -g -O0
 
 LIBDIR = lib/
 
@@ -48,9 +49,14 @@ INTL_HEADERS = colors.h libasm.h op.h hashtbl.h util.h asm.h instructions.h
 COREWAR_HEADERS = $(addprefix ./inc/, libasm.h op.h hashtbl.h util.h asm.h )
 VM_HEADERS = $(addprefix $(VM_SRCDIR), colors.h instructions.h cpu.h)
 
-CFLAGS = $(CCFLAGS) $(INCLUDES)
+# CFLAGS = $(CCFLAGS) $(INCLUDES)
 
 all: $(CHAMP_NAME) $(ASM_NAME) $(VM_NAME)
+
+.PHONY: debug
+debug: CCFLAGS = $(DBGFLAGS)
+debug: $(ASM_NAME)
+debug: $(VM_NAME)
 
 $(INTERNAL_OBJS): CFLAGS = $(CCFLAGS) $(CWINCLUDES)
 
