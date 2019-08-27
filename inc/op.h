@@ -2,16 +2,20 @@
 #define OP_H
 
 #define IND_SIZE 2
-#define REG_SIZE 1
-#define DIR_SIZE 4
-#define SPECIAL_DIR_SIZE 2
+#define REG_SIZE 4
+#define DIR_SIZE REG_SIZE
+
+#define REG_ARG_SIZE 1
+#define IND_ARG_SIZE 2
+#define DIR_ARG_SIZE 4
+
+#define SPECIAL_DIR_SIZE IND_ARG_SIZE
 
 #define REG_CODE 1
 #define DIR_CODE 2
 #define IND_CODE 3
 
 #define MAX_ARGS_NUMBER 4
-#define ENC_SIZE 1
 #define MAX_PLAYERS 4
 #define MEM_SIZE (4 * 1024)
 #define IDX_MOD (MEM_SIZE / 8)
@@ -21,8 +25,8 @@
 #define NUM_EXT_OPS (2)
 #define NUM_OPS (NUM_BASE_OPS + NUM_EXT_OPS)
 
-#define COMMENT_CHAR ';'
-#define COMMENT_CHAR_ALT '#'
+#define COMMENT_CHAR '#'
+#define COMMENT_CHAR_ALT ';'
 #define LABEL_CHAR ':'
 #define DIRECT_CHAR '%'
 #define SEPARATOR_CHAR ','
@@ -39,7 +43,8 @@
 #define NBR_LIVE 21
 #define MAX_CHECKS 10
 
-typedef char t_arg_type;
+typedef unsigned char t_arg_type;
+#define ENC_SIZE (sizeof(t_arg_type))
 
 #define T_REG 1 // Registry
 #define T_DIR 2 // Direct
@@ -77,8 +82,8 @@ typedef struct s_op {
   int cycles_to_exec;
   char *desc;
   int param_encode;
-  int direct_size; // 0 - DIR_SIZE = 4 bytes
-                   // 1 - DIR_SIZE = 2 bytes
+  int direct_size; // 0 - DIR_SIZE = DIR_SIZE
+                   // 1 - DIR_SIZE = IND_SIZE
 } t_op;
 
 extern t_op g_op_tab[NUM_OPS + 1];

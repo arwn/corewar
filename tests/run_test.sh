@@ -74,7 +74,7 @@ misc_tests+=(['Gagnant']=1)
 
 declare -A ins_time
 ins_time+=(['live']=90)
-ins_time+=(['ld']=90)
+ins_time+=(['ld']=30)
 ins_time+=(['st']=90)
 ins_time+=(['add']=30)
 ins_time+=(['sub']=30)
@@ -82,7 +82,7 @@ ins_time+=(['and']=30)
 ins_time+=(['or']=30)
 ins_time+=(['xor']=30)
 ins_time+=(['zjmp']=543)            # 543
-ins_time+=(['ldi']=90)
+ins_time+=(['ldi']=50)
 ins_time+=(['sti']=90)
 ins_time+=(['fork']=870)
 ins_time+=(['lld']=45)

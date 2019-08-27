@@ -48,6 +48,7 @@ struct s_process {
   int player;
   int pid;
   int registers[REG_NUMBER];
+  int args[MAX_ARGS_NUMBER];
   int pc;
   bool carry;
 };
@@ -90,15 +91,15 @@ struct s_cpu {
   void (*load)(struct s_cpu *, char *, uint32_t, uint32_t);
 };
 
-/* VM Command Line Flags */
-int f_color;          /* enable color in core dump */
-int f_dump;           /* dump core memory after ARG cycles */
-int f_leaks;          /* call 'pause()' at the end of main */
-int f_dump_processes; /* dump processes */
-int f_gui;            /* graphical visualizer of vm */
-int f_verbose;        /* verbosity level */
-int f_enable_aff;     /* display AFF output */
-int f_background;     /* fork and kill parent */
+// VM Command Line Flags
+int f_color;          // enable color in core dump
+int f_dump;           // dump core memory after ARG cycles
+int f_leaks;          // call 'pause()' at the end of main
+int f_dump_processes; // dump processes
+int f_gui;            // graphical visualizer of vm
+int f_verbose;        // verbosity level
+int f_enable_aff;     // display AFF output
+int f_background;     // fork and kill parent
 
 extern int instruction_calls[NUM_OPS + 1];
 

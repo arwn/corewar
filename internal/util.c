@@ -14,9 +14,19 @@ void free_(void *a, size_t b) {
   free(a);
 }
 
-// Extract the PAR'th parameter type from the encoded BYTE
-int get_param(uint8_t byte, int par) {
-  return (byte >> (8 - (par * 2))) & (0b11);
+// Extract the PAR'th parameter type from the encoded BYTE TODO: delete
+int get_param(t_arg_type byte, int par) {
+  return (byte >> ((3 - par) * 2)) & (0b11);
+}
+
+// Prevent out of bounds accesses for cpu->program
+int mod_idx(int idx) {
+  int ret;
+
+  ret = idx % MEM_SIZE;
+  if (ret < 0)
+    ret += MEM_SIZE;
+  return ret;
 }
 
 // Read a single byte from buffer PROGRAM at IDX, swapping endianness
@@ -36,16 +46,4 @@ uint32_t read_mem_4(uint8_t *program, uint32_t idx) {
          ((uint32_t)program[(idx + 1) % MEM_SIZE] << 16) |
          ((uint32_t)program[(idx + 2) % MEM_SIZE] << 8) |
          ((uint32_t)program[(idx + 3) % MEM_SIZE]);
-}
-
-// Read eight bytes from buffer PROGRAM at IDX, swapping endianness
-uint64_t read_mem_8(uint8_t *program, uint32_t idx) {
-  return ((uint64_t)program[idx % MEM_SIZE] << 56 |
-          (uint64_t)program[(idx + 1) % MEM_SIZE] << 48 |
-          (uint64_t)program[(idx + 2) % MEM_SIZE] << 40 |
-          (uint64_t)program[(idx + 3) % MEM_SIZE] << 32 |
-          (uint64_t)program[(idx + 4) % MEM_SIZE] << 24 |
-          (uint64_t)program[(idx + 5) % MEM_SIZE] << 16 |
-          (uint64_t)program[(idx + 6) % MEM_SIZE] << 8 |
-          (uint64_t)program[(idx + 7) % MEM_SIZE]);
 }
