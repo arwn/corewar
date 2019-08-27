@@ -1,22 +1,34 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   instructions_15.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: callen <marvin@42.fr>                      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/08/27 16:23:49 by callen            #+#    #+#             */
+/*   Updated: 2019/08/27 16:23:52 by callen           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <stdio.h>
 #include "instructions.h"
 
 #define OUT(...) printf(__VA_ARGS__)
 
+#define ERRORBAD (perror("Fatal error"), -1)
+
 /*
 ** Allocate and initialize the new process with the state of the parent process
 */
 
-static void fork_process(struct s_cpu *cpu, struct s_process *proc, int idx)
+static void	fork_process(struct s_cpu *cpu, struct s_process *proc, int idx)
 {
-	struct s_process *new;
-	int ii;
-	int pl;
+	struct s_process	*new;
+	int					ii;
+	int					pl;
 
-	if ((new = malloc(sizeof(*new))) == NULL) {
-		perror("Fatal error");
-		exit(-1);
-	}
+	if ((new = malloc(sizeof(*new))) == NULL)
+		exit(ERRORBAD);
 	ft_bzero(new, sizeof(*new));
 	new->pc = mod_idx(idx);
 	pl = ~proc->player;
@@ -42,10 +54,10 @@ static void fork_process(struct s_cpu *cpu, struct s_process *proc, int idx)
 ** process at (PC + (34 % IDX_MOD)).
 */
 
-int instruction_fork(struct s_cpu *cpu, struct s_process *proc)
+int			instruction_fork(struct s_cpu *cpu, struct s_process *proc)
 {
-	int idx;
-	short arg1;
+	int		idx;
+	short	arg1;
 
 	arg1 = read_mem_2(cpu->program, proc->pc + 1);
 	idx = arg1 % IDX_MOD;
@@ -63,25 +75,29 @@ int instruction_fork(struct s_cpu *cpu, struct s_process *proc)
 ** register r3.
 */
 
-int instruction_lld(struct s_cpu *cpu, struct s_process *proc)
+#define LLDPRINT OUT("P% 5d | lld %d r%d\n", proc->pid, arg1, arg2)
+#define PRINT_INSTR (f_verbose & OPT_INSTR) ? LLDPRINT : 0
+
+int			instruction_lld(struct s_cpu *cpu, struct s_process *proc)
 {
-	t_arg_type pcb;
-	uint8_t arg2;
-	int type;
-	int arg1;
+	t_arg_type	pcb;
+	uint8_t		arg2;
+	int			type;
+	int			arg1;
 
 	pcb = read_mem_1(cpu->program, proc->pc + 1);
-	if (check_pcb(pcb, e_lld) != 0) {
-		type = type_from_pcb(pcb, 0);
-		if (type == T_DIR)
+	if (check_pcb(pcb, e_lld) != 0)
+	{
+		if ((type = type_from_pcb(pcb, 0)) == T_DIR)
 			arg1 = (int)read_mem_4(cpu->program, proc->pc + 2);
 		else
-			arg1 = (short)read_mem_2(
-					cpu->program, proc->pc + read_mem_2(cpu->program, proc->pc + 2));
-		arg2 = read_mem_1(cpu->program, proc->pc + 2 + size_from_pt(type, e_lld));
-		if (valid_reg(arg2) != 0) {
-			if (f_verbose & OPT_INSTR)
-				OUT("P% 5d | lld %d r%d\n", proc->pid, arg1, arg2);
+			arg1 = (short)read_mem_2(cpu->program, proc->pc
+				+ read_mem_2(cpu->program, proc->pc + 2));
+		arg2 = read_mem_1(cpu->program, proc->pc
+			+ 2 + size_from_pt(type, e_lld));
+		if (valid_reg(arg2) != 0)
+		{
+			PRINT_INSTR;
 			proc->carry = arg1 == 0;
 			write_reg(proc, arg2, arg1);
 		}
@@ -98,51 +114,40 @@ int instruction_lld(struct s_cpu *cpu, struct s_process *proc)
 ** 'r1'.
 */
 
-int instruction_lldi(struct s_cpu *cpu, struct s_process *proc)
+#define A1 arg12[0]
+#define A2 arg12[1]
+#define LLDIPS1 "P% 5d | lldi %d %d r%d\n"
+#define LLDIPS2 "       | -> load from %d + %d = %d (with pc %d)\n"
+#define LLDIPA1 proc->pid, A1, A2, arg3
+#define LLDIPA2 A1, A2, A1+A2,proc->pc+A1+A2
+#define LLDIPRINT (f_verbose&OPT_INSTR)?OUT(LLDIPS1 LLDIPS2,LLDIPA1,LLDIPA2):0;
+#define TYFP(N) (type = type_from_pcb(pcb, (N)))
+#define RPCB (pcb = read_mem_1(cpu->program, proc->pc + 1))
+#define VALARG3 (valid_reg((arg3 = read_mem_1(cpu->program, ofs))) == 0)
+#define SHOULD_BREAK (VALARG3 || proc->reg_err)
+
+int			instruction_lldi(struct s_cpu *cpu, struct s_process *proc)
 {
-	t_arg_type pcb;
-	uint8_t arg3;
-	int offset;
-	int type;
-	int arg1;
-	int arg2;
+	t_arg_type	pcb;
+	uint8_t		arg3;
+	int			ofs;
+	int			type;
+	int			arg12[2];
 
 	pcb = read_mem_1(cpu->program, proc->pc + 1);
-	while (check_pcb(pcb, e_lldi) != 0) {
-		offset = proc->pc + 2;
-		type = type_from_pcb(pcb, 0);
-		if (type == T_REG) {
-			arg1 = read_mem_1(cpu->program, offset);
-			if (valid_reg(arg1) == 0)
-				break;
-			arg1 = read_reg(proc, arg1);
-		} else if (type == T_IND) {
-			arg1 = read_indirect(cpu, proc, read_mem_2(cpu->program, offset));
-		} else {
-			arg1 = (short)read_mem_2(cpu->program, offset);
-		}
-		offset += size_from_pt(type, e_lldi);
-		type = type_from_pcb(pcb, 1);
-		if (type == T_REG) {
-			arg2 = read_mem_1(cpu->program, offset);
-			if (valid_reg(arg2) == 0)
-				break;
-			arg2 = read_reg(proc, arg2);
-		} else {
-			arg2 = (short)read_mem_2(cpu->program, offset);
-		}
-		offset += size_from_pt(type, e_lldi);
-		arg3 = read_mem_1(cpu->program, offset);
-		if (valid_reg(arg3) == 0)
-			break;
-		if (f_verbose & OPT_INSTR) {
-			OUT("P% 5d | lldi %d %d r%d\n", proc->pid, arg1, arg2, arg3);
-			OUT("       | -> load from %d + %d = %d (with pc %d)\n", arg1, arg2,
-				arg1 + arg2, proc->pc + arg1 + arg2);
-		}
-		proc->carry = (read_mem_4(cpu->program, proc->pc + arg1 + arg2) == 0);
-		write_reg(proc, arg3, read_mem_4(cpu->program, proc->pc + arg1 + arg2));
-		break;
+	while (check_pcb(pcb, e_lldi) != 0)
+	{
+		ofs = proc->pc + 2;
+		A1 = read_typearoni(cpu, proc, TYFP(0), ofs);
+		ofs += size_from_pt(type, e_lldi);
+		A2 = read_typearoni(cpu, proc, TYFP(1), ofs);
+		ofs += size_from_pt(type, e_lldi);
+		if (SHOULD_BREAK)
+			break ;
+		LLDIPRINT;
+		proc->carry = (read_mem_4(cpu->program, proc->pc + A1 + A2) == 0);
+		write_reg(proc, arg3, read_mem_4(cpu->program, proc->pc + A1 + A2));
+		break ;
 	}
 	if (f_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_lldi));
@@ -154,14 +159,14 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc)
 ** Modifies carry.
 */
 
-int instruction_lfork(struct s_cpu *cpu, struct s_process *proc)
+int			instruction_lfork(struct s_cpu *cpu, struct s_process *proc)
 {
 	short new_offset;
 
 	new_offset = (short)read_mem_2(cpu->program, proc->pc + 1);
 	if (f_verbose & OPT_INSTR)
 		OUT("P% 5d | lfork %d (%d)\n", proc->pid, new_offset,
-					 new_offset + proc->pc);
+			new_offset + proc->pc);
 	fork_process(cpu, proc, proc->pc + new_offset);
 	if (f_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + 3);

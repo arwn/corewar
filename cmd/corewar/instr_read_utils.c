@@ -54,6 +54,8 @@ int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type, int ofs)
 		ret = read_mem_1(cpu->program, ofs);
 		if (valid_reg(ret) != 0)
 			ret = read_reg(proc, ret);
+		else
+			proc->reg_err = true;
 	}
 	else if (type == T_DIR)
 	{

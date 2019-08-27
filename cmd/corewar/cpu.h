@@ -51,6 +51,7 @@ struct s_process {
   int args[MAX_ARGS_NUMBER];
   int pc;
   bool carry;
+  bool reg_err;
   bool kill;
 };
 
