@@ -58,8 +58,13 @@ void	write_mem_ins(struct s_process *proc, uint8_t *mem, int idx, int val);
 
 typedef int	(*t_inst)(struct s_cpu *, struct s_process *);
 
-static const
-t_inst	g_inst_tab[NUM_OPS + 1] = {
+static
+
+const
+
+t_inst
+
+g_inst_tab[NUM_OPS + 1] = {
 	(t_inst)0,
 	[e_live] = instruction_live,
 	[e_ld] = instruction_ld,
