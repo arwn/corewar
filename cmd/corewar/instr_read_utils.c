@@ -1,11 +1,9 @@
-#include "cpu.h"
-#include "op.h"
-#include "util.h"
 #include "instructions.h"
 
 /*
 ** Write VAL into register REG for the process PROC
 */
+
 void write_reg(struct s_process *proc, int reg, int val)
 {
 	if (valid_reg(reg))
@@ -15,6 +13,7 @@ void write_reg(struct s_process *proc, int reg, int val)
 /*
 ** Read register REG for the process PROC
 */
+
 int read_reg(struct s_process *proc, int reg)
 {
 	int ret;
@@ -28,6 +27,7 @@ int read_reg(struct s_process *proc, int reg)
 /*
 ** Modify the carry flag for the current process based on VAL
 */
+
 void mod_carry(struct s_process *proc, int val) {
 	proc->carry = val;
 }
@@ -35,6 +35,7 @@ void mod_carry(struct s_process *proc, int val) {
 /*
 ** reads an indirect value from core memory
 */
+
 int read_indirect(struct s_cpu *cpu, struct s_process *proc, short offset)
 {
 	int idx;
@@ -50,6 +51,7 @@ int read_indirect(struct s_cpu *cpu, struct s_process *proc, short offset)
 /*
 ** readaroni that typearoni
 */
+
 int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type, int ofs)
 {
 	int ret;
@@ -76,6 +78,7 @@ int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type, int ofs)
 /*
 ** giv noombir plos
 */
+
 int read_arg_pls(struct s_cpu *cpu, struct s_process *proc, int type, int ofs)
 {
 	int ret;

@@ -51,6 +51,7 @@ struct s_process {
   int args[MAX_ARGS_NUMBER];
   int pc;
   bool carry;
+  bool kill;
 };
 
 // write pc blank live
@@ -68,6 +69,7 @@ struct s_player {
   int prog_size;
   char *name;
   char *comment;
+  bool kill;
 };
 
 struct s_cpu {

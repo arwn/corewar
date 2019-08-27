@@ -1,16 +1,7 @@
-#include "cpu.h"
-#include "op.h"
-#include "util.h"
 #include <stdio.h>
-
-// clang-format off
-// must be included AFTER cpu.h
 #include "instructions.h"
-// clang-format on
 
 #define OUT(...) printf(__VA_ARGS__)
-
-/* Instructions */
 
 // Stores the current cycle into the lastlive array in CPU, if the NAME
 // corresponds to an active player

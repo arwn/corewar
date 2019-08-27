@@ -1,12 +1,4 @@
-#include "cpu.h"
-#include "op.h"
-#include "util.h"
 #include <stdio.h>
-
-/*
-** must be included AFTER cpu.h
-*/
-
 #include "instructions.h"
 
 #define OUT(...) printf(__VA_ARGS__)
@@ -146,7 +138,7 @@ int instruction_lldi(struct s_cpu *cpu, struct s_process *proc)
 		if (f_verbose & OPT_INSTR) {
 			OUT("P% 5d | lldi %d %d r%d\n", proc->pid, arg1, arg2, arg3);
 			OUT("       | -> load from %d + %d = %d (with pc %d)\n", arg1, arg2,
-						 arg1 + arg2, proc->pc + arg1 + arg2);
+				arg1 + arg2, proc->pc + arg1 + arg2);
 		}
 		proc->carry = (read_mem_4(cpu->program, proc->pc + arg1 + arg2) == 0);
 		write_reg(proc, arg3, read_mem_4(cpu->program, proc->pc + arg1 + arg2));

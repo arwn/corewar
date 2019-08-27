@@ -1,19 +1,18 @@
-#include "cpu.h"
-#include "op.h"
-#include "util.h"
 #include "instructions.h"
 
 /*
 ** check if a register number is valid: r1 - r16
 */
+
 int valid_reg(int reg)
 {
-  return (reg > 0 && reg <= REG_NUMBER);
+	return (reg > 0 && reg <= REG_NUMBER);
 }
 
 /*
 ** Get the type of the N'th argument from the pcb
 */
+
 int type_from_pcb(t_arg_type pcb, int arg)
 {
 	int type;
@@ -31,6 +30,7 @@ int type_from_pcb(t_arg_type pcb, int arg)
 /*
 ** returns REG_ARG_SIZE, IND_ARG_SIZE, or DIR_ARG_SIZE
 */
+
 int size_from_pt(int type, int opcode)
 {
 	if (type == T_REG)

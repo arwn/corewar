@@ -1,12 +1,5 @@
-#include "cpu.h"
-#include "op.h"
-#include "util.h"
 #include <stdio.h>
-
-// clang-format off
-// must be included AFTER cpu.h
 #include "instructions.h"
-// clang-format on
 
 #define OUT(...) printf(__VA_ARGS__)
 // 'aff' takes a register and writes the stored value modulo 256 to
@@ -46,12 +39,11 @@ int instruction_kill(struct s_cpu *cpu, struct s_process *proc)
   int tokill;
   int player;
 
-  proc->last_live = 0;
+  proc->kill = true;
   tokill = read_mem_4(cpu->program, proc->pc + 1);
   player = ~tokill;
-  if (player >= 0 && player < MAX_PLAYERS) {
-    cpu->players[player].last_live = 0;
-  }
+  if (player >= 0 && player < MAX_PLAYERS)
+    cpu->players[player].kill = true;
   if (f_verbose & OPT_INSTR)
     OUT("P% 5d | kill %d\n", proc->pid, tokill);
   if (f_verbose & OPT_PCMOVE)

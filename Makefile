@@ -28,9 +28,9 @@ ASM_OBJS = $(ASM_SRCS:.c=.o)
 VM_SRCDIR = cmd/corewar/
 VM_NAME = corewar
 VM_CFILES = \
-	corewar.c cpu.c instructions.c colors.c instr_arg_utils.c \
-	instr_op_args.c instr_read_utils.c instructions_5.c \
-	instructions_10.c instructions_15.c instructions_17.c
+	corewar.c cpu.c colors.c instr_arg_utils.c instr_op_args.c \
+	instr_read_utils.c instructions_5.c instructions_10.c \
+	instructions_15.c instructions_17.c
 VM_SRCS = $(addprefix $(VM_SRCDIR), $(VM_CFILES))
 VM_OBJS = $(VM_SRCS:.c=.o)
 

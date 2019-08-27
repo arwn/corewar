@@ -10,9 +10,6 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "cpu.h"
-#include "op.h"
-#include "util.h"
 #include "instructions.h"
 
 const char	g_verboden_reg[NUM_OPS][MAX_ARGS_NUMBER] = {
