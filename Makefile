@@ -54,7 +54,6 @@ INTL_HEADERS = colors.h libasm.h op.h hashtbl.h util.h asm.h instructions.h
 COREWAR_HEADERS = $(addprefix ./inc/, libasm.h op.h hashtbl.h util.h asm.h )
 VM_HEADERS = $(addprefix $(VM_SRCDIR), colors.h instructions.h cpu.h)
 
-# CFLAGS = $(CCFLAGS) $(INCLUDES)
 .PHONY: debug
 debug: CCFLAGS = $(DBGFLAGS)
 debug: $(ASM_NAME)
