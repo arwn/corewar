@@ -1,10 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   instr_arg_utils.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: callen <marvin@42.fr>                      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/08/27 16:32:41 by callen            #+#    #+#             */
+/*   Updated: 2019/08/27 16:32:43 by callen           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "instructions.h"
 
 /*
 ** check if a register number is valid: r1 - r16
 */
 
-int valid_reg(int reg)
+int	valid_reg(int reg)
 {
 	return (reg > 0 && reg <= REG_NUMBER);
 }
@@ -13,7 +25,7 @@ int valid_reg(int reg)
 ** Get the type of the N'th argument from the pcb
 */
 
-int type_from_pcb(t_arg_type pcb, int arg)
+int	type_from_pcb(t_arg_type pcb, int arg)
 {
 	int type;
 
@@ -31,7 +43,7 @@ int type_from_pcb(t_arg_type pcb, int arg)
 ** returns REG_ARG_SIZE, IND_ARG_SIZE, or DIR_ARG_SIZE
 */
 
-int size_from_pt(int type, int opcode)
+int	size_from_pt(int type, int opcode)
 {
 	if (type == T_REG)
 		return (REG_ARG_SIZE);
@@ -42,7 +54,7 @@ int size_from_pt(int type, int opcode)
 	return (0);
 }
 
-int size_from_pcb(t_arg_type pcb, int opcode)
+int	size_from_pcb(t_arg_type pcb, int opcode)
 {
 	int ret;
 	int ii;
@@ -57,7 +69,7 @@ int size_from_pcb(t_arg_type pcb, int opcode)
 	return (ret);
 }
 
-int check_pcb(t_arg_type pcb, int op)
+int	check_pcb(t_arg_type pcb, int op)
 {
 	int ii;
 	int type;

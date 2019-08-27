@@ -1,10 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   instr_read_utils.c                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: callen <marvin@42.fr>                      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/08/27 16:30:19 by callen            #+#    #+#             */
+/*   Updated: 2019/08/27 16:30:21 by callen           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "instructions.h"
 
 /*
 ** Write VAL into register REG for the process PROC
 */
 
-void write_reg(struct s_process *proc, int reg, int val)
+void	write_reg(struct s_process *proc, int reg, int val)
 {
 	if (valid_reg(reg))
 		proc->registers[reg - 1] = val;
@@ -14,7 +26,7 @@ void write_reg(struct s_process *proc, int reg, int val)
 ** Read register REG for the process PROC
 */
 
-int read_reg(struct s_process *proc, int reg)
+int		read_reg(struct s_process *proc, int reg)
 {
 	int ret;
 
@@ -28,7 +40,7 @@ int read_reg(struct s_process *proc, int reg)
 ** reads an indirect value from core memory
 */
 
-int read_indirect(struct s_cpu *cpu, struct s_process *proc, short offset)
+int		read_indirect(struct s_cpu *cpu, struct s_process *proc, short offset)
 {
 	int idx;
 	int ofs;
@@ -37,14 +49,15 @@ int read_indirect(struct s_cpu *cpu, struct s_process *proc, short offset)
 	ofs = offset % IDX_MOD;
 	idx = proc->pc + ofs;
 	ret = (int)read_mem_4(cpu->program, idx);
-	return ret;
+	return (ret);
 }
 
 /*
 ** readaroni that typearoni
 */
 
-int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type, int ofs)
+int		read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type,
+	int ofs)
 {
 	int ret;
 
@@ -73,7 +86,8 @@ int read_typearoni(struct s_cpu *cpu, struct s_process *proc, int type, int ofs)
 ** giv noombir plos
 */
 
-int read_arg_pls(struct s_cpu *cpu, struct s_process *proc, int type, int ofs)
+int		read_arg_pls(struct s_cpu *cpu, struct s_process *proc, int type,
+	int ofs)
 {
 	int ret;
 

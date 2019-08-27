@@ -17,10 +17,6 @@
 # include "op.h"
 # include "util.h"
 
-/*
-** Must be included after cpu.h
-*/
-
 int		instruction_live(struct s_cpu *cpu, struct s_process *proc);
 int		instruction_ld(struct s_cpu *cpu, struct s_process *proc);
 int		instruction_st(struct s_cpu *cpu, struct s_process *proc);

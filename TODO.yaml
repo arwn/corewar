@@ -1,4 +1,26 @@
 fuck you:
+  - Norminette:
+    - norm inc/asm.h
+    - norm inc/hashtbl.h
+    - norm inc/libasm.h
+    - norm inc/util.h
+    - norm internal/asm_main_funcs.c
+    - norm internal/globals.c
+    - norm internal/hashtbl.c
+    - norm internal/lex.c
+    - norm internal/parse_binary.c
+    - norm internal/parse.c
+    - norm internal/print_args.c
+    - norm internal/resolve_labels.c
+    - norm internal/util.c
+    - norm cmd/corewar/colors.c
+    - norm cmd/corewar/colors.h
+    - norm cmd/corewar/cpu.c
+    - norm cmd/corewar/cpu.h
+    - norm cmd/corewar/corewar.c (except for gui stuff)
+    - norm cmd/corewar/instructions_5.c
+    - norm cmd/corewar/instructions_10.c
+    - norm cmd/corewar/instructions_17.c
   - move globals defines into headers
   - parse opts in extern function
   - colors.c to_rgb() clean up
@@ -20,11 +42,17 @@ done:
     - Separator char with nothing after it
     - leaks in dictInsert when conflict found
   COREWAR:
+    - Norminette:
+      - norm cmd/corewar/instructions_15.c
+      - norm cmd/corewar/instructions.h
+      - norm cmd/corewar/instr_read_utils.c
+      - norm cmd/corewar/instr_op_args.c
+      - norm cmd/corewar/instr_arg_utils.c
     - Potentially incorrect winner:
-    - ./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor should result
-      in player 3 winning
-    - ./corewar -n jumper.cor helltrain.cor helltrain.cor helltrain.cor
-      should result in jumper (p1) winning
+      - ./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor should result
+        in player 3 winning
+      - ./corewar -n jumper.cor helltrain.cor helltrain.cor helltrain.cor
+        should result in jumper (p1) winning
     - Fix unreadable player PC colors.  More contrast, sometimes no colors appear, -c
     - graph only shows live calls
     - Fix live -- CYCLE_TO_DIE (tentatively fixed, need to verify more)
