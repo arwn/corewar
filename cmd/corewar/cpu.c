@@ -56,12 +56,30 @@ int run_op(struct s_cpu *cpu, struct s_process *proc)
 	return (0);
 }
 
+int remove_proc(struct s_cpu *cpu, struct s_process **proc, int cond)
+{
+	if (!cond)
+		return (0);
+	if ((*proc)->next)
+	{
+		*proc = (*proc)->next;
+		cpu->kill_process(cpu, &(*proc)->prev);
+	}
+	else
+	{
+		cpu->kill_process(cpu, proc);
+		return (1);
+	}
+	return (0);
+}
+
 // run processes
 int run_processes(struct s_cpu *cpu)
 {
-	struct s_process *proc;
-	int ret = 0;
+	struct s_process	*proc;
+	int					ret;
 
+	ret = 0;
 	proc = cpu->processes;
 	while (proc != 0)
 	{
@@ -69,7 +87,10 @@ int run_processes(struct s_cpu *cpu)
 			next_cpu_op(cpu, proc);
 		if (proc->opcode != 0)
 			ret = run_op(cpu, proc);
-		proc = proc->next;
+		if (remove_proc(cpu, &proc, (proc->kill || cpu->players[~proc->player].kill)))
+			break;
+		else
+			proc = proc->next;
 	}
 	return ret;
 }

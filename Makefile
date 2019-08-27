@@ -35,8 +35,8 @@ VM_SRCS = $(addprefix $(VM_SRCDIR), $(VM_CFILES))
 VM_OBJS = $(VM_SRCS:.c=.o)
 
 CHAMP_SRCDIR = champ/
-CHAMP_NAME = champ.cor
-CHAMP_CFILES = champ.s
+CHAMP_CFILES = champ.s reaper.s
+CHAMP_NAME = $(CHAMP_CFILES:.s=.cor)
 CHAMP_SRCS = $(addprefix $(CHAMP_SRCDIR), $(CHAMP_CFILES))
 
 GUI_LDFLAGS = $(LIBGLEW) -L $(dir $(LIBGLFW)) -lglfw3

@@ -25,14 +25,6 @@ int read_reg(struct s_process *proc, int reg)
 }
 
 /*
-** Modify the carry flag for the current process based on VAL
-*/
-
-void mod_carry(struct s_process *proc, int val) {
-	proc->carry = val;
-}
-
-/*
 ** reads an indirect value from core memory
 */
 
