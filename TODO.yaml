@@ -18,7 +18,6 @@ fuck you:
     - norm cmd/corewar/cpu.c
     - norm cmd/corewar/cpu.h
     - norm cmd/corewar/corewar.c (except for gui stuff)
-    - norm cmd/corewar/instructions_5.c
     - norm cmd/corewar/instructions_10.c
   - move globals defines into headers
   - parse opts in extern function
@@ -42,6 +41,7 @@ done:
     - leaks in dictInsert when conflict found
   COREWAR:
     - Norminette:
+      - norm cmd/corewar/instructions_5.c
       - norm cmd/corewar/instructions_15.c
       - norm cmd/corewar/instructions.h
       - norm cmd/corewar/instr_read_utils.c
