@@ -20,7 +20,6 @@ fuck you:
     - norm cmd/corewar/corewar.c (except for gui stuff)
     - norm cmd/corewar/instructions_5.c
     - norm cmd/corewar/instructions_10.c
-    - norm cmd/corewar/instructions_17.c
   - move globals defines into headers
   - parse opts in extern function
   - colors.c to_rgb() clean up
@@ -48,6 +47,7 @@ done:
       - norm cmd/corewar/instr_read_utils.c
       - norm cmd/corewar/instr_op_args.c
       - norm cmd/corewar/instr_arg_utils.c
+      - norm cmd/corewar/instructions_17.c
     - Potentially incorrect winner:
       - ./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor should result
         in player 3 winning
