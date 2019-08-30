@@ -143,7 +143,14 @@ int					g_instruction_calls[NUM_OPS + 1];
 struct s_mem_colors	*g_mem_colors;
 
 void				next_cpu_op(struct s_cpu *cpu, struct s_process *proc);
-
+int					assbutt(struct s_cpu *cpu, struct s_process **proc);
+void				initial_process(struct s_process *done, struct s_cpu *cpu);
+void				prepend_process(struct s_process *done, struct s_cpu *cpu);
+int					run_op(struct s_cpu *cpu, struct s_process *proc);
+int					remove_proc(struct s_cpu *cpu, struct s_process **proc,
+int cond);
+int					run_processes(struct s_cpu *cpu);
+void				check_alive(struct s_cpu *cpu);
 struct s_cpu		new_cpu(void);
 
 bool				valid_header_p(header_t header);
