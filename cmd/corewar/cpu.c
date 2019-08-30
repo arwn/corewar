@@ -46,7 +46,7 @@ int run_op(struct s_cpu *cpu, struct s_process *proc)
 		new_pc = g_inst_tab[proc->opcode](cpu, proc);
 		if (new_pc >= MEM_SIZE)
 			new_pc %= MEM_SIZE;
-		instruction_calls[proc->opcode] += 1;
+		g_instruction_calls[proc->opcode] += 1;
 		if (new_pc < 0)
 			new_pc += MEM_SIZE;
 		proc->pc = new_pc;
@@ -128,7 +128,7 @@ static void check_alive(struct s_cpu *cpu)
 	if (cpu->nbr_lives >= NBR_LIVE || cpu->num_checks == MAX_CHECKS) {
 		cpu->cycle_to_die -= CYCLE_DELTA;
 		cpu->num_checks = 0;
-		if (f_verbose & OPT_CYCLES)
+		if (g_verbose & OPT_CYCLES)
 			OUT("Cycle to die is now %d\n", cpu->cycle_to_die);
 	}
 	cpu->nbr_lives = 0;
@@ -140,13 +140,13 @@ static int step(struct s_cpu *cpu)
 	int ii;
 
 	cpu->clock += 1;
-	if (f_verbose & OPT_CYCLES)
+	if (g_verbose & OPT_CYCLES)
 		OUT("It is now cycle %d\n", cpu->clock);
 	ret = run_processes(cpu);
 
 	if (cpu->cycle_to_die <= cpu->clock - cpu->prev_check)
 		check_alive(cpu);
-	if (f_color || f_gui)
+	if (g_color || g_gui)
 	{
 		ii = 0;
 		while (ii < MEM_SIZE)
@@ -195,7 +195,7 @@ static void delete_process(struct s_cpu *cpu, struct s_process **proc)
 	assert(*proc != NULL); // TODO: remove
 	struct s_process *expired = *proc;
 
-	if (f_verbose & OPT_DEATHS)
+	if (g_verbose & OPT_DEATHS)
 		OUT("Process %d hasn\'t lived for %d cycles (CTD %d)\n", expired->pid, cpu->clock - expired->last_live, cpu->cycle_to_die);
 
 	if (expired->prev)

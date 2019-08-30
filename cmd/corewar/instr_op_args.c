@@ -114,7 +114,7 @@ void	write_mem_ins(struct s_process *proc, uint8_t *mem, int idx, int val)
 	const int idx3 = (idx + 2) % MEM_SIZE;
 	const int idx4 = (idx + 3) % MEM_SIZE;
 
-	if (f_color || f_gui)
+	if (g_color || g_gui)
 	{
 		MEM_COLOR(idx1, proc->player);
 		MEM_COLOR(idx2, proc->player);

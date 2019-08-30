@@ -32,11 +32,11 @@ int	instruction_aff(struct s_cpu *cpu, struct s_process *proc)
 		if (valid_reg(arg1) != 0)
 		{
 			arg1 = read_reg(proc, arg1);
-			if (f_enable_aff != 0)
+			if (g_enable_aff != 0)
 				OUT("Aff: %c\n", arg1);
 		}
 	}
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_aff));
 	return (proc->pc + 2 + size_from_pcb(pcb, e_aff));
 }
@@ -50,9 +50,9 @@ int	instruction_nop(struct s_cpu *cpu, struct s_process *proc)
 	int ret;
 
 	ret = proc->pc + 1;
-	if (f_verbose & OPT_INSTR)
+	if (g_verbose & OPT_INSTR)
 		OUT("P% 5d | nop\n", proc->pid);
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, ret);
 	return (ret);
 }
@@ -71,9 +71,9 @@ int	instruction_kill(struct s_cpu *cpu, struct s_process *proc)
 	player = ~tokill;
 	if (player >= 0 && player < MAX_PLAYERS)
 		cpu->players[player].kill = true;
-	if (f_verbose & OPT_INSTR)
+	if (g_verbose & OPT_INSTR)
 		OUT("P% 5d | kill %d\n", proc->pid, tokill);
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + 5);
 	return (proc->pc + 5);
 }

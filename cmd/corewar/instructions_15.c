@@ -61,10 +61,10 @@ int			instruction_fork(struct s_cpu *cpu, struct s_process *proc)
 
 	arg1 = read_mem_2(cpu->program, proc->pc + 1);
 	idx = arg1 % IDX_MOD;
-	if (f_verbose & OPT_INSTR)
+	if (g_verbose & OPT_INSTR)
 		OUT("P% 5d | fork %d (%d)\n", proc->pid, arg1, proc->pc + idx);
 	fork_process(cpu, proc, proc->pc + idx);
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + 3);
 	return (proc->pc + 3);
 }
@@ -76,7 +76,7 @@ int			instruction_fork(struct s_cpu *cpu, struct s_process *proc)
 */
 
 #define LLDPRINT OUT("P% 5d | lld %d r%d\n", proc->pid, arg1, arg2)
-#define PRINT_INSTR (f_verbose & OPT_INSTR) ? LLDPRINT : 0
+#define PRINT_INSTR (g_verbose & OPT_INSTR) ? LLDPRINT : 0
 
 int			instruction_lld(struct s_cpu *cpu, struct s_process *proc)
 {
@@ -102,7 +102,7 @@ int			instruction_lld(struct s_cpu *cpu, struct s_process *proc)
 			write_reg(proc, arg2, arg1);
 		}
 	}
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_lld));
 	return (proc->pc + 2 + size_from_pcb(pcb, e_lld));
 }
@@ -120,7 +120,7 @@ int			instruction_lld(struct s_cpu *cpu, struct s_process *proc)
 #define LLDIPS2 "       | -> load from %d + %d = %d (with pc %d)\n"
 #define LLDIPA1 proc->pid, A1, A2, arg3
 #define LLDIPA2 A1, A2, A1+A2,proc->pc+A1+A2
-#define LLDIPRINT (f_verbose&OPT_INSTR)?OUT(LLDIPS1 LLDIPS2,LLDIPA1,LLDIPA2):0;
+#define LLDIPRINT (g_verbose&OPT_INSTR)?OUT(LLDIPS1 LLDIPS2,LLDIPA1,LLDIPA2):0
 #define TYFP(N) (type = type_from_pcb(pcb, (N)))
 #define RPCB (pcb = read_mem_1(cpu->program, proc->pc + 1))
 #define VALARG3 (valid_reg((arg3 = read_mem_1(cpu->program, ofs))) == 0)
@@ -149,7 +149,7 @@ int			instruction_lldi(struct s_cpu *cpu, struct s_process *proc)
 		write_reg(proc, arg3, read_mem_4(cpu->program, proc->pc + A1 + A2));
 		break ;
 	}
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_lldi));
 	return (proc->pc + 2 + size_from_pcb(pcb, e_lldi));
 }
@@ -164,11 +164,11 @@ int			instruction_lfork(struct s_cpu *cpu, struct s_process *proc)
 	short new_offset;
 
 	new_offset = (short)read_mem_2(cpu->program, proc->pc + 1);
-	if (f_verbose & OPT_INSTR)
+	if (g_verbose & OPT_INSTR)
 		OUT("P% 5d | lfork %d (%d)\n", proc->pid, new_offset,
 			new_offset + proc->pc);
 	fork_process(cpu, proc, proc->pc + new_offset);
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + 3);
 	return (proc->pc + 3);
 }

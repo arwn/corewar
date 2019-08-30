@@ -26,20 +26,20 @@ int	instruction_live(struct s_cpu *cpu, struct s_process *proc)
 	int player;
 
 	arg1 = read_mem_4(cpu->program, proc->pc + 1);
-	if (f_verbose & OPT_LIVES)
+	if (g_verbose & OPT_LIVES)
 		OUT("P% 5d | live %d\n", proc->pid, arg1);
 	proc->last_live = cpu->clock;
 	cpu->nbr_lives += 1;
 	player = ~arg1;
 	if (player >= 0 && player < MAX_PLAYERS && cpu->players[player].name)
 	{
-		if ((f_verbose & OPT_LIVES))
+		if ((g_verbose & OPT_LIVES))
 			OUT("Player %d (%s) is said to be alive\n", player + 1,
 				cpu->players[player].name);
 		cpu->players[player].last_live = cpu->clock;
 		cpu->winner = player;
 	}
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + 5);
 	return (proc->pc + 5);
 }
@@ -68,14 +68,14 @@ int	instruction_ld(struct s_cpu *cpu, struct s_process *pr)
 		if (valid_reg((arg2 = read_mem_1(cpu->program,
 			pr->pc + 2 + size_from_pt(type, e_ld)))) != 0)
 		{
-			if (f_verbose & OPT_INSTR)
+			if (g_verbose & OPT_INSTR)
 				OUT("P% 5d | ld %d r%d\n", pr->pid, arg1, arg2);
 			pr->carry = arg1 == 0;
 			write_reg(pr, arg2, arg1);
 		}
 	}
 	ret = pr->pc + 2 + size_from_pcb(pcb, e_ld);
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, pr, ret);
 	return (ret);
 }
@@ -102,7 +102,7 @@ int	instruction_st(struct s_cpu *cpu, struct s_process *proc)
 			arg2 = read_mem_1(cpu->program, proc->pc + 3);
 		if (valid_reg((arg1 = read_mem_1(cpu->program, proc->pc + 2))) != 0)
 		{
-			if (f_verbose & OPT_INSTR)
+			if (g_verbose & OPT_INSTR)
 				OUT("P% 5d | st r%d %d\n", proc->pid, arg1, arg2);
 			if ((type == T_REG) && valid_reg(arg2) != 0)
 				write_reg(proc, arg2, read_reg(proc, arg1));
@@ -111,7 +111,7 @@ int	instruction_st(struct s_cpu *cpu, struct s_process *proc)
 					mod_idx(proc->pc + arg2 % IDX_MOD), read_reg(proc, arg1));
 		}
 	}
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + size_from_pcb(pcb, e_st) + 2);
 	return (proc->pc + size_from_pcb(pcb, e_st) + 2);
 }
@@ -138,7 +138,7 @@ int	instruction_add(struct s_cpu *cpu, struct s_process *proc)
 		arg3 = read_mem_1(cpu->program, proc->pc + 4);
 		if (valid_reg(arg1) && valid_reg(arg2) && valid_reg(arg3))
 		{
-			if (f_verbose & OPT_INSTR)
+			if (g_verbose & OPT_INSTR)
 				OUT("P% 5d | add r%d r%d r%d\n", proc->pid, arg1, arg2, arg3);
 			done = read_reg(proc, arg1) + read_reg(proc, arg2);
 			proc->carry = done == 0;
@@ -146,7 +146,7 @@ int	instruction_add(struct s_cpu *cpu, struct s_process *proc)
 		}
 	}
 	done = size_from_pcb(pcb, e_add);
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + done + 2);
 	return (proc->pc + done + 2);
 }
@@ -171,7 +171,7 @@ int	instruction_sub(struct s_cpu *cpu, struct s_process *proc)
 		reg3 = read_mem_1(cpu->program, proc->pc + 4);
 		if (valid_reg(reg1) && valid_reg(reg2) && valid_reg(reg3))
 		{
-			if (f_verbose & OPT_INSTR)
+			if (g_verbose & OPT_INSTR)
 				OUT("P% 5d | sub r%d r%d r%d\n", proc->pid, reg1, reg2, reg3);
 			done = read_reg(proc, reg1) - read_reg(proc, reg2);
 			proc->carry = done == 0;
@@ -179,7 +179,7 @@ int	instruction_sub(struct s_cpu *cpu, struct s_process *proc)
 		}
 	}
 	done = size_from_pcb(pcb, e_sub);
-	if (f_verbose & OPT_PCMOVE)
+	if (g_verbose & OPT_PCMOVE)
 		print_adv(cpu, proc, proc->pc + done + 2);
 	return (proc->pc + done + 2);
 }

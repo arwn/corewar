@@ -1,168 +1,104 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   instructions_10.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: callen <marvin@42.fr>                      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/08/29 18:14:35 by callen            #+#    #+#             */
+/*   Updated: 2019/08/29 18:14:36 by callen           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <stdio.h>
 #include "instructions.h"
 
 #define OUT(...) printf(__VA_ARGS__)
 
-// INSTRUCTION_BITWISE generates an instruction function withe name and operator
-#define INSTRUCTION_BITWISE(name, operator)                                    \
-  int instruction_##name(struct s_cpu *cpu, struct s_process *proc) {          \
-    t_arg_type pcb;                                                            \
-    int offset;                                                                \
-    int type;                                                                  \
-    int arg1;                                                                  \
-    int arg2;                                                                  \
-    uint8_t arg3;                                                              \
-    pcb = read_mem_1(cpu->program, proc->pc + 1);                              \
-    if (check_pcb(pcb, e_##name) != 0) {                                       \
-      type = type_from_pcb(pcb, 0);                                            \
-      offset = proc->pc + 2;                                                   \
-      arg1 = read_typearoni(cpu, proc, type, offset);                          \
-      offset += size_from_pt(type, e_##name);                                  \
-      type = type_from_pcb(pcb, 1);                                            \
-      arg2 = read_typearoni(cpu, proc, type, offset);                          \
-      offset += size_from_pt(type, e_##name);                                  \
-      arg3 = read_mem_1(cpu->program, offset);                                 \
-      if (valid_reg(arg3) != 0) {                                              \
-        if (f_verbose & OPT_INSTR)                                             \
-          OUT("P% 5d | %s %d %d r%d\n", proc->pid, #name, arg1, arg2, arg3);   \
-        proc->carry = ((arg1 operator arg2) == 0);                             \
-        write_reg(proc, arg3, (arg1 operator arg2));                           \
-      }                                                                        \
-    }                                                                          \
-    if (f_verbose & OPT_PCMOVE)                                                \
-      print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_##name));       \
-    return proc->pc + 2 + size_from_pcb(pcb, e_##name);                        \
-  }
+/*
+** ldi modifies carry. 'idx' and 'add' are indexes, and 'reg' is a
+** register. 'ldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3 %
+** IDX_MOD)), adding 4 to this sum S. Read REG_SIZE bytes at address (PC + (S %
+** IDX_MOD)), which are copied to 'r1'.
+*/
 
-// perform a bitwise and on the first two parameters, storing the result into
-// the third which is always a register. Modifies carry.'and r2,%0,r3' stores
-// 'r2 & 0' into 'r3'.
-INSTRUCTION_BITWISE(and, &);
+#define A1 arg12[0]
+#define A2 arg12[1]
+#define TYFP(N) (type = type_from_pcb(pcb, (N)))
+#define LDIPS1 "P% 5d | ldi %d %d r%d\n"
+#define LDIPS2 "       | -> load from %d + %d = %d (with pc and mod %d)\n"
+#define LDIPA1 proc->pid, A1, A2, arg3
+#define LDIPA2 A1, A2, A1 + A2, (proc->pc + (A1 + A2) % IDX_MOD)
+#define LDIPRINT (g_verbose&OPT_INSTR)?OUT(LDIPS1 LDIPS2,LDIPA1,LDIPA2):0
 
-// 'or' is the same as and, except uses bitwise or
-INSTRUCTION_BITWISE(or, |);
-
-// 'xor' is the same as and, except uses bitwise xor
-INSTRUCTION_BITWISE(xor, ^);
-
-// 'zjmp' always takes an index (IND_SIZE) and makes a jump at this
-// index if carry is true, otherwise consuming cycles. 'zjmp %23' stores (PC +
-// (23 % IDX_MOD)) into PC.
-int instruction_zjmp(struct s_cpu *cpu, struct s_process *proc)
+int
+	instruction_ldi(struct s_cpu *cpu, struct s_process *proc)
 {
-  short arg1;
-  int ret;
+	t_arg_type	pcb;
+	uint8_t		arg3;
+	int			offset;
+	int			type;
+	int			arg12[2];
 
-  arg1 = (short)read_mem_2(cpu->program, proc->pc + 1);
-  ret = proc->pc + 3;
-  if (proc->carry == 0) {
-    if (f_verbose & OPT_INSTR) {
-      OUT("P% 5d | zjmp %d FAILED\n", proc->pid, arg1);
-    }
-    if (f_verbose & OPT_PCMOVE)
-      print_adv(cpu, proc, ret);
-  } else {
-    if (f_verbose & OPT_INSTR)
-      OUT("P% 5d | zjmp %d OK\n", proc->pid, arg1);
-    ret = proc->pc + arg1 % IDX_MOD;
-  }
-  return ret;
+	pcb = read_mem_1(cpu->program, proc->pc + 1);
+	while (check_pcb(pcb, e_ldi) != 0)
+	{
+		offset = proc->pc + 2;
+		A1 = read_typearoni(cpu, proc, TYFP(0), offset);
+		offset += size_from_pt(type, e_ldi);
+		A2 = read_typearoni(cpu, proc, TYFP(1), offset);
+		offset += size_from_pt(type, e_ldi);
+		if (valid_reg((arg3 = read_mem_1(cpu->program, offset))) == 0)
+			break ;
+		LDIPRINT;
+		write_reg(proc, arg3,
+			read_mem_4(cpu->program, proc->pc + (A1 + A2) % IDX_MOD));
+		break ;
+	}
+	if (g_verbose & OPT_PCMOVE)
+		print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_ldi));
+	return (proc->pc + 2 + size_from_pcb(pcb, e_ldi));
 }
 
-// ldi modifies carry. 'idx' and 'add' are indexes, and 'reg' is a
-// register. 'ldi 3,%4,r1' reads IND_SIZE bytes at address: (PC + (3 %
-// IDX_MOD)), adding 4 to this sum S. Read REG_SIZE bytes at address (PC + (S %
-// IDX_MOD)), which are copied to 'r1'.
-int instruction_ldi(struct s_cpu *cpu, struct s_process *proc)
+/*
+** 'sti' stores at an index offset. 'sti r2,%4,%5' copies REG_SIZE bytes
+** of 'r2' at address (4 + 5) Parameters 2 and 3 are treated as indexes.
+*/
+
+#undef A2
+#define A2 arg23[0]
+#define A3 arg23[1]
+#define STIPS1 "P% 5d | sti r%d %d %d\n"
+#define STIPS2 "       | -> store to %d + %d = %d (with pc and mod %d)\n"
+#define STIPA1 proc->pid, arg1, A2, A3
+#define STIPA2 A2, A3, (A2 + A3), proc->pc + (A2 + A3) % IDX_MOD
+#define STIPRINT (g_verbose&OPT_INSTR)?OUT(STIPS1 STIPS2,STIPA1,STIPA2):0
+
+int	instruction_sti(struct s_cpu *cpu, struct s_process *proc)
 {
-  uint8_t pcb;
-  uint8_t arg3;
-  int offset;
-  int type;
-  int arg1;
-  int arg2;
+	t_arg_type	pcb;
+	int			type;
+	int			ofs;
+	int			arg1;
+	int			arg23[2];
 
-  pcb = read_mem_1(cpu->program, proc->pc + 1);
-  while (check_pcb(pcb, e_ldi) != 0) {
-    offset = proc->pc + 2;
-    type = type_from_pcb(pcb, 0);
-    if (type == T_REG) {
-      arg1 = read_mem_1(cpu->program, offset);
-      if (valid_reg(arg1) == 0)
-        break;
-      arg1 = read_reg(proc, arg1);
-    } else if (type == T_IND)
-      arg1 = read_indirect(cpu, proc, read_mem_2(cpu->program, offset));
-    else
-      arg1 = (short)read_mem_2(cpu->program, offset);
-    offset += size_from_pt(type, e_ldi);
-    type = type_from_pcb(pcb, 1);
-    if (type == T_REG) {
-      arg2 = read_mem_1(cpu->program, offset);
-      if (valid_reg(arg2) == 0)
-        break;
-      arg2 = read_reg(proc, arg2);
-    } else
-      arg2 = (short)read_mem_2(cpu->program, offset);
-    offset += size_from_pt(type, e_ldi);
-    arg3 = read_mem_1(cpu->program, offset);
-    if (valid_reg(arg3) == 0)
-      break;
-    if (f_verbose & OPT_INSTR) {
-      printf("P% 5d | ldi %d %d r%d\n", proc->pid, arg1, arg2, arg3);
-      printf("       | -> load from %d + %d = %d (with pc and mod %d)\n", arg1,
-             arg2, arg1 + arg2, (proc->pc + (arg1 + arg2) % IDX_MOD));
-    }
-    write_reg(proc, arg3,
-              read_mem_4(cpu->program, proc->pc + (arg1 + arg2) % IDX_MOD));
-    break;
-  }
-  if (f_verbose & OPT_PCMOVE)
-    print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_ldi));
-  return (proc->pc + 2 + size_from_pcb(pcb, e_ldi));
-}
-
-// 'sti' stores at an index offset. 'sti r2,%4,%5' copies REG_SIZE bytes
-// of 'r2' at address (4 + 5) Parameters 2 and 3 are treated as indexes.
-int instruction_sti(struct s_cpu *cpu, struct s_process *proc)
-{
-  t_arg_type pcb;
-  int type;
-  int arg1;
-  int arg2;
-  int arg3;
-
-  pcb = read_mem_1(cpu->program, proc->pc + 1);
-  while (check_pcb(pcb, e_sti) != 0) {
-    arg1 = read_mem_1(cpu->program, proc->pc + 2);
-    if (valid_reg(arg1) == 0)
-      break;
-    type = type_from_pcb(pcb, 1);
-    if (type == T_REG) {
-      arg2 = read_mem_1(cpu->program, proc->pc + 3);
-      if (valid_reg(arg2) == 0)
-        break;
-      arg2 = read_reg(proc, arg2);
-    } else if (type == T_IND)
-      arg2 = read_indirect(cpu, proc, read_mem_2(cpu->program, proc->pc + 3));
-    else
-      arg2 = (short)read_mem_2(cpu->program, proc->pc + 3);
-    if (type_from_pcb(pcb, 2) == T_REG) {
-      arg3 = read_mem_1(cpu->program, proc->pc + 3 + size_from_pt(type, e_sti));
-      if (valid_reg(arg3) == 0)
-        break;
-      arg3 = read_reg(proc, arg3);
-    } else
-      arg3 = (short)read_mem_2(cpu->program, proc->pc + 3 + size_from_pt(type, e_sti));
-    if (f_verbose & OPT_INSTR) {
-      OUT("P% 5d | sti r%d %d %d\n", proc->pid, arg1, arg2, arg3);
-      OUT("       | -> store to %d + %d = %d (with pc and mod %d)\n", arg2,
-          arg3, (arg2 + arg3), proc->pc + (arg2 + arg3) % IDX_MOD);
-    }
-    write_mem_ins(proc, cpu->program, mod_idx(proc->pc + (arg2 + arg3) % IDX_MOD), read_reg(proc, arg1));
-    break;
-  }
-  if (f_verbose & OPT_PCMOVE)
-    print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_sti));
-  return (proc->pc + 2 + size_from_pcb(pcb, e_sti));
+	while (check_pcb(pcb = read_mem_1(cpu->program, proc->pc + 1), e_sti) != 0)
+	{
+		if (valid_reg((arg1 = read_mem_1(cpu->program, proc->pc + 2))) == 0)
+			break ;
+		ofs = proc->pc + 3;
+		A2 = read_typearoni(cpu, proc, TYFP(1), ofs);
+		ofs += size_from_pt(type, e_sti);
+		A3 = read_typearoni(cpu, proc, TYFP(2), ofs);
+		if (proc->reg_err)
+			break ;
+		STIPRINT;
+		write_mem_ins(proc, cpu->program,
+			mod_idx(proc->pc + (A2 + A3) % IDX_MOD), read_reg(proc, arg1));
+		break ;
+	}
+	proc->reg_err = 0;
+	if (g_verbose & OPT_PCMOVE)
+		print_adv(cpu, proc, proc->pc + 2 + size_from_pcb(pcb, e_sti));
+	return (proc->pc + 2 + size_from_pcb(pcb, e_sti));
 }
