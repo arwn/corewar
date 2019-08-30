@@ -22,7 +22,7 @@ void resolve_labels(t_list *cmds, t_dict *htbl) {
     for (int ii = 0; ii < g_op_tab[c->opcode].numargs; ++ii) {
       if (c->argtypes[ii] & T_LAB) {
         char *tmp = c->args[ii].str;
-        size_t n = dictSearch(htbl, tmp);
+        size_t n = dict_search(htbl, tmp);
         if (n == (size_t)-1) {
           asprintf(&g_errstr, ERR_UNKNOWN_LABEL, c->linenum, c->cols[ii], tmp);
           return;

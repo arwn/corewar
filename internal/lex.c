@@ -46,9 +46,9 @@ t_tok complex_token(char **s, char *str, t_tok tok) {
     if (ft_hashn(*s, len) == g_name_hash_tab[ii]) {
       tok = ((t_tok){.type = (bot_name + ii),
                      .col = *s - str,
-                     .str = get_str(*s + len, &col)});
+                     .u.str = get_str(*s + len, &col)});
       **s = '\0';
-      if (!tok.str) {
+      if (!tok.u.str) {
         tok = TOK_ERR(*s - str + len + col, ERR_BAD_NAME);
         return (tok);
       }
@@ -64,8 +64,8 @@ t_tok complex_token(char **s, char *str, t_tok tok) {
     if (ft_hashn(*s, MAX(len, oplen)) == g_op_hash_tab[ii]) {
       tok = (t_tok){.type = instruction,
                     .col = *s - str,
-                    .opcode = g_op_tab[ii + 1].opcode};
-      if (tok.opcode > NUM_BASE_OPS)
+                    .u.opcode = g_op_tab[ii + 1].opcode};
+      if (tok.u.opcode > NUM_BASE_OPS)
         g_is_extended |= 1;
       *s += len;
       break;
@@ -79,7 +79,7 @@ t_tok complex_token(char **s, char *str, t_tok tok) {
       tok = TOK_ERR(*s - str, ERR_BAD_CHAR_IN_LABEL);
     } else {
       tok.type = label_def;
-      tok.str = ft_strndup(*s, ii);
+      tok.u.str = ft_strndup(*s, ii);
       *s += ii;
     }
   }
@@ -106,7 +106,7 @@ t_tok getnexttoken(char **s, char *str) {
   case '-':
   case '0' ... '9':
     tok = ((t_tok){
-        .type = num, .col = *s - str, .num = ft_atosize_tbase(*s, 10)});
+        .type = num, .col = *s - str, .u.num = ft_atosize_tbase(*s, 10)});
     if (**s == '-')
       ++*s;
     if (**s < '0' || **s > '9')
@@ -130,7 +130,7 @@ t_tok getnexttoken(char **s, char *str) {
     tok = ((t_tok){.type = separator, .col = *s - str});
     break;
   case 'r':
-    tok = ((t_tok){.type = registry, .col = *s - str, .num = 0});
+    tok = ((t_tok){.type = registry, .col = *s - str, .u.num = 0});
     break;
   }
   if (tok.type == err)
@@ -185,7 +185,7 @@ t_list *lex_file(int fd) {
     while (*str) {
       token = getnexttoken(&sptr, str);
       if (token.type == err) {
-        asprintf(&g_errstr, token.str, linenum, token.col, str);
+        asprintf(&g_errstr, token.u.str, linenum, token.col, str);
         ft_lstdel(&lst, (void (*)(void *, size_t))free_);
         free(str);
         return (NULL);

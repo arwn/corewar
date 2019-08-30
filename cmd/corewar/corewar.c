@@ -347,17 +347,6 @@ static void win_debug(struct nk_context *ctx, struct s_cpu *cpu) {
       }
     }
 
-    // print the registers
-    // if (cpu->processes != NULL) {
-    //   for (int i = 0; i < REG_NUMBER; i++) {
-    //     if (i % 16 == 0)
-    //       nk_layout_row_dynamic(ctx, 15, 8);
-    //     snprintf(buf, sizeof(buf), "r%02d[%08x]", i + 1,
-    //              cpu->processes->registers[i]);
-    //     nk_label(ctx, buf, NK_TEXT_LEFT);
-    //   }
-    // }
-
     // display active players
     // nk_layout_row_static(ctx, 30, DEBUG_RECT_WIDTH/MAX_PLAYERS, MAX_PLAYERS);
     nk_layout_row_dynamic(ctx, 30, MAX_PLAYERS);

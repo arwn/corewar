@@ -11,14 +11,14 @@ static t_list *handle_label(t_list *tok, t_arg *arg) {
   }
   arg->type |= T_LAB;
   if (T(tok)->type == instruction)
-    arg->str = g_op_tab[T(tok)->opcode].name;
+    arg->u.str = g_op_tab[T(tok)->u.opcode].name;
   else
-    arg->str = T(tok)->str;
+    arg->u.str = T(tok)->u.str;
   return (tok->next);
 }
 
 static t_list *handle_num(t_list *tok, t_arg *arg) {
-  arg->num = T(tok)->num;
+  arg->u.num = T(tok)->u.num;
   return (tok->next);
 }
 
@@ -40,7 +40,7 @@ t_list *getarg(t_list *tok, t_arg *arg, char *sep) {
     if (T(tok)->type != num)
       return (NULL);
     arg->type = T_REG;
-    arg->num = T(tok)->num;
+    arg->u.num = T(tok)->u.num;
     return (tok->next);
     break;
   case num:
@@ -110,7 +110,7 @@ t_list *getargs(t_list *tok, t_cmd *cmd) {
   sep = 0;
   ii = 0;
   arg.type = 0;
-  arg.num = 0;
+  arg.u.num = 0;
   if (T(tok)->type == err)
     return (tok);
   while (tok && T(tok)->type != err && ((cmd->cols[ii] = T(tok)->col) || 1) &&
@@ -131,12 +131,12 @@ t_list *getargs(t_list *tok, t_cmd *cmd) {
     tok = tmp;
     cmd->argtypes[ii] = arg.type;
     if (arg.type & T_LAB)
-      cmd->args[ii].str = arg.str;
+      cmd->args[ii].str = arg.u.str;
     else
-      cmd->args[ii].num = arg.num;
+      cmd->args[ii].num = arg.u.num;
     cmd->num_bytes += CMD_NUM_BYTES(arg.type & ~T_LAB, cmd->opcode);
     arg.type = 0;
-    arg.num = 0;
+    arg.u.num = 0;
     ++ii;
     sep = 0;
   }
@@ -178,12 +178,12 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
   case space:
     break;
   case bot_name:
-    ft_strncpy(header->prog_name, T(tok)->str, PROG_NAME_LENGTH);
+    ft_strncpy(header->prog_name, T(tok)->u.str, PROG_NAME_LENGTH);
     tok = tok->next;
     while (tok && (T(tok)->type == space))
       tok = tok->next;
     if (tok && T(tok)->type != newline) {
-      ft_strcat(g_errarr, ERR_FIRST_BIT "Unexpected symbol [");
+      ft_strcat(g_errarr, ERR_ST "Unexpected symbol [");
       ft_strcat(g_errarr, g_tok_to_str_safe[T(tok)->type]);
       ft_strcat(g_errarr, "]");
       TOK_TO_ERR(T(tok));
@@ -192,12 +192,12 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
     *linenum = *linenum + 1;
     break;
   case bot_comment:
-    ft_strncpy(header->comment, T(tok)->str, COMMENT_LENGTH);
+    ft_strncpy(header->comment, T(tok)->u.str, COMMENT_LENGTH);
     tok = tok->next;
     while (tok && (T(tok)->type == space))
       tok = tok->next;
     if (tok && T(tok)->type != newline) {
-      ft_strcat(g_errarr, ERR_FIRST_BIT "Unexpected symbol [");
+      ft_strcat(g_errarr, ERR_ST "Unexpected symbol [");
       ft_strcat(g_errarr, g_tok_to_str_safe[T(tok)->type]);
       ft_strcat(g_errarr, "]");
       TOK_TO_ERR(T(tok));
@@ -206,10 +206,10 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
     *linenum = *linenum + 1;
     break;
   case label_def:
-    ii = dictInsert(dict, T(tok)->str, *position);
+    ii = dict_insert(dict, T(tok)->u.str, *position);
     if (ii < 1) {
-      ft_strcat(g_errarr, ERR_FIRST_BIT "Redefinition of label \"");
-      ft_strcat(g_errarr, T(tok)->str);
+      ft_strcat(g_errarr, ERR_ST "Redefinition of label \"");
+      ft_strcat(g_errarr, T(tok)->u.str);
       ft_strcat(g_errarr, "\"");
       TOK_TO_ERR(T(tok));
       return (tok);
@@ -217,20 +217,20 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
     tok = tok->next;
     if (tok && T(tok)->type == label_char)
       return (tok->next);
-    ft_strcat(g_errarr, ERR_FIRST_BIT "Unexpected symbol [");
+    ft_strcat(g_errarr, ERR_ST "Unexpected symbol [");
     ft_strcat(g_errarr, g_tok_to_str_safe[T(tok)->type]);
     ft_strcat(g_errarr, "]");
     TOK_TO_ERR(T(tok));
     return (tok);
     break;
   case instruction:
-    cmd->opcode = T(tok)->opcode;
+    cmd->opcode = T(tok)->u.opcode;
     tok = tok->next;
     tok = getargs(tok, cmd);
     if (tok && T(tok)->type != newline) {
-      ft_strcat(g_errarr, ERR_FIRST_BIT "Unexpected symbol [");
+      ft_strcat(g_errarr, ERR_ST "Unexpected symbol [");
       ft_strcat(g_errarr,
-                g_tok_to_str_safe[T(tok)->type == err ? T(tok)->_type
+                g_tok_to_str_safe[T(tok)->type == err ? T(tok)->u._type
                                                       : T(tok)->type]);
       ft_strcat(g_errarr, "]");
       TOK_TO_ERR(T(tok));
@@ -241,8 +241,8 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
   default:
     if (T(tok)->type == label_def || T(tok)->type == bot_name ||
         T(tok)->type == bot_comment) {
-      free(T(tok)->str);
-      T(tok)->str = NULL;
+      free(T(tok)->u.str);
+      T(tok)->u.str = NULL;
     }
     TOK_TO_ERR(T(tok));
     ft_strcat(g_errarr, ERR_UNEXPECTED_SYMBOL);
@@ -307,7 +307,7 @@ t_list *parse(t_list *tokens, size_t bufsize, header_t *header, t_dict *dict) {
     tok = getcmd(tok, &cmd, &position, dict, &linenum, header);
     if (tok && T(tok)->type == err) {
       asprintf(&g_errstr, g_errarr, linenum, T(tok)->col,
-               g_tok_to_str[T(tok)->_type]);
+               g_tok_to_str[T(tok)->u._type]);
       ft_lstdel(&cmds, free_);
       return (NULL);
     }

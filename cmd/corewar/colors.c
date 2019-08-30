@@ -3,15 +3,23 @@
 #include "nuklear.h"
 #include <math.h>
 
-struct nk_color to_rgb(float h, float s, float v) {
+struct nk_color
+  to_rgb(float h, float s, float v)
+{
+  float C;
+  float X;
+  float m;
+  float r;
+  float g;
+  float b;
+
   while (h < 0)
     h += 360.;
   while (h > 360)
     h -= 360.;
-  float C = v * s;
-  float X = C * (1 - fabs(fmod(h / 60, 2) - 1));
-  float m = v - C;
-  float r, g, b;
+  C = v * s;
+  X = C * (1 - fabs(fmod(h / 60, 2) - 1));
+  m = v - C;
   switch (((int)h) / 60) {
   case 0:
     r = C;
@@ -44,18 +52,28 @@ struct nk_color to_rgb(float h, float s, float v) {
     b = X;
     break;
   }
-  struct nk_color color = {(r + m) * 255, (g + m) * 255, (b + m) * 255, 255};
-  return (color);
+  return ((struct nk_color){(r + m) * 255, (g + m) * 255, (b + m) * 255, 255});
 }
 
-struct s_hsv to_hsv(int r, int g, int b) {
-  float rp = r / 255.;
-  float gp = g / 255.;
-  float bp = b / 255.;
-  float Cmax = MAX(rp, MAX(gp, bp));
-  float Cmin = MIN(rp, MIN(gp, bp));
-  float delta = Cmax - Cmin;
-  float h, s, v;
+struct s_hsv
+  to_hsv(int r, int g, int b)
+{
+  float rp;
+  float gp;
+  float bp;
+  float Cmax;
+  float Cmin;
+  float delta;
+  float h;
+  float s;
+  float v;
+
+  rp = r / 255.;
+  gp = g / 255.;
+  bp = b / 255.;
+  Cmax = MAX(rp, MAX(gp, bp));
+  Cmin = MIN(rp, MIN(gp, bp));
+  delta = Cmax - Cmin;
   v = Cmax;
   if (Cmax == 0)
     s = 0;

@@ -1,9 +1,6 @@
 fuck you:
   - Norminette:
     - norm inc/asm.h
-    - norm inc/hashtbl.h
-    - norm inc/libasm.h
-    - norm inc/util.h
     - norm internal/asm_main_funcs.c
     - norm internal/globals.c
     - norm internal/hashtbl.c
@@ -14,7 +11,6 @@ fuck you:
     - norm internal/resolve_labels.c
     - norm internal/util.c
     - norm cmd/corewar/colors.c
-    - norm cmd/corewar/colors.h
     - norm cmd/corewar/corewar.c (except for gui stuff)
   - move globals defines into headers
   - parse opts in extern function
@@ -35,7 +31,7 @@ done:
     - Fix labels with names conflicting with types
     - Missing close quote comment/name
     - Separator char with nothing after it
-    - leaks in dictInsert when conflict found
+    - leaks in dict_insert when conflict found
   COREWAR:
     - Norminette:
       - norm cmd/corewar/instructions_5.c
@@ -51,6 +47,10 @@ done:
       - norm cmd/corewar/cpu.c
       - norm cmd/corewar/cpu_deux.c
       - norm cmd/corewar/cpu_triple.c
+      - norm inc/hashtbl.h
+      - norm inc/libasm.h
+      - norm inc/util.h
+      - norm cmd/corewar/colors.h
     - Potentially incorrect winner:
       - ./corewar Gagnant.cor Gagnant.cor Gagnant.cor Gagnant.cor should result
         in player 3 winning

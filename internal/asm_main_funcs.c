@@ -33,13 +33,13 @@ char *assemble(int fd, size_t *size) {
   if (!tokens)
     return (NULL);
 
-  htbl = dictInit(MEM_SIZE * 4);
+  htbl = dict_init(MEM_SIZE * 4);
   cmds = parse(tokens, sizeof(g_bufarr) - sizeof(header), &header, htbl);
 
   if (!cmds) {
     ft_lstdel(&tokens, free_);
     ft_lstdel(&cmds, free_);
-    killDict(htbl);
+    kill_dict(htbl);
     return (NULL);
   }
 
@@ -47,7 +47,7 @@ char *assemble(int fd, size_t *size) {
   if (g_errstr) {
     ft_lstdel(&tokens, free_);
     ft_lstdel(&cmds, free_);
-    killDict(htbl);
+    kill_dict(htbl);
     return (NULL);
   }
 
@@ -57,7 +57,7 @@ char *assemble(int fd, size_t *size) {
     header.magic = COREWAR_EXEC_MAGIC;
   print_args(g_bufarr, sizeof(g_bufarr), cmds->next, size, &header);
 
-  killDict(htbl);
+  kill_dict(htbl);
   ft_lstdel(&tokens, (void (*)(void *, size_t))free_);
   ft_lstdel(&cmds, (void (*)(void *, size_t))free_);
   return (g_bufarr);

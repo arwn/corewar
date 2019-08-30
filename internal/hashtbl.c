@@ -12,7 +12,7 @@
 
 #include "hashtbl.h"
 
-struct s_dict *dictInit(int capacity) {
+struct s_dict *dict_init(int capacity) {
   struct s_dict *dict;
   struct s_item **items;
 
@@ -34,7 +34,7 @@ struct s_dict *dictInit(int capacity) {
 **         -1 if duplicate
 */
 
-int dictInsert(struct s_dict *dict, char *str, size_t value) {
+int dict_insert(struct s_dict *dict, char *str, size_t value) {
   if (!dict || !str)
     return (0);
 
@@ -60,7 +60,7 @@ int dictInsert(struct s_dict *dict, char *str, size_t value) {
   return (1);
 }
 
-size_t dictSearch(struct s_dict *dict, char *str) {
+size_t dict_search(struct s_dict *dict, char *str) {
   size_t idx;
   struct s_item *ii;
   size_t key;
@@ -80,7 +80,7 @@ size_t dictSearch(struct s_dict *dict, char *str) {
   return (-1);
 }
 
-void killDict(struct s_dict *dict) {
+void kill_dict(struct s_dict *dict) {
   unsigned ii;
   struct s_item *item;
 

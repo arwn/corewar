@@ -7,8 +7,8 @@ void free_(void *a, size_t b) {
     t_tok *t = (t_tok *)(a);
     if ((t->type == label_def || t->type == bot_name ||
          t->type == bot_comment) &&
-        t->str)
-      free(t->str);
+        t->u.str)
+      free(t->u.str);
   } else if (b == sizeof(t_cmd)) {
   }
   free(a);

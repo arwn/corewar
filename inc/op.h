@@ -56,6 +56,7 @@ typedef unsigned char t_arg_type;
 #define COREWAR_EXEC_MAGIC 0x00ea83f3
 #define COREWAR_EXTENDED_EXEC_MAGIC (COREWAR_EXEC_MAGIC + 0x411c102d)
 
+// TODO: calculate based on args in main
 #define OFFSET_1P_P1 0
 #define OFFSET_2P_P1 OFFSET_1P_P1
 #define OFFSET_2P_P2 (MEM_SIZE / 2)
