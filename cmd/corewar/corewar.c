@@ -440,6 +440,17 @@ void new_player(struct s_cpu *cpu, header_t *h, int num) {
 
 #define OUT(...) printf(__VA_ARGS__)
 
+#define ROW_HEIGHT 15
+#define BUTTON_HEIGHT 30
+#define ROW_BUF 30
+#define WIDTH_BUF 20
+#define HEIGHT_BUF 30
+#define OFF_Y 50
+#define OFF_X 50
+
+#define COR_FILENAME "/tmp/corewar.cor"
+#define ASM_FILENAME "/tmp/corewar.s"
+
 // load_file reads a file into readbuf. if the file starts with
 // COREWAR_EXEC_MAGIC it is loaded via `cpu->load()' otherwise load_file reads
 // the file into `edit_buf'. returns number of bytes read.
@@ -562,14 +573,6 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
       }
     }
 
-#define ROW_HEIGHT 15
-#define BUTTON_HEIGHT 30
-#define ROW_BUF 30
-#define WIDTH_BUF 20
-#define HEIGHT_BUF 30
-#define OFF_Y 50
-#define OFF_X 50
-
     // display compilation error if one is thrown
     static char **strtab = NULL;
     static size_t max_strlen = 0;
@@ -619,9 +622,6 @@ static void win_open(struct nk_context *ctx, struct s_cpu *cpu) {
       max_strlen = 0;
       num_lines = 0;
     }
-
-#define COR_FILENAME "/tmp/corewar.cor"
-#define ASM_FILENAME "/tmp/corewar.s"
 
     // compile button
     if (nk_button_label(ctx, "Compile")) {
@@ -791,8 +791,10 @@ static void vm_dump_byte(struct s_cpu *cpu, int idx, int space) {
   if (g_color)
     OUT("\e[0m");
 }
+
 #define DUMP_POW2 6
 #define DUMP_WIDTH(X) ((X) << DUMP_POW2)
+
 static void vm_dump_core(struct s_cpu *cpu) {
   register int ii, jj, kk;
   int max = MEM_SIZE >> DUMP_POW2;
@@ -842,18 +844,20 @@ void vm_dump_state(struct s_cpu *cpu) {
   }
 }
 
+#define DOUT(FD, ...) dprintf(FD, __VA_ARGS__)
+
 static void usage(const char *msg, const char *ext) {
   if (msg && ext)
-    ft_dprintf(STDERR_FILENO, "%s%s\n", msg, ext);
+    DOUT(STDERR_FILENO, "%s%s\n", msg, ext);
   else if (msg)
-    ft_dprintf(STDERR_FILENO, "%s\n", msg);
-  ft_dprintf(STDERR_FILENO, "Usage: corewar [OPTION]... FILE...\n"
+    DOUT(STDERR_FILENO, "%s\n", msg);
+  DOUT(STDERR_FILENO, "Usage: corewar [OPTION]... FILE...\n"
                   "Try 'corewar -h' for more information.\n");
   exit((msg != 0 || ext != 0) && opterr != 0);
 }
 
 static void usage_help(void) {
-  ft_dprintf(STDERR_FILENO, "Usage: corewar [OPTION]... FILE...\n"
+  DOUT(STDERR_FILENO, "Usage: corewar [OPTION]... FILE...\n"
                   "Run each file in the Corewar virtual machine\n"
                   "Example: corewar -v 0 champ.cor zork.cor\n\n"
                   "Options:\n"
@@ -887,7 +891,7 @@ static void corewar_gui(struct s_cpu *cpu) {
   // GLFW
   glfwSetErrorCallback(error_callback);
   if (!glfwInit()) {
-    ft_dprintf(STDERR_FILENO, "Fatal error: [GFLW] failed to init!\n");
+    DOUT(STDERR_FILENO, "Fatal error: [GFLW] failed to init!\n");
     exit(1);
   }
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -904,7 +908,7 @@ static void corewar_gui(struct s_cpu *cpu) {
   glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
   glewExperimental = 1;
   if (glewInit() != GLEW_OK) {
-    ft_dprintf(STDERR_FILENO, "Failed to setup GLEW\n");
+    DOUT(STDERR_FILENO, "Failed to setup GLEW\n");
     exit(1);
   }
 
@@ -1016,7 +1020,7 @@ int main(int argc, char *argv[]) {
   argc -= optind;
   argv += optind;
   if (argc > MAX_PLAYERS || argc < 0) {
-    ft_dprintf(STDERR_FILENO, "Error: invalid number of arguments: %d\n", argc);
+    DOUT(STDERR_FILENO, "Error: invalid number of arguments: %d\n", argc);
     return (1);
   }
 
@@ -1042,7 +1046,7 @@ int main(int argc, char *argv[]) {
       OUT("Introducing contestants...\n");
     int len = load_file(&cpu, f, offsets[argc - 1][ii], ii + 1);
     if (len < 1 || (len - sizeof(header_t)) >= CHAMP_MAX_SIZE) {
-      ft_dprintf(STDERR_FILENO, "Fatal error: invalid champion file: %s\n", *argv);
+      DOUT(STDERR_FILENO, "Fatal error: invalid champion file: %s\n", *argv);
       return 1;
     }
     if (fclose(f) != 0) {
