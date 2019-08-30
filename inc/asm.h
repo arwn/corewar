@@ -102,14 +102,14 @@ struct s_arg {
 		})
 
 # ifdef COLORS
-#  define WARNING_MOD TE(BOL) FG(LMGN)
+#  define WC TE(BOL) FG(LMGN)
 #  define ERR_MOD TE(BOL) FG(LRED)
 # else
 #  ifdef NC
 #   undef NC
 #  endif
 #  define NC ""
-#  define WARNING_MOD ""
+#  define WC ""
 #  define ERR_MOD ""
 # endif
 
@@ -128,14 +128,14 @@ struct s_arg {
 # define ERR_BAD_NUM_OF_ARGS ERR_ST "Bad number of arguments to command \"%s\""
 
 # define ERR_UNKNOWN_LABEL ERR_ST "Unrecognized label \"%s\""
-# define WARNING_PROG_TOO_BIG WARNING_MOD "WARNING" NC " LINE %u\nProgram too large. Truncating"
+# define WARN_PROG_SZ WC "WARNING" NC " LINE %u\nProgram too large. Truncating"
 
 /*
 ** disassembler errors
 */
 
-# define WARNING_PROG_TOO_BIG_DISASM WARNING_MOD "WARNING" NC " Binary too large. Truncating"
-# define WARNING_FILE_TRUNC WARNING_MOD "WARNING" NC " File appears to be truncated"
+# define WARN_PROG_SZ_D WC "WARNING" NC " Binary too large. Truncating"
+# define WARNING_FILE_TRUNC WC "WARNING" NC " File appears to be truncated"
 # define ERR_BAD_HEADER ERR_MOD "ERROR" NC " File has invalid header"
 # define ERR_UNKNOWN_TYPE ERR_MOD "ERROR" NC " Unknown argument type %#04llx"
 # define ERR_FILE_TOO_BIG ERR_MOD "ERROR" NC " File too large"

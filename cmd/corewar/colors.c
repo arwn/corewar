@@ -15,6 +15,7 @@
 #include "nuklear.h"
 #include <math.h>
 
+#undef C
 #define C arr[0]
 #define X arr[1]
 #define M arr[2]

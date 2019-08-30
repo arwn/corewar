@@ -2,7 +2,7 @@
 
 int larger_than_bufsize(int *err, unsigned ii) {
   *err = 1;
-  ft_dprintf(STDERR_FILENO, WARNING_PROG_TOO_BIG_DISASM "\n");
+  ft_dprintf(STDERR_FILENO, WARN_PROG_SZ_D "\n");
   return (ii);
 }
 

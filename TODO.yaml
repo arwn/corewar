@@ -1,17 +1,16 @@
 fuck you:
   - Norminette:
-    - norm inc/asm.h
-    - norm internal/asm_main_funcs.c
-    - norm internal/globals.c
-    - norm internal/hashtbl.c
-    - norm internal/lex.c
-    - norm internal/parse_binary.c
-    - norm internal/parse.c
-    - norm internal/print_args.c
-    - norm internal/resolve_labels.c
-    - norm internal/util.c
-    - norm cmd/corewar/colors.c
-    - norm cmd/corewar/corewar.c (except for gui stuff)
+    - norm internal/resolve_labels.c                       36 lines
+    - norm internal/print_args.c                           59 lines
+    - norm internal/globals.c                              99 lines
+    - norm internal/hashtbl.c                             100 lines
+    - norm cmd/corewar/colors.c                           108 lines
+    - norm internal/asm_main_funcs.c                      110 lines
+    - norm internal/parse_binary.c                        169 lines
+    - norm inc/asm.h                                      193 lines
+    - norm internal/lex.c                                 205 lines
+    - norm internal/parse.c                               357 lines
+    - norm cmd/corewar/corewar.c (except for gui stuff)  1088 lines
   - move globals defines into headers
   - parse opts in extern function
   - colors.c to_rgb() clean up
@@ -34,6 +33,7 @@ done:
     - leaks in dict_insert when conflict found
   COREWAR:
     - Norminette:
+      - norm internal/util.c                                 49 lines
       - norm cmd/corewar/instructions_5.c
       - norm cmd/corewar/instructions_15.c
       - norm cmd/corewar/instructions.h

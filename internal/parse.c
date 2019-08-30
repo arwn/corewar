@@ -156,7 +156,8 @@ t_list *getargs(t_list *tok, t_cmd *cmd) {
 */
 
 t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
-               unsigned *linenum, header_t *header) {
+               unsigned *linenum, header_t *header)
+{
   unsigned argnum;
   int ii;
 
@@ -171,7 +172,8 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
     tok = tok->next;
   if (!tok)
     return (tok);
-  switch (T(tok)->type) {
+  switch (T(tok)->type)
+  {
   case newline:
     *linenum = *linenum + 1;
     break;
@@ -182,7 +184,8 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
     tok = tok->next;
     while (tok && (T(tok)->type == space))
       tok = tok->next;
-    if (tok && T(tok)->type != newline) {
+    if (tok && T(tok)->type != newline)
+    {
       ft_strcat(g_errarr, ERR_ST "Unexpected symbol [");
       ft_strcat(g_errarr, g_tok_to_str_safe[T(tok)->type]);
       ft_strcat(g_errarr, "]");
@@ -196,7 +199,8 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
     tok = tok->next;
     while (tok && (T(tok)->type == space))
       tok = tok->next;
-    if (tok && T(tok)->type != newline) {
+    if (tok && T(tok)->type != newline)
+    {
       ft_strcat(g_errarr, ERR_ST "Unexpected symbol [");
       ft_strcat(g_errarr, g_tok_to_str_safe[T(tok)->type]);
       ft_strcat(g_errarr, "]");
@@ -207,7 +211,8 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
     break;
   case label_def:
     ii = dict_insert(dict, T(tok)->u.str, *position);
-    if (ii < 1) {
+    if (ii < 1)
+    {
       ft_strcat(g_errarr, ERR_ST "Redefinition of label \"");
       ft_strcat(g_errarr, T(tok)->u.str);
       ft_strcat(g_errarr, "\"");
@@ -227,7 +232,8 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
     cmd->opcode = T(tok)->u.opcode;
     tok = tok->next;
     tok = getargs(tok, cmd);
-    if (tok && T(tok)->type != newline) {
+    if (tok && T(tok)->type != newline)
+    {
       ft_strcat(g_errarr, ERR_ST "Unexpected symbol [");
       ft_strcat(g_errarr,
                 g_tok_to_str_safe[T(tok)->type == err ? T(tok)->u._type
@@ -240,7 +246,8 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
     return (tok->next);
   default:
     if (T(tok)->type == label_def || T(tok)->type == bot_name ||
-        T(tok)->type == bot_comment) {
+        T(tok)->type == bot_comment)
+    {
       free(T(tok)->u.str);
       T(tok)->u.str = NULL;
     }
@@ -258,11 +265,14 @@ t_list *getcmd(t_list *tok, t_cmd *cmd, unsigned *position, t_dict *dict,
   return (tok);
 }
 
-static int chkcmd(t_cmd *cmd) {
+static int chkcmd(t_cmd *cmd)
+{
   t_op *op = &g_op_tab[cmd->opcode];
 
-  for (int ii = 0; ii < op->numargs; ++ii) {
-    if (!(op->argtypes[ii] & (cmd->argtypes[ii] & ~T_LAB))) {
+  for (int ii = 0; ii < op->numargs; ++ii)
+  {
+    if (!(op->argtypes[ii] & (cmd->argtypes[ii] & ~T_LAB)))
+    {
       ft_strcat(g_errarr, ERR_UNEXPECTED_ARG);
       return (ii + 1);
     }
@@ -274,7 +284,8 @@ static int chkcmd(t_cmd *cmd) {
 ** take list of tokens, header, dict of labels, returns list of cmds
 */
 
-t_list *parse(t_list *tokens, size_t bufsize, header_t *header, t_dict *dict) {
+t_list *parse(t_list *tokens, size_t bufsize, header_t *header, t_dict *dict)
+{
   (void)tokens;
   (void)header;
   enum e_toktype type;
@@ -295,7 +306,8 @@ t_list *parse(t_list *tokens, size_t bufsize, header_t *header, t_dict *dict) {
 
   t_cmd cmd;
 
-  while (tok && T(tok)->type != eof) {
+  while (tok && T(tok)->type != eof)
+  {
     cmd = (t_cmd){-1,
                   0,
                   linenum,
@@ -305,15 +317,18 @@ t_list *parse(t_list *tokens, size_t bufsize, header_t *header, t_dict *dict) {
                   {{.str = 0}, {.str = 0}, {.str = 0}, {.str = 0}}};
     tmp = tok;
     tok = getcmd(tok, &cmd, &position, dict, &linenum, header);
-    if (tok && T(tok)->type == err) {
+    if (tok && T(tok)->type == err)
+    {
       asprintf(&g_errstr, g_errarr, linenum, T(tok)->col,
                g_tok_to_str[T(tok)->u._type]);
       ft_lstdel(&cmds, free_);
       return (NULL);
     }
-    if (cmd.opcode > -1) {
+    if (cmd.opcode > -1)
+    {
       int idx;
-      if ((idx = chkcmd(&cmd))) {
+      if ((idx = chkcmd(&cmd)))
+      {
         asprintf(&g_errstr, g_errarr, cmd.linenum, cmd.cols[idx - 1],
                  g_op_tab[cmd.opcode].name,
                  g_arg_to_str[cmd.argtypes[idx - 1] & ~T_LAB]);
@@ -322,13 +337,15 @@ t_list *parse(t_list *tokens, size_t bufsize, header_t *header, t_dict *dict) {
       }
       {
         cmd.encoding = 0;
-        for (int ii = 1; ii <= g_op_tab[cmd.opcode].numargs; ++ii) {
+        for (int ii = 1; ii <= g_op_tab[cmd.opcode].numargs; ++ii)
+        {
           cmd.encoding |= (g_cmd_encoding[cmd.argtypes[ii - 1] & ~T_LAB])
                           << ((ENC_SIZE * 8) - (ii * 2));
         }
       }
-      if (position + cmd.num_bytes > bufsize) {
-        ft_dprintf(STDERR_FILENO, WARNING_PROG_TOO_BIG "\n", cmd.linenum);
+      if (position + cmd.num_bytes > bufsize)
+      {
+        ft_dprintf(STDERR_FILENO, WARN_PROG_SZ "\n", cmd.linenum);
         break;
       }
       position += cmd.num_bytes;
