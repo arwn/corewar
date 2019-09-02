@@ -1027,14 +1027,6 @@ int main(int argc, char *argv[]) {
   // make our cpu and program
   cpu = new_cpu();
 
-  // table for determining the offset based on number of players
-  int offsets[4][4] = {
-      {OFFSET_1P_P1, 0, 0, 0},
-      {OFFSET_2P_P1, OFFSET_2P_P2, 0, 0},
-      {OFFSET_3P_P1, OFFSET_3P_P2, OFFSET_3P_P3, 0},
-      {OFFSET_4P_P1, OFFSET_4P_P2, OFFSET_4P_P3, OFFSET_4P_P4},
-  };
-
   // load in .cor files
   while (ii < argc) {
     f = fopen(*argv, "r");
@@ -1044,7 +1036,7 @@ int main(int argc, char *argv[]) {
     }
     if (ii == 0)
       OUT("Introducing contestants...\n");
-    int len = load_file(&cpu, f, offsets[argc - 1][ii], ii + 1);
+    int len = load_file(&cpu, f, (argc - (argc - ii)) * (MEM_SIZE / MAX_PLAYERS), ii + 1);
     if (len < 1 || (len - sizeof(header_t)) >= CHAMP_MAX_SIZE) {
       DOUT(STDERR_FILENO, "Fatal error: invalid champion file: %s\n", *argv);
       return 1;

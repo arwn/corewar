@@ -33,6 +33,7 @@ done:
     - leaks in dict_insert when conflict found
   COREWAR:
     - Norminette:
+      - norm cmd/asm/main.c
       - norm internal/util.c                                 49 lines
       - norm cmd/corewar/instructions_5.c
       - norm cmd/corewar/instructions_15.c

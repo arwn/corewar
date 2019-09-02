@@ -13,65 +13,72 @@
 #include "asm.h"
 
 struct s_option *g_asm_opts[] = {
-    &(struct s_option){'d', "disassemble", "Disassemble .cor file", 1 << 0},
-    &(struct s_option){'h', "help", "Display help message", 1 << 1},
-    &(struct s_option){'q', "quiet", "Run with no output", 1 << 2},
-    &(struct s_option){'n', "nowrite", "Do not write to output file", 1 << 3},
-    &(struct s_option){'f', "force", "Force disassembly output if error",
-                       1 << 4},
-    NULL,
+	&(struct s_option){'d', "disassemble", "Disassemble .cor file", 1 << 0},
+	&(struct s_option){'h', "help", "Display help message", 1 << 1},
+	&(struct s_option){'q', "quiet", "Run with no output", 1 << 2},
+	&(struct s_option){'n', "nowrite", "Do not write to output file", 1 << 3},
+	&(struct s_option){'f', "force", "Force disassembly output if error",
+		1 << 4},
+	NULL,
 };
 
-char g_force_disasm = 0;
+char	g_force_disasm = 0;
 
-int main(int argc, char **argv) {
-  int opts;
-  int ii;
-  int r;
-  char *s;
-  int fd;
-  size_t size;
+void	opteroni(int opts, int argc, char **argv, int ii)
+{
+	if (opts & opt_getoptcode(g_asm_opts, 'q', NULL))
+	{
+		fclose(stdout);
+		fclose(stderr);
+	}
+	if (opts & opt_getoptcode(g_asm_opts, 'h', NULL))
+	{
+		opt_printusage(g_asm_opts, argv);
+		exit(0);
+	}
+	else if (argc - ii <= 0)
+	{
+		opt_printusage(g_asm_opts, argv);
+		exit(1);
+	}
+	if (opts & opt_getoptcode(g_asm_opts, 'f', NULL))
+		g_force_disasm |= 1;
+}
 
-  ii = 1;
-  opts = opt_getopts(g_asm_opts, argc, argv, &ii);
-  if (opts & opt_getoptcode(g_asm_opts, 'q', NULL)) {
-    fclose(stdout);
-    fclose(stderr);
-  }
-  if (opts & opt_getoptcode(g_asm_opts, 'h', NULL)) {
-    opt_printusage(g_asm_opts, argv);
-    return (0);
-  } else if (argc - ii <= 0) {
-    opt_printusage(g_asm_opts, argv);
-    return (1);
-  }
-  if (opts & opt_getoptcode(g_asm_opts, 'f', NULL))
-    g_force_disasm |= 1;
-  r = 0;
-  while (ii < argc) {
-    size = 0;
-    fd = open(argv[ii], O_RDONLY);
-    if (fd < 0)
-      ft_dprintf(STDERR_FILENO, "Unable to read from file %s\n", argv[ii]);
-    else {
-      ft_printf("-- %sssembling %s\n",
-                opts & opt_getoptcode(g_asm_opts, 'd', NULL) ? "Disa" : "A",
-                argv[ii]);
-      s = g_tab[!!(opts & opt_getoptcode(g_asm_opts, 'd', NULL))](fd, &size);
-      if (g_errstr) {
-        ft_dprintf(STDERR_FILENO, "%s\n", g_errstr);
-        free(g_errstr);
-        g_errstr = NULL;
-        r = 1;
-      }
-      if (s && !(opts & opt_getoptcode(g_asm_opts, 'n', NULL)))
-        r |= write_to_file(opts, argv[ii], s, size);
-      else
-        r |= !s;
-      close(fd);
-    }
+#define CHK(C) (OPTS & opt_getoptcode(g_asm_opts, (C), NULL))
 
-    ++ii;
-  }
-  return (r);
+#define OPTS (arr[0])
+#define II (arr[1])
+#define R (arr[2])
+#define FD (arr[3])
+#define WRTF write_to_file
+#define STDL ft_strdel
+
+int		main(int argc, char **argv)
+{
+	int		arr[4];
+	char	*s;
+	size_t	size;
+
+	II = 1;
+	OPTS = opt_getopts(g_asm_opts, argc, argv, &II);
+	DO_ALL(1, opteroni(OPTS, argc, argv, II), R = 0);
+	while (II < argc)
+	{
+		size = 0;
+		FD = open(argv[II], O_RDONLY);
+		if (FD < 0)
+			ft_dprintf(2, "Unable to read file %s\n", argv[II]);
+		else
+		{
+			ft_printf("-- %sssembling %s\n", CHK('d') ? "Disa" : "A", argv[II]);
+			s = g_tab[!!CHK('d')](FD, &size);
+			if (g_errstr)
+				DO_ALL(ft_dprintf(2, "%s\n", g_errstr), STDL(&g_errstr), R = 1);
+			R |= (s && !CHK('n')) ? WRTF(OPTS, argv[II], s, size) : !s;
+			close(FD);
+		}
+		++II;
+	}
+	return (R);
 }

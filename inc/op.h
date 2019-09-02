@@ -56,18 +56,6 @@ typedef unsigned char t_arg_type;
 #define COREWAR_EXEC_MAGIC 0x00ea83f3
 #define COREWAR_EXTENDED_EXEC_MAGIC (COREWAR_EXEC_MAGIC + 0x411c102d)
 
-// TODO: calculate based on args in main
-#define OFFSET_1P_P1 0
-#define OFFSET_2P_P1 OFFSET_1P_P1
-#define OFFSET_2P_P2 (MEM_SIZE / 2)
-#define OFFSET_3P_P1 OFFSET_1P_P1
-#define OFFSET_3P_P2 (MEM_SIZE / 3)
-#define OFFSET_3P_P3 ((MEM_SIZE / 3) * 2)
-#define OFFSET_4P_P1 OFFSET_1P_P1
-#define OFFSET_4P_P2 (MEM_SIZE / 4)
-#define OFFSET_4P_P3 ((MEM_SIZE / 4) * 2)
-#define OFFSET_4P_P4 ((MEM_SIZE / 4) * 3)
-
 typedef struct header_s {
   unsigned int magic;
   char prog_name[PROG_NAME_LENGTH + 1];
