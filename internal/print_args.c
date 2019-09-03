@@ -50,7 +50,7 @@ void print_args(char *buf, size_t bufsize, t_list *cmd, size_t *size,
 
   for (t_list *ll = cmd; ll; ll = ll->next) {
     if (ii > (unsigned)(bufsize - C(ll)->num_bytes)) {
-      ft_dprintf(STDERR_FILENO, WARNING_PROG_TOO_BIG "\n", C(ll)->linenum);
+      ft_dprintf(STDERR_FILENO, WARN_PROG_SZ "\n", C(ll)->linenum);
       break;
     }
     ii = printCmd(buf, ii, bufsize, C(ll));

@@ -74,7 +74,7 @@ misc_tests+=(['Gagnant']=1)
 
 declare -A ins_time
 ins_time+=(['live']=90)
-ins_time+=(['ld']=90)
+ins_time+=(['ld']=30)
 ins_time+=(['st']=90)
 ins_time+=(['add']=30)
 ins_time+=(['sub']=30)
@@ -82,7 +82,7 @@ ins_time+=(['and']=30)
 ins_time+=(['or']=30)
 ins_time+=(['xor']=30)
 ins_time+=(['zjmp']=543)            # 543
-ins_time+=(['ldi']=90)
+ins_time+=(['ldi']=50)
 ins_time+=(['sti']=90)
 ins_time+=(['fork']=870)
 ins_time+=(['lld']=45)
@@ -240,27 +240,19 @@ for ins in "${input_args[@]}"; do
             mv "$testdir/$ins$i.cor" "$out/$ins$i.cor"
         fi
         if [[ $experimental -eq 1 ]]; then
-            $invm -a -v 31 -d "$tim" "$out/$ins$i.cor" | awk '{$1=$1};1' > "$out/$ins$i.in"
+            $invm -a -v 31 -d "$tim" "$out/$ins$i.cor" > "$out/$ins$i.in"
         else
-            $invm -d "$tim" "$out/$ins$i.cor" | grep -E '^0x0[[:xdigit:]]{2}0 : ' | awk '{$1=$1};1' > "$out/$ins$i.in"
+            $invm -d "$tim" "$out/$ins$i.cor" > "$out/$ins$i.in"
         fi
         if [[ $experimental -eq 1 ]]; then
-            $outvm -a -v 31 -d "$tim" "$out/$ins$i.cor" | awk '{$1=$1};1' > "$out/$ins$i.out"
+            $outvm -a -v 31 -d "$tim" "$out/$ins$i.cor" > "$out/$ins$i.out"
         else
-            timeout 5 $outvm -d "$tim" "$out/$ins$i.cor" > "$out/out.tmp"
-            status=$?
-            if (( status!=124 )); then
-                grep -E '^0x0[[:xdigit:]]{2}0 : ' "$out/out.tmp" | awk '{$1=$1};1' > "$out/$ins$i.out"
-            fi
+            $outvm -d "$tim" "$out/$ins$i.cor" > "$out/$ins$i.out"
         fi
-        if (( status==124 )); then
-            if [[ $verbose -gt 0 ]]; then
-                printf "\e[33mTIMEOUT\e[0m\n"
-            fi
-        elif ! diff -q "$out/$ins$i.in" "$out/$ins$i.out" >/dev/null; then
+        if ! diff -wq "$out/$ins$i.in" "$out/$ins$i.out" >/dev/null; then
             if [[ $verbose -gt 0 ]]; then
                 if [[ $verbose -gt 1 ]]; then
-                    diff "$out/$ins$i.in" "$out/$ins$i.out"
+                    diff -w "$out/$ins$i.in" "$out/$ins$i.out"
                 else
                     printf "\e[31mKO\e[0m\n"
                 fi

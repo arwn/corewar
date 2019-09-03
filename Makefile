@@ -1,5 +1,8 @@
 RM = rm -f
-CCFLAGS = -Wall -Wextra -Werror -DNDEBUG
+CCFLAGS = -Wall -Werror -DNDEBUG -Ofast
+DBGFLAGS = -Wall -Wextra -g -O0
+ASANFLAGS = -fexceptions -fasynchronous-unwind-tables \
+	-fpie -fstack-protector-all -fsanitize=address,undefined
 
 LIBDIR = lib/
 
@@ -24,13 +27,16 @@ ASM_OBJS = $(ASM_SRCS:.c=.o)
 
 VM_SRCDIR = cmd/corewar/
 VM_NAME = corewar
-VM_CFILES = corewar.c cpu.c instructions.c colors.c
+VM_CFILES = \
+	corewar.c cpu.c cpu_deux.c cpu_triple.c colors.c instr_arg_utils.c \
+	instr_op_args.c instr_read_utils.c instructions_5.c instructions_8.c \
+	instructions_10.c instructions_15.c instructions_17.c
 VM_SRCS = $(addprefix $(VM_SRCDIR), $(VM_CFILES))
 VM_OBJS = $(VM_SRCS:.c=.o)
 
 CHAMP_SRCDIR = champ/
-CHAMP_NAME = champ.cor
-CHAMP_CFILES = champ.s
+CHAMP_CFILES = champ.s reaper.s
+CHAMP_NAME = $(CHAMP_CFILES:.s=.cor)
 CHAMP_SRCS = $(addprefix $(CHAMP_SRCDIR), $(CHAMP_CFILES))
 
 GUI_LDFLAGS = $(LIBGLEW) -L $(dir $(LIBGLFW)) -lglfw3
@@ -48,7 +54,17 @@ INTL_HEADERS = colors.h libasm.h op.h hashtbl.h util.h asm.h instructions.h
 COREWAR_HEADERS = $(addprefix ./inc/, libasm.h op.h hashtbl.h util.h asm.h )
 VM_HEADERS = $(addprefix $(VM_SRCDIR), colors.h instructions.h cpu.h)
 
-CFLAGS = $(CCFLAGS) $(INCLUDES)
+.PHONY: debug
+debug: CCFLAGS = $(DBGFLAGS)
+debug: $(CHAMP_NAME) $(ASM_NAME)
+debug: $(ASM_NAME)
+debug: $(VM_NAME)
+
+.PHONY: asan
+asan: CCFLAGS = $(DBGFLAGS) $(ASANFLAGS)
+asan: $(CHAMP_NAME) $(ASM_NAME)
+asan: $(ASM_NAME)
+asan: $(VM_NAME)
 
 all: $(CHAMP_NAME) $(ASM_NAME) $(VM_NAME)
 
@@ -108,7 +124,7 @@ fclean: clean
 	-$(RM) $(ASM_NAME) $(VM_NAME)
 	-$(RM) -r $(ASM_NAME).dSYM $(VM_NAME).dSYM
 	-$(RM) $(CHAMP_NAME)
-	-$(RM) $(CHAMP_SRCDIR)$(CHAMP_NAME)
+	-$(RM) $(addprefix $(CHAMP_SRCDIR), $(CHAMP_NAME))
 
 .PHONY: depclean
 depclean:

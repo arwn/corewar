@@ -48,9 +48,9 @@ char g_tok_to_str[][17] = {
 };
 
 char g_cmd_sizes[] = {
-    [T_DIR] = DIR_SIZE,
-    [T_REG] = REG_SIZE,
-    [T_IND] = IND_SIZE,
+    [T_DIR] = DIR_ARG_SIZE,
+    [T_REG] = REG_ARG_SIZE,
+    [T_IND] = IND_ARG_SIZE,
 };
 
 char g_cmd_encoding[] = {

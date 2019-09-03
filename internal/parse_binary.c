@@ -2,7 +2,7 @@
 
 int larger_than_bufsize(int *err, unsigned ii) {
   *err = 1;
-  ft_dprintf(STDERR_FILENO, WARNING_PROG_TOO_BIG_DISASM "\n");
+  ft_dprintf(STDERR_FILENO, WARN_PROG_SZ_D "\n");
   return (ii);
 }
 
@@ -80,9 +80,6 @@ unsigned next_instruction(char *linebuf, size_t bufsize, size_t *bufidx,
       break;
     case 4:
       nn = (int32_t)read_mem_4(progbuf, ii);
-      break;
-    case 8:
-      nn = (int64_t)read_mem_8(progbuf, ii);
       break;
     }
     ii += num_bytes;
