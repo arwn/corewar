@@ -147,6 +147,8 @@ int parse_bin(char *buf, size_t bufsize, int fd, size_t *size) {
 
   if (progbuf_size < 0) {
     asprintf(&g_errstr, "Fatal error.  Unable to read from file");
+    free(progbuf);
+    progbuf = NULL;
     return (1);
   }
 
